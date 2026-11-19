@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { randomUUID } from 'crypto';
+const randomUUID = () =>
+  Array.from({ length: 4 }, () => Math.random().toString(16).slice(2, 10)).join('');
 
 function env(name: string): string {
   const v = process.env[name];
