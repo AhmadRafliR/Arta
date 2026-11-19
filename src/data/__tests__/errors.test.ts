@@ -14,4 +14,13 @@ describe('toAppError', () => {
     expect(toAppError(new Error('boom')).kind).toBe('lain');
     expect(toAppError('x').kind).toBe('lain');
   });
+  it('bentuk terbungkus supabase-js -> offline', () => {
+    expect(toAppError({ message: 'TypeError: Network request failed', code: '' }).kind).toBe('offline');
+  });
+  it('FunctionsFetchError -> offline', () => {
+    expect(toAppError({ name: 'FunctionsFetchError', message: 'Failed to send a request' }).kind).toBe('offline');
+  });
+  it('TypeError pemrograman -> lain', () => {
+    expect(toAppError(new TypeError('undefined is not a function')).kind).toBe('lain');
+  });
 });

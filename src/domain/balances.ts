@@ -1,7 +1,12 @@
 import type { Tx, Wallet } from './types';
 
 // Saldo = saldo_awal + efek SEMUA transaksi pada dompet itu (tanpa filter tanggal).
-export function walletBalances(wallets: Wallet[], txs: Tx[]): Record<string, number> {
+export type BalanceTx = Pick<
+  Tx,
+  'jenis' | 'nominal' | 'wallet_id' | 'wallet_tujuan_id'
+>;
+
+export function walletBalances(wallets: Wallet[], txs: BalanceTx[]): Record<string, number> {
   const bal: Record<string, number> = {};
   for (const w of wallets) bal[w.id] = w.saldo_awal;
   const tambah = (id: string | null, delta: number) => {

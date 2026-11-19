@@ -72,17 +72,44 @@ export function useTransactions(bulan: string) {
   });
 }
 
+export type TxSaldo = Pick<
+  Tx,
+  'id' | 'tanggal' | 'jenis' | 'nominal' | 'wallet_id' | 'wallet_tujuan_id' | 'debt_id'
+>;
+
+const COLS_SALDO = 'id,tanggal,jenis,nominal,wallet_id,wallet_tujuan_id,debt_id';
+export const PAGE_SIZE = 1000;
+
+// PostgREST membatasi respons (default 1000 baris); ambil semua halaman.
 export function useAllTransactions() {
-  return useQuery<Tx[], AppError>({
+  return useQuery<TxSaldo[], AppError>({
     queryKey: ['transactions', 'all'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select(COLS)
-        .order('tanggal', { ascending: false })
-        .order('created_at', { ascending: false });
-      if (error) throw toAppError(error);
-      return (data ?? []).map((r) => toTx(r as Row));
+      const out: TxSaldo[] = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select(COLS_SALDO)
+          .order('tanggal', { ascending: false })
+          .order('id', { ascending: true })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw toAppError(error);
+        const rows = data ?? [];
+        for (const r of rows) {
+          const t = toTx(r as Row);
+          out.push({
+            id: t.id,
+            tanggal: t.tanggal,
+            jenis: t.jenis,
+            nominal: t.nominal,
+            wallet_id: t.wallet_id,
+            wallet_tujuan_id: t.wallet_tujuan_id,
+            debt_id: t.debt_id,
+          });
+        }
+        if (rows.length < PAGE_SIZE) break;
+      }
+      return out;
     },
   });
 }
