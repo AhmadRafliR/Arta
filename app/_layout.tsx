@@ -37,8 +37,9 @@ export default function RootLayout() {
       <AuthProvider>
         <ThemeShell>
           <ThemeProfileBridge />
-          <AuthGate />
-          <Stack screenOptions={{ headerShown: false }} />
+          <AuthGate>
+            <Stack screenOptions={{ headerShown: false }} />
+          </AuthGate>
         </ThemeShell>
       </AuthProvider>
     </QueryClientProvider>

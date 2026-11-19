@@ -15,6 +15,8 @@ type AuthValue = {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  profileError: boolean;
+  refreshProfile: () => void;
   signOut: () => Promise<void>;
 };
 
@@ -25,6 +27,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -51,35 +55,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!userId) {
       setProfile(null);
+      setProfileError(false);
       setProfileLoading(false);
       return;
     }
     let alive = true;
     setProfileLoading(true);
+    setProfileError(false);
     supabase
       .from('profiles')
       .select('id, nama, zona_waktu, mode_tampilan, onboarding_selesai')
       .eq('id', userId)
       .maybeSingle()
-      .then(({ data }) => {
-        if (alive) setProfile((data as Profile | null) ?? null);
+      .then(({ data, error }) => {
+        if (!alive) return;
+        // Gagal jaringan / baris tidak ada / tabel belum dimigrasi -> tampilkan layar galat.
+        if (error || !data) {
+          setProfile(null);
+          setProfileError(true);
+        } else {
+          setProfile(data as Profile);
+        }
       })
-      .then(undefined, () => {})
+      .then(undefined, () => {
+        if (alive) setProfileError(true);
+      })
       .then(() => {
         if (alive) setProfileLoading(false);
       });
     return () => {
       alive = false;
     };
-  }, [userId]);
+  }, [userId, refreshKey]);
+
+  const refreshProfile = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
   }, []);
 
   const value = useMemo<AuthValue>(
-    () => ({ session, profile, loading: !sessionLoaded || (!!session && profileLoading), signOut }),
-    [session, profile, sessionLoaded, profileLoading, signOut],
+    () => ({ session, profile, loading: !sessionLoaded || (!!session && profileLoading), profileError, refreshProfile, signOut }),
+    [session, profile, sessionLoaded, profileLoading, profileError, refreshProfile, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
