@@ -45,3 +45,18 @@ export function tanggalValid(s: string): boolean {
   const hari = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
   return d <= hari;
 }
+
+export const NAMA_BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+/** 'YYYY-MM' digeser n bulan (n boleh negatif). */
+export function geserBulan(bulan: string, n: number): string {
+  const [y, m] = bulan.split('-').map(Number);
+  const idx = y * 12 + (m - 1) + n;
+  return `${Math.floor(idx / 12)}-${p2((idx % 12) + 1)}`;
+}
+
+/** 'YYYY-MM' -> 'Nov 2026'. */
+export function labelBulan(bulan: string): string {
+  const [y, m] = bulan.split('-').map(Number);
+  return `${NAMA_BULAN[m - 1]} ${y}`;
+}

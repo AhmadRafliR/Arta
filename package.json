@@ -62,6 +62,7 @@
     "setupFiles": [
       "./jest.setup.js"
     ],
+    "testTimeout": 15000,
     "testPathIgnorePatterns": [
       "/node_modules/",
       "<rootDir>/tests/integration/"

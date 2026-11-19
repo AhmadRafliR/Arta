@@ -1,11 +1,73 @@
-import { Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { RiwayatFilter } from '@/components/RiwayatFilter';
+import { TxRow } from '@/components/TxRow';
+import { useAuth } from '@/auth/AuthProvider';
+import { useTransactions } from '@/data/transactions';
+import { useWallets } from '@/data/wallets';
+import { formatRupiah } from '@/domain/money';
+import { filterTx, kelompokHarian, type FilterTx } from '@/lib/filterTx';
+import { geserBulan, hariIni, labelBulan, NAMA_BULAN } from '@/lib/tanggal';
 
-// Placeholder; digantikan di Task 10.
+function labelHari(tanggal: string): string {
+  const [, m, d] = tanggal.split('-').map(Number);
+  return `${d} ${NAMA_BULAN[m - 1]}`;
+}
+
 export default function Riwayat() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { profile } = useAuth();
+  const [bulan, setBulan] = useState(() => hariIni(profile?.zona_waktu || undefined).slice(0, 7));
+  const [filter, setFilter] = useState<FilterTx>({});
+
+  const wallets = useWallets();
+  const q = useTransactions(bulan);
+  const dompet = wallets.data ?? [];
+  const namaDompet = (id: string | null) => dompet.find((w) => w.id === id)?.nama ?? null;
+
+  const semua = q.data;
+  const kategori = useMemo(
+    () => [...new Set((semua ?? []).map((t) => t.kategori).filter((k): k is string => !!k))].sort(),
+    [semua],
+  );
+  const grup = useMemo(() => kelompokHarian(filterTx(semua ?? [], filter)), [semua, filter]);
+
   return (
-    <View className="flex-1 items-center justify-center bg-bg">
-      <Text className="text-lg font-bold text-fg">Riwayat</Text>
-      <Text className="text-mid">Segera hadir</Text>
-    </View>
+    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-3 px-4 pb-6" contentContainerStyle={{ paddingTop: insets.top + 12 }}>
+      <View className="flex-row items-center justify-between">
+        <Pressable accessibilityRole="button" accessibilityLabel="Bulan sebelumnya" onPress={() => setBulan((b) => geserBulan(b, -1))} className="px-3 py-1">
+          <Text className="text-lg text-fg">‹</Text>
+        </Pressable>
+        <Text className="text-base font-bold text-fg">{labelBulan(bulan)}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Bulan berikutnya" onPress={() => setBulan((b) => geserBulan(b, 1))} className="px-3 py-1">
+          <Text className="text-lg text-fg">›</Text>
+        </Pressable>
+      </View>
+
+      <RiwayatFilter filter={filter} onChange={setFilter} kategori={kategori} dompet={dompet.map((w) => ({ id: w.id, nama: w.nama }))} />
+
+      {semua === undefined ? (
+        <Text className={q.error ? 'text-fg' : 'text-mid'}>{q.error ? q.error.pesan : 'Memuat…'}</Text>
+      ) : grup.length === 0 ? (
+        <Text className="text-mid">Belum ada transaksi.</Text>
+      ) : (
+        grup.map((g) => (
+          <View key={g.tanggal}>
+            <View className="flex-row items-center justify-between pt-1">
+              <Text className="text-xs font-bold text-mid">{labelHari(g.tanggal)}</Text>
+              <Text className="text-xs text-mid">{formatRupiah(g.total)}</Text>
+            </View>
+            {g.items.map((tx) => (
+              <Pressable key={tx.id} accessibilityRole="button" onPress={() => router.push(`/transaksi/${tx.id}?bulan=${bulan}`)}>
+                <TxRow tx={tx} namaDompet={namaDompet} />
+              </Pressable>
+            ))}
+          </View>
+        ))
+      )}
+    </ScrollView>
   );
 }

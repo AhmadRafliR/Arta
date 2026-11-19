@@ -4,8 +4,11 @@ import { AmountInput } from '@/components/AmountInput';
 import { Chip } from '@/components/Chip';
 import { useAuth } from '@/auth/AuthProvider';
 import { useCategories } from '@/data/categories';
+import { formatRupiah } from '@/domain/money';
 import { toAppError, type AppError } from '@/data/errors';
-import { useSaveTransactions, type NewTx } from '@/data/transactions';
+import { useSaveTransactions, useUpdateTransaction, type NewTx } from '@/data/transactions';
+import type { Tx } from '@/domain/types';
+import { buatPatch, type NilaiForm } from '@/lib/txPatch';
 import { useWallets } from '@/data/wallets';
 import { hariIni, tanggalValid } from '@/lib/tanggal';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -27,26 +30,33 @@ function Label({ children }: { children: string }) {
   return <Text className="mt-2 text-xs font-semibold text-mid">{children}</Text>;
 }
 
-type Props = {
-  /** Id transaksi; dibuat sekali oleh pemanggil dan dipakai ulang untuk setiap percobaan simpan. */
-  txId: string;
-  onSaved: () => void;
+type BodyProps = {
+  /** Diisi pada mode ubah. */
+  initial?: Tx;
+  submit: (v: NilaiForm) => Promise<void>;
 };
 
-export function TxForm({ txId, onSaved }: Props) {
+function TxFormBody({ initial, submit }: BodyProps) {
   const { profile } = useAuth();
   const { t } = useTheme();
   const wallets = useWallets();
-  const save = useSaveTransactions();
-  const aktif = (wallets.data ?? []).filter((w) => !w.diarsip);
+  const ubah = initial !== undefined;
+  // hutang_* dan penyesuaian: jenis/nominal/dompet bergantung pada data lain, hanya tanggal + catatan yang boleh diubah.
+  const terkunci = ubah && (initial.jenis.startsWith('hutang_') || initial.jenis === 'penyesuaian');
+  // Dompet diarsip tetap tampil bila dipakai transaksi yang diubah, agar tidak berganti diam-diam.
+  const aktif = (wallets.data ?? []).filter(
+    (w) => !w.diarsip || (ubah && (w.id === initial.wallet_id || w.id === initial.wallet_tujuan_id)),
+  );
 
-  const [jenis, setJenis] = useState<JenisForm>('pengeluaran');
-  const [nominal, setNominal] = useState<number | null>(null);
-  const [kategori, setKategori] = useState<string | null>(null);
-  const [asalPilih, setAsalPilih] = useState<string | null>(null);
-  const [tujuanPilih, setTujuanPilih] = useState<string | null>(null);
-  const [tanggal, setTanggal] = useState(() => hariIni(profile?.zona_waktu || undefined));
-  const [catatan, setCatatan] = useState('');
+  const [jenis, setJenis] = useState<JenisForm>(
+    ubah && (initial.jenis === 'pemasukan' || initial.jenis === 'transfer') ? initial.jenis : 'pengeluaran',
+  );
+  const [nominal, setNominal] = useState<number | null>(ubah ? initial.nominal : null);
+  const [kategori, setKategori] = useState<string | null>(ubah ? initial.kategori : null);
+  const [asalPilih, setAsalPilih] = useState<string | null>(ubah ? initial.wallet_id : null);
+  const [tujuanPilih, setTujuanPilih] = useState<string | null>(ubah ? initial.wallet_tujuan_id : null);
+  const [tanggal, setTanggal] = useState(() => (ubah ? initial.tanggal : hariIni(profile?.zona_waktu || undefined)));
+  const [catatan, setCatatan] = useState(ubah ? (initial.catatan ?? '') : '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,8 +68,9 @@ export function TxForm({ txId, onSaved }: Props) {
   const tujuanOpsi = aktif.filter((w) => w.id !== asalId);
   const tujuanId = tujuanPilih && tujuanOpsi.some((w) => w.id === tujuanPilih) ? tujuanPilih : null;
 
-  const valid =
-    nominal !== null &&
+  const valid = terkunci
+    ? tanggalValid(tanggal)
+    : nominal !== null &&
     nominal > 0 &&
     asalId !== null &&
     tanggalValid(tanggal) &&
@@ -74,24 +85,21 @@ export function TxForm({ txId, onSaved }: Props) {
 
   async function simpan() {
     if (nonaktif || nominal === null) return;
-    const item: NewTx = {
-      id: txId,
-      tanggal,
-      jenis,
-      kategori: transfer ? null : kategori,
-      nominal,
-      wallet_id: asalId,
-      wallet_tujuan_id: transfer ? tujuanId : null,
-      catatan: catatan.trim() || null,
-      transkrip: null,
-      sumber: 'manual',
-    };
+    const v: NilaiForm = terkunci
+      ? { ...initial, tanggal, catatan: catatan.trim() || null }
+      : {
+          tanggal,
+          jenis,
+          kategori: transfer ? null : kategori,
+          nominal,
+          wallet_id: asalId,
+          wallet_tujuan_id: transfer ? tujuanId : null,
+          catatan: catatan.trim() || null,
+        };
     setBusy(true);
     setError(null);
     try {
-      // Hasil kosong ([]) berarti id sudah tersimpan oleh percobaan sebelumnya: tetap sukses.
-      await save.mutateAsync([item]);
-      onSaved();
+      await submit(v);
     } catch (e) {
       setError(pesanGalat(e));
     } finally {
@@ -101,16 +109,21 @@ export function TxForm({ txId, onSaved }: Props) {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-2 px-5 py-4" keyboardShouldPersistTaps="handled">
+      {terkunci ? <Text className="text-xs text-mid">{`${initial.jenis.replace('_', ' ')} · hanya tanggal dan catatan yang dapat diubah`}</Text> : null}
       <View className="flex-row flex-wrap gap-2">
-        {JENIS.map((j) => (
+        {(terkunci ? [] : JENIS).map((j) => (
           <Chip key={j.nilai} testID={`jenis-${j.nilai}`} label={j.label} selected={jenis === j.nilai} onPress={() => ubahJenis(j.nilai)} />
         ))}
       </View>
 
       <Label>Nominal</Label>
-      <AmountInput value={null} onChange={setNominal} testID="nominal" />
+      {terkunci ? (
+        <TextInput testID="nominal" editable={false} value={formatRupiah(initial.nominal)} className="rounded-xl border border-line bg-card px-4 py-3 text-mid" />
+      ) : (
+        <AmountInput value={ubah ? initial.nominal : null} onChange={setNominal} testID="nominal" />
+      )}
 
-      {transfer ? null : (
+      {transfer || terkunci ? null : (
         <>
           <Label>Kategori</Label>
           <View className="flex-row flex-wrap gap-2">
@@ -121,10 +134,17 @@ export function TxForm({ txId, onSaved }: Props) {
         </>
       )}
 
-      <Label>{transfer ? 'Dari dompet' : 'Dompet'}</Label>
-      {aktif.length === 0 ? <Text className="text-mid">Belum ada dompet aktif.</Text> : null}
+      {terkunci ? (
+        <>
+          <Label>Dompet</Label>
+          <Text className="text-mid">{(wallets.data ?? []).find((w) => w.id === initial.wallet_id)?.nama ?? '-'}</Text>
+        </>
+      ) : (
+        <Label>{transfer ? 'Dari dompet' : 'Dompet'}</Label>
+      )}
+      {aktif.length === 0 && !terkunci ? <Text className="text-mid">Belum ada dompet aktif.</Text> : null}
       <View className="flex-row flex-wrap gap-2">
-        {aktif.map((w) => (
+        {(terkunci ? [] : aktif).map((w) => (
           <Chip key={w.id} testID={`src-${w.id}`} label={w.nama} selected={asalId === w.id} onPress={() => setAsalPilih(w.id)} />
         ))}
       </View>
@@ -181,4 +201,39 @@ export function TxForm({ txId, onSaved }: Props) {
       </Pressable>
     </ScrollView>
   );
+}
+
+type Props = {
+  /** Mode baru: id transaksi, dibuat sekali oleh pemanggil dan dipakai ulang untuk setiap percobaan simpan. */
+  txId?: string;
+  /** 'ubah' mengisi dari `initial` dan memperbarui baris itu; bawaan 'baru'. */
+  mode?: 'baru' | 'ubah';
+  initial?: Tx;
+  onSaved: () => void;
+};
+
+function FormBaru({ txId, onSaved }: { txId: string; onSaved: () => void }) {
+  const save = useSaveTransactions();
+  async function submit(v: NilaiForm) {
+    const item: NewTx = { id: txId, ...v, transkrip: null, sumber: 'manual' };
+    // Hasil kosong ([]) berarti id sudah tersimpan oleh percobaan sebelumnya: tetap sukses.
+    await save.mutateAsync([item]);
+    onSaved();
+  }
+  return <TxFormBody submit={submit} />;
+}
+
+function FormUbah({ initial, onSaved }: { initial: Tx; onSaved: () => void }) {
+  const update = useUpdateTransaction();
+  async function submit(v: NilaiForm) {
+    const patch = buatPatch(initial, v);
+    if (Object.keys(patch).length > 0) await update.mutateAsync({ id: initial.id, patch });
+    onSaved();
+  }
+  return <TxFormBody initial={initial} submit={submit} />;
+}
+
+export function TxForm({ txId, mode = 'baru', initial, onSaved }: Props) {
+  if (mode === 'ubah' && initial) return <FormUbah initial={initial} onSaved={onSaved} />;
+  return <FormBaru txId={txId ?? ''} onSaved={onSaved} />;
 }

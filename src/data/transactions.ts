@@ -72,6 +72,20 @@ export function useTransactions(bulan: string) {
   });
 }
 
+/** Satu transaksi menurut id; memakai cache daftar bulan (`bulan`) sebagai data awal bila ada. */
+export function useTransaction(id: string, bulan?: string) {
+  const qc = useQueryClient();
+  return useQuery<Tx, AppError>({
+    queryKey: ['transactions', 'one', id],
+    initialData: () => qc.getQueryData<Tx[]>(['transactions', bulan])?.find((t) => t.id === id),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('transactions').select(COLS).eq('id', id).single();
+      if (error) throw toAppError(error);
+      return toTx(data as Row);
+    },
+  });
+}
+
 export type TxSaldo = Pick<
   Tx,
   'id' | 'tanggal' | 'jenis' | 'nominal' | 'wallet_id' | 'wallet_tujuan_id' | 'debt_id'
