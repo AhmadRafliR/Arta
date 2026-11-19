@@ -41,6 +41,8 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="catat" options={{ presentation: "modal" }} />
               <Stack.Screen name="transaksi/[id]" options={{ presentation: "modal" }} />
+              <Stack.Screen name="dompet/[id]" options={{ presentation: "modal" }} />
+              <Stack.Screen name="dompet/baru" options={{ presentation: "modal" }} />
             </Stack>
           </AuthGate>
         </ThemeShell>

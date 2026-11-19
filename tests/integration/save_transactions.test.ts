@@ -1,6 +1,5 @@
-import { randomUUID } from 'crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { cleanupUsers, createTestUser } from './helpers';
+import { cleanupUsers, createTestUser, uuidV4 as randomUUID } from './helpers';
 
 afterAll(cleanupUsers);
 

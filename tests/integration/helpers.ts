@@ -46,3 +46,11 @@ export async function cleanupUsers(): Promise<void> {
     throw new Error(`cleanupUsers: ${failed.length} deleteUser call(s) failed: ${failed[0].error?.message}`);
   }
 }
+
+/** UUID v4 tanpa dependensi (tanpa node `crypto`; tsconfig app tidak punya @types/node). */
+export function uuidV4(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.floor(Math.random() * 16);
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
