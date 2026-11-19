@@ -66,7 +66,7 @@ export function useTransactions(bulan: string) {
         .lte('tanggal', akhir)
         .order('tanggal', { ascending: false })
         .order('created_at', { ascending: false });
-      if (error) throw toAppError(error);
+      if (error) throw toAppError(error, { aksi: 'baca' });
       return (data ?? []).map((r) => toTx(r as Row));
     },
   });
@@ -80,7 +80,7 @@ export function useTransaction(id: string, bulan?: string) {
     initialData: () => qc.getQueryData<Tx[]>(['transactions', bulan])?.find((t) => t.id === id),
     queryFn: async () => {
       const { data, error } = await supabase.from('transactions').select(COLS).eq('id', id).single();
-      if (error) throw toAppError(error);
+      if (error) throw toAppError(error, { aksi: 'baca' });
       return toTx(data as Row);
     },
   });
@@ -107,7 +107,7 @@ export function useAllTransactions() {
           .order('tanggal', { ascending: false })
           .order('id', { ascending: true })
           .range(from, from + PAGE_SIZE - 1);
-        if (error) throw toAppError(error);
+        if (error) throw toAppError(error, { aksi: 'baca' });
         const rows = data ?? [];
         for (const r of rows) {
           const t = toTx(r as Row);
@@ -145,9 +145,9 @@ export function useSaveTransactions() {
       try {
         res = await supabase.rpc('save_transactions', { items });
       } catch (e) {
-        throw toAppError(e);
+        throw toAppError(e, { aksi: 'simpan-transaksi' });
       }
-      if (res.error) throw toAppError(res.error);
+      if (res.error) throw toAppError(res.error, { aksi: 'simpan-transaksi' });
       return ((res.data ?? []) as Row[]).map(toTx);
     },
     onSuccess: invalidate,
@@ -164,7 +164,7 @@ export function useUpdateTransaction() {
         .eq('id', id)
         .select(COLS)
         .single();
-      if (error) throw toAppError(error);
+      if (error) throw toAppError(error, { aksi: 'simpan-transaksi' });
       return toTx(data as Row);
     },
     onSuccess: invalidate,

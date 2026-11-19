@@ -4,6 +4,7 @@ import { AmountInput } from '@/components/AmountInput';
 import { useAuth } from '@/auth/AuthProvider';
 import { useCreateWallet } from '@/data/wallets';
 import { toAppError, type AppError } from '@/data/errors';
+import { adalahNamaKembar } from '@/data/pesan';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/theme/ThemeProvider';
 
@@ -32,6 +33,7 @@ export default function DompetAwal() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const nextKey = useRef(BAWAAN.length);
+  const jalan = useRef(false); // penjaga proses berjalan: ketukan ganda tidak memulai dua kali
 
   const namaBersih = rows.map((r) => r.nama.trim().toLowerCase());
   const kembar = namaBersih.some((n, i) => n !== '' && namaBersih.indexOf(n) !== i);
@@ -43,7 +45,8 @@ export default function DompetAwal() {
   }
 
   async function mulai() {
-    if (nonaktif || !session) return;
+    if (nonaktif || !session || jalan.current) return;
+    jalan.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -51,12 +54,17 @@ export default function DompetAwal() {
       for (const r of rows) {
         // Baris yang sudah dibuat (terkunci) dilewati saat coba lagi: tanpa duplikat.
         if (r.dibuat) continue;
-        await createWallet.mutateAsync({
-          nama: r.nama.trim(),
-          tipe: 'harian',
-          saldo_awal: r.saldo ?? 0,
-          tanggal_saldo_awal: tanggal,
-        });
+        try {
+          await createWallet.mutateAsync({
+            nama: r.nama.trim(),
+            tipe: 'harian',
+            saldo_awal: r.saldo ?? 0,
+            tanggal_saldo_awal: tanggal,
+          });
+        } catch (e) {
+          // 23505 (nama sudah ada): percobaan sebelumnya sudah membuatnya (respons hilang / profil gagal) -> lanjut.
+          if (!adalahNamaKembar(e)) throw e;
+        }
         ubah(r.key, { dibuat: true });
       }
       const { error: err } = await supabase
@@ -68,6 +76,7 @@ export default function DompetAwal() {
     } catch (e) {
       setError(pesanGalat(e));
     } finally {
+      jalan.current = false;
       setBusy(false);
     }
   }

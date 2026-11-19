@@ -36,6 +36,6 @@ export function parseNominal(input: string): number | null {
     nilai = Number(angka.replace(/[.,]/g, ''));
   }
   const bulat = Math.round(nilai);
-  if (!Number.isFinite(bulat) || Math.abs(nilai - bulat) > 1e-6 || bulat <= 0) return null;
+  if (!Number.isFinite(bulat) || Math.abs(nilai - bulat) > 1e-6 || bulat <= 0 || bulat > Number.MAX_SAFE_INTEGER) return null;
   return bulat;
 }

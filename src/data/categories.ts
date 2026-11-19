@@ -13,7 +13,7 @@ export function useCategories(jenis: 'pemasukan' | 'pengeluaran') {
         .select('id,jenis,nama')
         .eq('jenis', jenis)
         .order('nama', { ascending: true });
-      if (error) throw toAppError(error);
+      if (error) throw toAppError(error, { aksi: 'baca' });
       return (data ?? []) as Category[];
     },
   });

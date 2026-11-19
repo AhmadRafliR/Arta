@@ -118,7 +118,7 @@ describe('Dompet awal', () => {
     mockEq.mockResolvedValueOnce({ error: { message: 'boom' } });
     await render(<DompetAwal />);
     await fireEvent.press(mulai());
-    expect(await screen.findByText('boom')).toBeTruthy();
+    expect(await screen.findByText('Terjadi kesalahan. Coba lagi.')).toBeTruthy();
     expect(mockRefresh).not.toHaveBeenCalled();
     await fireEvent.press(mulai());
     await waitFor(() => expect(mockRefresh).toHaveBeenCalledTimes(1));
@@ -151,5 +151,38 @@ describe('Dompet awal', () => {
     await fireEvent.press(screen.getByText('Tambah dompet'));
     await fireEvent.changeText(screen.getAllByPlaceholderText('Nama dompet').at(-1)!, 'GoPay');
     expect(nonaktif()).toBe(true);
+  });
+
+  it('retry setelah 23505 (dompet sudah ada): dianggap sudah dibuat, onboarding selesai', async () => {
+    const dup = { kind: 'lain', pesan: 'Terjadi kesalahan. Coba lagi.', code: '23505' };
+    mockCreate.mockRejectedValueOnce(dup).mockRejectedValueOnce(dup).mockRejectedValueOnce(dup);
+    await render(<DompetAwal />);
+    await fireEvent.press(mulai());
+    await waitFor(() => expect(mockRefresh).toHaveBeenCalledTimes(1));
+    expect(mockCreate).toHaveBeenCalledTimes(3);
+    expect(mockUpdate).toHaveBeenCalledWith({ nama: null, onboarding_selesai: true });
+    expect(screen.queryByText('Terjadi kesalahan. Coba lagi.')).toBeNull();
+  });
+
+  it('galat selain 23505 tetap menghentikan', async () => {
+    mockCreate.mockRejectedValueOnce({ kind: 'lain', pesan: 'Terjadi kesalahan. Coba lagi.', code: '42501' });
+    await render(<DompetAwal />);
+    await fireEvent.press(mulai());
+    expect(await screen.findByText('Terjadi kesalahan. Coba lagi.')).toBeTruthy();
+    expect(mockRefresh).not.toHaveBeenCalled();
+  });
+
+  it('ketuk Mulai dua kali saat berjalan: hanya satu proses', async () => {
+    let selesai!: () => void;
+    mockCreate.mockImplementationOnce(() => new Promise((r) => (selesai = () => r({}))));
+    await render(<DompetAwal />);
+    const pertama = fireEvent.press(mulai()); // tidak di-await: menunggu janji yang belum selesai
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+    await fireEvent.press(mulai());
+    selesai();
+    await pertama;
+    await waitFor(() => expect(mockRefresh).toHaveBeenCalledTimes(1));
+    expect(mockCreate).toHaveBeenCalledTimes(3);
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
   });
 });

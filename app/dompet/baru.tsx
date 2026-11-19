@@ -45,7 +45,7 @@ export default function DompetBaru() {
       });
       tutup();
     } catch (e) {
-      setPesan(pesanDompet(e));
+      setPesan(pesanDompet(e, { namaUnik: true }));
     } finally {
       setBusy(false);
     }

@@ -39,3 +39,14 @@ describe('parseNominal', () => {
     expect(parseNominal(s)).toBeNull();
   });
 });
+
+describe('parseNominal batas', () => {
+  it('di atas MAX_SAFE_INTEGER -> null', () => {
+    expect(parseNominal('9007199254740993')).toBeNull();
+    expect(parseNominal('99999999999999999999')).toBeNull();
+    expect(parseNominal('9' + '9'.repeat(400))).toBeNull();
+  });
+  it('tepat MAX_SAFE_INTEGER valid', () => {
+    expect(parseNominal('9007199254740991')).toBe(Number.MAX_SAFE_INTEGER);
+  });
+});

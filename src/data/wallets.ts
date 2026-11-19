@@ -25,7 +25,7 @@ export function useWallets() {
         .from('wallets')
         .select('id,nama,tipe,saldo_awal,tanggal_saldo_awal,target,diarsip')
         .order('created_at', { ascending: true });
-      if (error) throw toAppError(error);
+      if (error) throw toAppError(error, { aksi: 'baca' });
       return (data ?? []).map((r) => toWallet(r as Row));
     },
   });
