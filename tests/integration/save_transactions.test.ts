@@ -143,3 +143,49 @@ test('anon tidak boleh memanggil', async () => {
   expect(error).not.toBeNull();
   expect(`${error!.code} ${error!.message}`).toMatch(/42501|permission denied/i);
 });
+
+test('non-transfer dengan wallet_tujuan_id ditolak', async () => {
+  const a = await createTestUser();
+  const w1 = await bikinDompet(a.client, 'Tunai');
+  const w2 = await bikinDompet(a.client, 'Bank');
+  const { error } = await a.client.rpc('save_transactions', {
+    items: [item({ wallet_id: w1, wallet_tujuan_id: w2 })],
+  });
+  expect(error!.message).toMatch(/hanya untuk transfer/i);
+  expect(await hitung(a.client)).toBe(0);
+});
+
+test('item tanpa id ditolak', async () => {
+  const a = await createTestUser();
+  const w = await bikinDompet(a.client, 'Tunai');
+  const { error } = await a.client.rpc('save_transactions', {
+    items: [item({ wallet_id: w, id: null })],
+  });
+  expect(error!.message).toMatch(/id transaksi wajib diisi/i);
+  expect(await hitung(a.client)).toBe(0);
+});
+
+test('id ganda dalam satu permintaan ditolak', async () => {
+  const a = await createTestUser();
+  const w = await bikinDompet(a.client, 'Tunai');
+  const id = randomUUID();
+  const { error } = await a.client.rpc('save_transactions', {
+    items: [item({ wallet_id: w, id }), item({ wallet_id: w, id })],
+  });
+  expect(error!.message).toMatch(/id transaksi ganda/i);
+  expect(await hitung(a.client)).toBe(0);
+});
+
+test('retry campuran: hanya item baru yang dikembalikan', async () => {
+  const a = await createTestUser();
+  const w = await bikinDompet(a.client, 'Tunai');
+  const lama = item({ wallet_id: w });
+  const baru = item({ wallet_id: w, nominal: 777 });
+  const r1 = await a.client.rpc('save_transactions', { items: [lama] });
+  expect(r1.error).toBeNull();
+  const r2 = await a.client.rpc('save_transactions', { items: [lama, baru] });
+  expect(r2.error).toBeNull();
+  expect(r2.data).toHaveLength(1);
+  expect(r2.data[0].id).toBe(baru.id);
+  expect(await hitung(a.client)).toBe(2);
+});
