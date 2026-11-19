@@ -23,8 +23,15 @@ const item: NewTx = {
   sumber: 'manual',
 };
 
+const klien: QueryClient[] = [];
+afterEach(() => {
+  klien.splice(0).forEach((c) => c.clear());
+});
+
 function wrapper() {
-  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  // gcTime: Infinity -> tanpa timer gc yang menahan worker Jest; dibersihkan di afterEach.
+  const qc = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
+  klien.push(qc);
   const W = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );

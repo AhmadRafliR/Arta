@@ -4,8 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
 // Nilai env diisi pemilik di .env. Placeholder agar import tidak crash saat env kosong (mis. Jest).
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'anon-key-kosong';
+const envUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const envKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// Build rilis tanpa konfigurasi tidak boleh diam-diam menyasar localhost.
+if (!__DEV__ && (!envUrl || !envKey)) {
+  throw new Error('Konfigurasi Supabase belum diisi (EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY).');
+}
+const url = envUrl || 'http://localhost:54321';
+const anonKey = envKey || 'anon-key-kosong';
 
 export const supabase = createClient(url, anonKey, {
   auth: {
