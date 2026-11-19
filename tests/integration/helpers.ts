@@ -40,5 +40,9 @@ export async function createTestUser(): Promise<{ client: SupabaseClient; userId
 
 export async function cleanupUsers(): Promise<void> {
   const ids = createdUserIds.splice(0);
-  await Promise.all(ids.map((id) => getAdmin().auth.admin.deleteUser(id)));
+  const results = await Promise.all(ids.map((id) => getAdmin().auth.admin.deleteUser(id)));
+  const failed = results.filter((r) => r.error);
+  if (failed.length) {
+    throw new Error(`cleanupUsers: ${failed.length} deleteUser call(s) failed: ${failed[0].error?.message}`);
+  }
 }
