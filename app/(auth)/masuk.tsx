@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { Tombol } from '@/components/Tombol';
+import { pesanAuth } from '@/auth/pesanAuth';
 import { supabase } from '@/lib/supabase';
 
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
@@ -19,7 +21,7 @@ export default function Masuk() {
     setError(null);
     const { error: err } = await supabase.auth.signInWithOtp({ email: e });
     setBusy(false);
-    if (err) return setError('Gagal mengirim kode. Coba lagi.');
+    if (err) return setError(pesanAuth(err, 'Gagal mengirim kode. Coba lagi.'));
     router.push({ pathname: '/(auth)/kode', params: { email: e } });
   }
 
@@ -47,9 +49,7 @@ export default function Masuk() {
     <View className="flex-1 justify-center gap-4 bg-bg px-6">
       <Text className="text-2xl font-bold text-fg">Masuk</Text>
       {GOOGLE_WEB_CLIENT_ID ? (
-        <Pressable onPress={masukGoogle} disabled={busy} className="items-center rounded-xl bg-acc py-3">
-          <Text className="font-semibold text-white">Masuk dengan Google</Text>
-        </Pressable>
+        <Tombol label="Masuk dengan Google" primary disabled={busy} onPress={() => void masukGoogle()} />
       ) : null}
       <TextInput
         value={email}
@@ -60,9 +60,7 @@ export default function Masuk() {
         autoComplete="email"
         className="rounded-xl border border-line bg-card px-4 py-3 text-fg"
       />
-      <Pressable onPress={kirimKode} disabled={busy} className="items-center rounded-xl border border-line bg-card py-3">
-        {busy ? <ActivityIndicator /> : <Text className="font-semibold text-fg">Kirim kode</Text>}
-      </Pressable>
+      <Tombol label="Kirim kode" busy={busy} disabled={busy} onPress={() => void kirimKode()} />
       {error ? <Text className="text-fg">{error}</Text> : null}
     </View>
   );

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { AuthGate } from '@/auth/AuthGate';
+import { QueryCacheGuard } from '@/auth/QueryCacheGuard';
 import { ThemeProfileBridge } from '@/auth/ThemeProfileBridge';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import type { Pref } from '@/theme/tokens';
@@ -35,6 +36,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <QueryCacheGuard />
         <ThemeShell>
           <ThemeProfileBridge />
           <AuthGate>
