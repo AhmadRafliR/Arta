@@ -1,0 +1,75 @@
+<style>
+  .phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px;margin-top:18px}
+  .ph{border-radius:34px;padding:10px;background:#2a2a2d;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .scr{background:var(--bg);color:var(--fg);border-radius:26px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:560px;display:flex;flex-direction:column}
+  .L{--bg:#EEF3F5;--fg:#0B424F;--mid:#5b7c84;--card:#fff;--line:#dde7ea;--hero:linear-gradient(135deg,#0B424F,#1F6A76);--heroFg:#fff;--chip:rgba(255,255,255,.12);--acc:#52C3BF;--accFg:#0B424F;--pos:#1a9a8f}
+  .D{--bg:#0B0B0C;--fg:#fff;--mid:#8a8a8f;--card:#161618;--line:#26262a;--hero:#fff;--heroFg:#0B0B0C;--chip:rgba(0,0,0,.06);--acc:#C6F432;--accFg:#0B0B0C;--pos:#C6F432}
+  .top{padding:16px 16px 6px;display:flex;justify-content:space-between;align-items:center}
+  .hi{font-size:11px;color:var(--mid)} .nm{font-size:15px;font-weight:700}
+  .tog{font-size:10px;border:1px solid var(--line);border-radius:99px;padding:4px 9px;color:var(--mid)}
+  .hero{margin:8px 14px;border-radius:20px;padding:16px;background:var(--hero);color:var(--heroFg)}
+  .lbl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.65}
+  .big{font-size:27px;font-weight:800;margin:4px 0 2px;letter-spacing:-.02em}
+  .sub{font-size:10px;opacity:.65}
+  .chips{display:flex;gap:6px;margin-top:12px}
+  .chip{flex:1;border-radius:10px;padding:6px 7px;background:var(--chip);font-size:9px}
+  .chip b{display:block;font-size:11px}
+  .sec{margin:12px 14px 0;font-size:11px;font-weight:700;display:flex;justify-content:space-between}
+  .sec span{font-weight:500;color:var(--mid)}
+  .card{margin:6px 14px 0;border-radius:16px;padding:12px;background:var(--card);border:1px solid var(--line)}
+  .row{display:flex;justify-content:space-between;font-size:11px}
+  .bar{height:7px;border-radius:9px;background:var(--line);margin:8px 0 5px;overflow:hidden}
+  .bar i{display:block;height:100%;width:34%;background:var(--acc)}
+  .tiny{font-size:9.5px;color:var(--mid)}
+  .t{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:11px}
+  .t:last-child{border-bottom:0}
+  .ic{width:24px;height:24px;border-radius:8px;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:12px}
+  .t .a{margin-left:auto;font-weight:700}
+  .nav{margin-top:auto;display:flex;justify-content:space-around;align-items:center;padding:8px 10px 14px;border-top:1px solid var(--line);background:var(--card);font-size:9px;color:var(--mid)}
+  .nav .on{color:var(--fg);font-weight:700}
+  .mic{width:52px;height:52px;border-radius:50%;background:var(--acc);color:var(--accFg);display:flex;align-items:center;justify-content:center;font-size:22px;margin-top:-30px;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+  .cap{margin-top:12px;text-align:center} .cap h3{margin:0;font-size:15px} .cap p{margin:4px 0 0;font-size:12px;color:#888}
+  table.tok{width:100%;border-collapse:collapse;margin-top:26px;font-size:12px}
+  table.tok td,table.tok th{padding:7px 8px;border-bottom:1px solid #8883;text-align:left}
+  .sw{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-3px;margin-right:6px;border:1px solid #8885}
+</style>
+
+<h2>Dua mode: Terang = PANTRA, Gelap = Versi D</h2>
+<p class="subtitle">Susunan sama persis, hanya warnanya bertukar. Default ikut pengaturan HP, bisa diganti manual di Akun.</p>
+
+<div class="phones">
+  <div>
+    <div class="ph"><div class="scr L">
+      <div class="top"><div><div class="hi">Selamat pagi,</div><div class="nm">Rafli 👋</div></div><span class="tog">☀️ Terang</span></div>
+      <div class="hero"><div class="lbl">Sisa uang · semua dompet</div><div class="big">Rp288.000</div><div class="sub">Kekayaan bersih Rp7.922.717</div>
+        <div class="chips"><div class="chip">GoPay<b>152rb</b></div><div class="chip">Cash<b>106rb</b></div><div class="chip">ShopeePay<b>30rb</b></div></div></div>
+      <div class="sec">Hutang <span>Jadwal ›</span></div>
+      <div class="card"><div class="row"><b>Cicilan</b><b>Rp1.365.283</b></div><div class="bar"><i></i></div><div class="tiny">Jatuh tempo 1 Des (12 hari lagi) · bebas hutang Agt 2027</div></div>
+      <div class="sec">Terbaru <span>Semua ›</span></div>
+      <div class="card" style="padding:2px 12px"><div class="t"><div class="ic">🚬</div>Rokok · GoPay<span class="a">-25rb</span></div><div class="t"><div class="ic">🅿️</div>Parkir · Cash<span class="a">-2rb</span></div><div class="t"><div class="ic">💸</div>Kiriman ortu · BCA<span class="a" style="color:var(--pos)">+1,5jt</span></div></div>
+      <div class="nav"><span class="on">Beranda</span><span>Riwayat</span><div class="mic">🎙</div><span>Hutang</span><span>Akun</span></div>
+    </div></div>
+    <div class="cap"><h3>Mode terang · PANTRA</h3><p>Abu muda 60% · teal tua 30% · mint 10%</p></div>
+  </div>
+
+  <div>
+    <div class="ph"><div class="scr D">
+      <div class="top"><div><div class="hi">Selamat malam,</div><div class="nm">Rafli 👋</div></div><span class="tog">🌙 Gelap</span></div>
+      <div class="hero"><div class="lbl">Sisa uang · semua dompet</div><div class="big">Rp288.000</div><div class="sub">Kekayaan bersih Rp7.922.717</div>
+        <div class="chips"><div class="chip">GoPay<b>152rb</b></div><div class="chip">Cash<b>106rb</b></div><div class="chip">ShopeePay<b>30rb</b></div></div></div>
+      <div class="sec">Hutang <span>Jadwal ›</span></div>
+      <div class="card"><div class="row"><b>Cicilan</b><b>Rp1.365.283</b></div><div class="bar"><i></i></div><div class="tiny">Jatuh tempo 1 Des (12 hari lagi) · bebas hutang Agt 2027</div></div>
+      <div class="sec">Terbaru <span>Semua ›</span></div>
+      <div class="card" style="padding:2px 12px"><div class="t"><div class="ic">🚬</div>Rokok · GoPay<span class="a">-25rb</span></div><div class="t"><div class="ic">🅿️</div>Parkir · Cash<span class="a">-2rb</span></div><div class="t"><div class="ic">💸</div>Kiriman ortu · BCA<span class="a" style="color:var(--pos)">+1,5jt</span></div></div>
+      <div class="nav"><span class="on">Beranda</span><span>Riwayat</span><div class="mic">🎙</div><span>Hutang</span><span>Akun</span></div>
+    </div></div>
+    <div class="cap"><h3>Mode gelap · Versi D</h3><p>Hitam 60% · putih/abu 30% · lime 10%</p></div>
+  </div>
+</div>
+
+<table class="tok">
+  <tr><th>Peran warna</th><th>Terang (PANTRA)</th><th>Gelap (D)</th></tr>
+  <tr><td>Latar (60%)</td><td><span class="sw" style="background:#EEF3F5"></span>#EEF3F5</td><td><span class="sw" style="background:#0B0B0C"></span>#0B0B0C</td></tr>
+  <tr><td>Kartu utama & teks (30%)</td><td><span class="sw" style="background:#0B424F"></span>#0B424F</td><td><span class="sw" style="background:#FFFFFF"></span>#FFFFFF</td></tr>
+  <tr><td>Aksen: mic, tombol, progres, uang masuk (10%)</td><td><span class="sw" style="background:#52C3BF"></span>#52C3BF</td><td><span class="sw" style="background:#C6F432"></span>#C6F432</td></tr>
+</table>

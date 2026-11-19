@@ -1,0 +1,140 @@
+<style>
+  .phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px;margin-top:18px}
+  .ph{border-radius:34px;padding:10px;background:#2a2a2d;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .scr{--bg:#0B0B0C;--fg:#fff;--mid:#8a8a8f;--card:#161618;--line:#26262a;--acc:#C6F432;
+       background:var(--bg);color:var(--fg);border-radius:26px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:560px;display:flex;flex-direction:column;position:relative}
+  .top{padding:16px 16px 6px;display:flex;justify-content:space-between;align-items:center}
+  .hi{font-size:11px;color:var(--mid)} .nm{font-size:15px;font-weight:700}
+  .ttl{font-size:17px;font-weight:800}
+  .av{width:30px;height:30px;border-radius:50%;background:var(--line)}
+  .back{font-size:16px;color:var(--mid)}
+  .hero{margin:8px 14px;border-radius:20px;padding:16px;background:#fff;color:#0B0B0C}
+  .lbl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.6}
+  .big{font-size:27px;font-weight:800;margin:4px 0 2px;letter-spacing:-.02em}
+  .sub{font-size:10px;opacity:.6}
+  .chips{display:flex;gap:6px;margin-top:12px}
+  .chip{flex:1;border-radius:10px;padding:6px 7px;background:rgba(0,0,0,.06);font-size:9px}
+  .chip b{display:block;font-size:11px}
+  .sec{margin:12px 14px 0;font-size:11px;font-weight:700;display:flex;justify-content:space-between}
+  .sec span{font-weight:500;color:var(--mid)}
+  .card{margin:6px 14px 0;border-radius:16px;padding:12px;background:var(--card);border:1px solid var(--line)}
+  .row{display:flex;justify-content:space-between;align-items:center;font-size:11px}
+  .bar{height:7px;border-radius:9px;background:var(--line);margin:8px 0 5px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--acc)}
+  .tiny{font-size:9.5px;color:var(--mid)}
+  .t{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:11px}
+  .t:last-child{border-bottom:0}
+  .ic{width:24px;height:24px;border-radius:8px;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:12px}
+  .t .a{margin-left:auto;font-weight:700}
+  .pos{color:var(--acc)}
+  .nav{margin-top:auto;display:flex;justify-content:space-around;align-items:center;padding:8px 10px 14px;border-top:1px solid var(--line);background:var(--card);font-size:9px;color:var(--mid)}
+  .nav .on{color:#fff;font-weight:700}
+  .mic{width:52px;height:52px;border-radius:50%;background:var(--acc);color:#0B0B0C;display:flex;align-items:center;justify-content:center;font-size:22px;margin-top:-30px;box-shadow:0 0 0 6px rgba(198,244,50,.12)}
+  .btn{margin:10px 14px 0;border-radius:14px;padding:12px;text-align:center;font-size:12px;font-weight:800;background:var(--acc);color:#0B0B0C}
+  .btn.ghost{background:transparent;color:#fff;border:1px solid var(--line);font-weight:600}
+  .pill{display:inline-block;font-size:9px;padding:2px 7px;border-radius:99px;background:var(--line);color:#ddd}
+  .pill.l{background:var(--acc);color:#0B0B0C;font-weight:700}
+  .cap{margin-top:12px;text-align:center}
+  .cap h3{margin:0;font-size:15px} .cap p{margin:4px 0 0;font-size:12px;color:#888}
+  /* rekam */
+  .rec{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 18px}
+  .ring{width:120px;height:120px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:42px;color:#0B0B0C;box-shadow:0 0 0 14px rgba(198,244,50,.15),0 0 0 30px rgba(198,244,50,.06)}
+  .wave{display:flex;gap:3px;align-items:center;height:30px}
+  .wave i{width:4px;border-radius:3px;background:var(--acc);display:block}
+  .quote{font-size:13px;text-align:center;line-height:1.45;color:#ddd}
+  .in{border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:11px;color:#ddd;margin:6px 14px 0;display:flex;justify-content:space-between}
+  .x{color:var(--mid)}
+</style>
+
+<h2>Versi D · Hitam, Putih, Lime</h2>
+<p class="subtitle">Lima layar inti dengan palet D: 60% hitam, 30% putih/abu, 10% lime khusus untuk aksi penting (mic, tombol utama, progres, uang masuk). Geser ke bawah untuk lihat semua. Ceritakan di chat yang mau diubah.</p>
+
+<div class="phones">
+
+  <!-- 1. Beranda -->
+  <div>
+    <div class="ph"><div class="scr">
+      <div class="top"><div><div class="hi">Selamat malam,</div><div class="nm">Rafli 👋</div></div><div class="av"></div></div>
+      <div class="hero"><div class="lbl">Sisa uang · semua dompet</div><div class="big">Rp288.000</div><div class="sub">Kekayaan bersih Rp7.922.717</div>
+        <div class="chips"><div class="chip">GoPay<b>152rb</b></div><div class="chip">Cash<b>106rb</b></div><div class="chip">ShopeePay<b>30rb</b></div></div></div>
+      <div class="sec">Bulan ini</div>
+      <div class="card" style="display:flex;gap:10px">
+        <div style="flex:1"><div class="tiny">Masuk</div><div style="font-weight:800;font-size:14px" class="pos">+Rp0</div></div>
+        <div style="flex:1"><div class="tiny">Keluar</div><div style="font-weight:800;font-size:14px">-Rp49rb</div></div>
+        <div style="flex:1"><div class="tiny">Budget rokok</div><div style="font-weight:800;font-size:14px">62%</div></div>
+      </div>
+      <div class="sec">Hutang <span>Jadwal ›</span></div>
+      <div class="card"><div class="row"><b>Cicilan</b><b>Rp1.365.283</b></div><div class="bar"><i style="width:34%"></i></div><div class="tiny">Jatuh tempo 1 Des (12 hari lagi) · bebas hutang Agt 2027</div></div>
+      <div class="sec">Terbaru <span>Semua ›</span></div>
+      <div class="card" style="padding:2px 12px"><div class="t"><div class="ic">🚬</div>Rokok · GoPay<span class="a">-25rb</span></div><div class="t"><div class="ic">🅿️</div>Parkir · Cash<span class="a">-2rb</span></div></div>
+      <div class="nav"><span class="on">Beranda</span><span>Riwayat</span><div class="mic">🎙</div><span>Hutang</span><span>Akun</span></div>
+    </div></div>
+    <div class="cap"><h3>1 · Beranda</h3><p>Kartu putih jadi pusat perhatian di atas latar hitam.</p></div>
+  </div>
+
+  <!-- 2. Merekam -->
+  <div>
+    <div class="ph"><div class="scr">
+      <div class="top"><span class="back">✕</span><span class="tiny">Sisa 21 catatan suara bulan ini</span></div>
+      <div class="rec">
+        <div class="ring">🎙</div>
+        <div class="wave"><i style="height:10px"></i><i style="height:22px"></i><i style="height:14px"></i><i style="height:28px"></i><i style="height:18px"></i><i style="height:26px"></i><i style="height:12px"></i><i style="height:20px"></i><i style="height:8px"></i><i style="height:24px"></i><i style="height:16px"></i></div>
+        <div class="tiny">Mendengarkan… 0:04</div>
+        <div class="quote">"tadi rokok <b>25rb</b> pake <b>gopay</b>,<br>parkir <b>2rb</b> cash"</div>
+        <div class="tiny" style="text-align:center">Lepas untuk selesai · geser ke atas untuk batal</div>
+      </div>
+      <div class="btn ghost" style="margin-bottom:16px">⌨ Ketik saja</div>
+    </div></div>
+    <div class="cap"><h3>2 · Merekam</h3><p>Tahan mic, ngomong, teks muncul langsung.</p></div>
+  </div>
+
+  <!-- 3. Konfirmasi -->
+  <div>
+    <div class="ph"><div class="scr">
+      <div class="top"><span class="back">‹</span><span class="ttl">Cek dulu</span><span></span></div>
+      <div class="tiny" style="margin:0 16px">AI menemukan 2 transaksi. Ketuk untuk ubah.</div>
+      <div class="card"><div class="row"><span><b>Rokok</b> <span class="pill">pengeluaran</span></span><b>-Rp25.000</b></div><div class="tiny" style="margin-top:5px">GoPay · hari ini 21.48</div></div>
+      <div class="card"><div class="row"><span><b>Parkir</b> <span class="pill">pengeluaran</span></span><b>-Rp2.000</b></div><div class="tiny" style="margin-top:5px">Cash · hari ini 21.48</div></div>
+      <div class="card" style="border-color:#3a3a12;background:#15160d"><div class="row"><span>⚠️ Budget rokok</span><b>87%</b></div><div class="bar"><i style="width:87%"></i></div><div class="tiny">Sisa Rp13.000 sampai akhir bulan</div></div>
+      <div style="margin-top:auto;margin-bottom:16px">
+        <div class="btn">Simpan 2 transaksi</div>
+        <div class="btn ghost">Batal</div>
+      </div>
+    </div></div>
+    <div class="cap"><h3>3 · Konfirmasi</h3><p>Selalu bisa dicek sebelum tersimpan.</p></div>
+  </div>
+
+  <!-- 4. Hutang -->
+  <div>
+    <div class="ph"><div class="scr">
+      <div class="top"><span class="ttl">Hutang</span><span class="pill l">+ Tambah</span></div>
+      <div class="hero"><div class="lbl">Total sisa hutang</div><div class="big">Rp1.365.283</div><div class="sub">Bebas hutang perkiraan Agustus 2027</div><div class="bar" style="background:#0001"><i style="width:34%;background:#0B0B0C"></i></div><div class="sub">34% sudah lunas</div></div>
+      <div class="sec">Jadwal <span>9 tagihan</span></div>
+      <div class="card" style="padding:2px 12px">
+        <div class="t"><div class="ic">📅</div><div>1 Des 2026<div class="tiny">Cicilan · bunga flat</div></div><span class="a">Rp151.698</span></div>
+        <div class="t"><div class="ic">📅</div><div>1 Jan 2027<div class="tiny">Cicilan</div></div><span class="a">Rp151.698</span></div>
+        <div class="t"><div class="ic">📅</div><div>1 Feb 2027<div class="tiny">Cicilan</div></div><span class="a">Rp151.698</span></div>
+      </div>
+      <div class="card"><div class="row"><span>🔔 Ingatkan</span><span class="pill l">3 hari sebelum</span></div></div>
+      <div class="nav"><span>Beranda</span><span>Riwayat</span><div class="mic">🎙</div><span class="on">Hutang</span><span>Akun</span></div>
+    </div></div>
+    <div class="cap"><h3>4 · Hutang & jadwal</h3><p>Fitur pembeda: kapan bebas hutang + pengingat.</p></div>
+  </div>
+
+  <!-- 5. Laporan & penerima -->
+  <div>
+    <div class="ph"><div class="scr">
+      <div class="top"><span class="back">‹</span><span class="ttl">Laporan bulanan</span><span class="pill l">PRO</span></div>
+      <div class="card"><div class="row"><span>Kirim otomatis tiap tgl 1</span><span style="width:34px;height:20px;border-radius:99px;background:var(--acc);display:inline-block;position:relative"><i style="position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#0B0B0C"></i></span></div></div>
+      <div class="sec">Penerima <span>maks. 3</span></div>
+      <div class="in">ahmadrafli…@gmail.com <span class="x">Saya</span></div>
+      <div class="in">queenneth…@gmail.com <span class="x">✕</span></div>
+      <div class="in" style="border-style:dashed;color:var(--mid)">+ Tambah email (orang tua, pasangan…)</div>
+      <div class="sec">Pratinjau</div>
+      <div class="card" style="background:#fff;color:#111"><div style="font-weight:800;font-size:12px">Laporan Keuangan · Nov 2026</div><div style="font-size:10px;color:#666;margin-top:4px">Sisa uang (semua dompet) <b style="float:right;color:#111">Rp288.000</b></div><div style="font-size:10px;color:#666">Bayar hutang <b style="float:right;color:#111">Rp0</b></div></div>
+      <div style="margin-top:auto;margin-bottom:16px"><div class="btn">Kirim laporan sekarang</div></div>
+    </div></div>
+    <div class="cap"><h3>5 · Laporan & penerima</h3><p>Pengganti /laporan: email diatur sendiri.</p></div>
+  </div>
+
+</div>

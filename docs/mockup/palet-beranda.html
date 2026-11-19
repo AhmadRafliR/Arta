@@ -1,0 +1,107 @@
+<style>
+  .phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;margin-top:18px}
+  .ph{--bg:#fff;--fg:#111;--mid:#666;--card:#fff;--hero:#111;--heroFg:#fff;--acc:#c6f432;--accFg:#111;--line:#e5e5e5;
+      border-radius:34px;padding:10px;background:#1b1b1b;box-shadow:0 10px 30px rgba(0,0,0,.18);cursor:pointer;transition:transform .15s}
+  .ph:hover{transform:translateY(-3px)}
+  .selected .ph{outline:4px solid #3b82f6;outline-offset:3px}
+  .scr{background:var(--bg);color:var(--fg);border-radius:26px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:540px;display:flex;flex-direction:column;position:relative}
+  .top{padding:16px 16px 6px;display:flex;justify-content:space-between;align-items:center}
+  .hi{font-size:11px;color:var(--mid)} .nm{font-size:15px;font-weight:700}
+  .av{width:30px;height:30px;border-radius:50%;background:var(--line)}
+  .hero{margin:8px 14px;border-radius:20px;padding:16px;background:var(--hero);color:var(--heroFg)}
+  .lbl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
+  .big{font-size:26px;font-weight:800;margin:4px 0 2px;letter-spacing:-.02em}
+  .sub{font-size:10px;opacity:.7}
+  .chips{display:flex;gap:6px;margin-top:12px}
+  .chip{flex:1;border-radius:10px;padding:6px 7px;background:rgba(255,255,255,.12);font-size:9px}
+  .chip b{display:block;font-size:11px}
+  .sec{margin:10px 14px 0;font-size:11px;font-weight:700;display:flex;justify-content:space-between}
+  .sec span{font-weight:500;color:var(--mid)}
+  .debt{margin:6px 14px 0;border-radius:16px;padding:12px;background:var(--card);border:1px solid var(--line)}
+  .row{display:flex;justify-content:space-between;font-size:11px}
+  .bar{height:7px;border-radius:9px;background:var(--line);margin:8px 0 5px;overflow:hidden}
+  .bar i{display:block;height:100%;width:34%;background:var(--acc)}
+  .tiny{font-size:9.5px;color:var(--mid)}
+  .tx{margin:6px 14px 0;border-radius:16px;background:var(--card);border:1px solid var(--line);padding:2px 12px}
+  .t{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:11px}
+  .t:last-child{border-bottom:0}
+  .ic{width:24px;height:24px;border-radius:8px;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:12px}
+  .t .a{margin-left:auto;font-weight:700}
+  .nav{margin-top:auto;display:flex;justify-content:space-around;align-items:center;padding:8px 10px 14px;border-top:1px solid var(--line);background:var(--card);font-size:9px;color:var(--mid)}
+  .mic{width:52px;height:52px;border-radius:50%;background:var(--acc);color:var(--accFg);display:flex;align-items:center;justify-content:center;font-size:22px;margin-top:-30px;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+  .cap{margin-top:12px;text-align:center}
+  .cap h3{margin:0;font-size:16px} .cap p{margin:4px 0 0;font-size:12px;color:#666}
+  .sw{display:flex;justify-content:center;gap:5px;margin-top:8px}
+  .sw i{width:30px;height:16px;border-radius:5px;border:1px solid #0002;display:block}
+  /* A: Teal PANTRA */
+  .A{--bg:#EEF3F5;--fg:#0B424F;--mid:#5b7c84;--card:#fff;--hero:linear-gradient(135deg,#0B424F,#1F6A76);--heroFg:#fff;--acc:#52C3BF;--accFg:#0B424F;--line:#dde7ea}
+  /* B: Navy, Cream, Coral */
+  .B{--bg:#F4EDE0;--fg:#14213D;--mid:#6b6a73;--card:#FBF7EF;--hero:#14213D;--heroFg:#F4EDE0;--acc:#FF6B5B;--accFg:#fff;--line:#e6dccb}
+  /* C: Forest green, Sand beige */
+  .C{--bg:#E8DCC4;--fg:#1F3D2B;--mid:#5f6b55;--card:#F2EADB;--hero:#1F3D2B;--heroFg:#E8DCC4;--acc:#C9E265;--accFg:#1F3D2B;--line:#d8c9ab}
+  /* D: Midnight black, White, Lime */
+  .D{--bg:#0B0B0C;--fg:#fff;--mid:#8a8a8f;--card:#161618;--hero:#fff;--heroFg:#0B0B0C;--acc:#C6F432;--accFg:#0B0B0C;--line:#26262a}
+  .D .chip{background:rgba(0,0,0,.07)}
+</style>
+
+<h2>Pilih palet & susunan beranda</h2>
+<p class="subtitle">Keempatnya memakai susunan yang sama: kartu "Sisa uang" besar, dompet, progres hutang, transaksi terbaru, tombol mic di tengah bawah. Yang berbeda hanya palet (aturan 60/30/10 dari video). Klik yang paling kamu suka, lalu ceritakan alasannya di chat.</p>
+
+<div class="phones">
+  <!-- template diulang 4x -->
+  <div data-choice="A-teal" onclick="toggleSelect(this)">
+    <div class="ph A"><div class="scr">
+      <div class="top"><div><div class="hi">Selamat malam,</div><div class="nm">Rafli 👋</div></div><div class="av"></div></div>
+      <div class="hero"><div class="lbl">Sisa uang · semua dompet</div><div class="big">Rp288.000</div><div class="sub">Kekayaan bersih Rp7.922.717</div>
+        <div class="chips"><div class="chip">GoPay<b>152rb</b></div><div class="chip">Cash<b>106rb</b></div><div class="chip">ShopeePay<b>30rb</b></div></div></div>
+      <div class="sec">Hutang <span>Lihat jadwal</span></div>
+      <div class="debt"><div class="row"><b>Cicilan</b><b>Rp1.365.283</b></div><div class="bar"><i></i></div><div class="tiny">Jatuh tempo 1 Des · bebas hutang Agt 2027</div></div>
+      <div class="sec">Transaksi terbaru <span>Semua</span></div>
+      <div class="tx"><div class="t"><div class="ic">🚬</div>Rokok · GoPay<span class="a">-25rb</span></div><div class="t"><div class="ic">🅿️</div>Parkir · Cash<span class="a">-2rb</span></div></div>
+      <div class="nav"><span>Beranda</span><span>Riwayat</span><div class="mic">🎙</div><span>Hutang</span><span>Akun</span></div>
+    </div></div>
+    <div class="cap"><h3>A · Teal PANTRA</h3><p>Hijau-biru tua + abu muda, aksen mint. Mirip repo yang kamu kirim.</p><div class="sw"><i style="background:#EEF3F5"></i><i style="background:#0B424F"></i><i style="background:#52C3BF"></i></div></div>
+  </div>
+
+  <div data-choice="B-navy" onclick="toggleSelect(this)">
+    <div class="ph B"><div class="scr">
+      <div class="top"><div><div class="hi">Selamat malam,</div><div class="nm">Rafli 👋</div></div><div class="av"></div></div>
+      <div class="hero"><div class="lbl">Sisa uang · semua dompet</div><div class="big">Rp288.000</div><div class="sub">Kekayaan bersih Rp7.922.717</div>
+        <div class="chips"><div class="chip">GoPay<b>152rb</b></div><div class="chip">Cash<b>106rb</b></div><div class="chip">ShopeePay<b>30rb</b></div></div></div>
+      <div class="sec">Hutang <span>Lihat jadwal</span></div>
+      <div class="debt"><div class="row"><b>Cicilan</b><b>Rp1.365.283</b></div><div class="bar"><i></i></div><div class="tiny">Jatuh tempo 1 Des · bebas hutang Agt 2027</div></div>
+      <div class="sec">Transaksi terbaru <span>Semua</span></div>
+      <div class="tx"><div class="t"><div class="ic">🚬</div>Rokok · GoPay<span class="a">-25rb</span></div><div class="t"><div class="ic">🅿️</div>Parkir · Cash<span class="a">-2rb</span></div></div>
+      <div class="nav"><span>Beranda</span><span>Riwayat</span><div class="mic">🎙</div><span>Hutang</span><span>Akun</span></div>
+    </div></div>
+    <div class="cap"><h3>B · Navy, Krem, Koral</h3><p>Hangat dan premium, koral hanya untuk tombol mic & progres.</p><div class="sw"><i style="background:#F4EDE0"></i><i style="background:#14213D"></i><i style="background:#FF6B5B"></i></div></div>
+  </div>
+
+  <div data-choice="C-forest" onclick="toggleSelect(this)">
+    <div class="ph C"><div class="scr">
+      <div class="top"><div><div class="hi">Selamat malam,</div><div class="nm">Rafli 👋</div></div><div class="av"></div></div>
+      <div class="hero"><div class="lbl">Sisa uang · semua dompet</div><div class="big">Rp288.000</div><div class="sub">Kekayaan bersih Rp7.922.717</div>
+        <div class="chips"><div class="chip">GoPay<b>152rb</b></div><div class="chip">Cash<b>106rb</b></div><div class="chip">ShopeePay<b>30rb</b></div></div></div>
+      <div class="sec">Hutang <span>Lihat jadwal</span></div>
+      <div class="debt"><div class="row"><b>Cicilan</b><b>Rp1.365.283</b></div><div class="bar"><i></i></div><div class="tiny">Jatuh tempo 1 Des · bebas hutang Agt 2027</div></div>
+      <div class="sec">Transaksi terbaru <span>Semua</span></div>
+      <div class="tx"><div class="t"><div class="ic">🚬</div>Rokok · GoPay<span class="a">-25rb</span></div><div class="t"><div class="ic">🅿️</div>Parkir · Cash<span class="a">-2rb</span></div></div>
+      <div class="nav"><span>Beranda</span><span>Riwayat</span><div class="mic">🎙</div><span>Hutang</span><span>Akun</span></div>
+    </div></div>
+    <div class="cap"><h3>C · Hijau Hutan, Pasir</h3><p>Tenang, "uang tumbuh pelan-pelan", aksen hijau limau.</p><div class="sw"><i style="background:#E8DCC4"></i><i style="background:#1F3D2B"></i><i style="background:#C9E265"></i></div></div>
+  </div>
+
+  <div data-choice="D-midnight" onclick="toggleSelect(this)">
+    <div class="ph D"><div class="scr">
+      <div class="top"><div><div class="hi">Selamat malam,</div><div class="nm">Rafli 👋</div></div><div class="av"></div></div>
+      <div class="hero"><div class="lbl">Sisa uang · semua dompet</div><div class="big">Rp288.000</div><div class="sub">Kekayaan bersih Rp7.922.717</div>
+        <div class="chips"><div class="chip">GoPay<b>152rb</b></div><div class="chip">Cash<b>106rb</b></div><div class="chip">ShopeePay<b>30rb</b></div></div></div>
+      <div class="sec">Hutang <span>Lihat jadwal</span></div>
+      <div class="debt"><div class="row"><b>Cicilan</b><b>Rp1.365.283</b></div><div class="bar"><i></i></div><div class="tiny">Jatuh tempo 1 Des · bebas hutang Agt 2027</div></div>
+      <div class="sec">Transaksi terbaru <span>Semua</span></div>
+      <div class="tx"><div class="t"><div class="ic">🚬</div>Rokok · GoPay<span class="a">-25rb</span></div><div class="t"><div class="ic">🅿️</div>Parkir · Cash<span class="a">-2rb</span></div></div>
+      <div class="nav"><span>Beranda</span><span>Riwayat</span><div class="mic">🎙</div><span>Hutang</span><span>Akun</span></div>
+    </div></div>
+    <div class="cap"><h3>D · Hitam, Putih, Lime</h3><p>Mode gelap tegas ala contoh 60/30/10 di video.</p><div class="sw"><i style="background:#0B0B0C"></i><i style="background:#fff"></i><i style="background:#C6F432"></i></div></div>
+  </div>
+</div>
