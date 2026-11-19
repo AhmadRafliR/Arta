@@ -36,6 +36,7 @@ export function ThemeProvider({
 }) {
   const system = useColorScheme();
   const [pref, setPrefState] = useState<Pref>('sistem');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -43,7 +44,10 @@ export function ThemeProvider({
       .then((v) => {
         if (alive && isPref(v)) setPrefState(v);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setLoaded(true);
+      });
     return () => {
       alive = false;
     };
@@ -64,6 +68,9 @@ export function ThemeProvider({
     [mode, pref, setPref],
   );
   const style = useMemo(() => toVars(tokens[mode]), [mode]);
+
+  // Tahan render sampai pref tersimpan terbaca, agar tidak berkedip tema salah.
+  if (!loaded) return null;
 
   return (
     <ThemeContext.Provider value={value}>

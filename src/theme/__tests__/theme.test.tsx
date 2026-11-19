@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, Pressable } from 'react-native';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokens } from '../tokens';
 import { resolveMode } from '../resolveMode';
@@ -47,12 +47,13 @@ describe('ThemeProvider', () => {
 
   it('default sistem -> terang saat sistem tidak diketahui', async () => {
     await render(<ThemeProvider><Probe /></ThemeProvider>);
-    expect(screen.getByTestId('out').props.children).toBe('terang|sistem|#EEF3F5');
+    expect((await screen.findByTestId('out')).props.children).toBe('terang|sistem|#EEF3F5');
   });
 
   it('setPref menyimpan ke AsyncStorage dan memanggil onPrefChange', async () => {
     const onPrefChange = jest.fn();
     await render(<ThemeProvider onPrefChange={onPrefChange}><Probe /></ThemeProvider>);
+    await screen.findByTestId('btn');
     fireEvent.press(screen.getByTestId('btn'));
     await waitFor(() =>
       expect(screen.getByTestId('out').props.children).toBe('gelap|gelap|#0B0B0C'),
@@ -67,5 +68,18 @@ describe('ThemeProvider', () => {
     await waitFor(() =>
       expect(screen.getByTestId('out').props.children).toBe('gelap|gelap|#0B0B0C'),
     );
+  });
+
+  it('tidak merender anak sebelum pref tersimpan terbaca', async () => {
+    await AsyncStorage.setItem('tema_pref', 'gelap');
+    let resolve!: (v: string | null) => void;
+    const spy = jest
+      .spyOn(AsyncStorage, 'getItem')
+      .mockImplementationOnce(() => new Promise<string | null>((r) => { resolve = r; }));
+    await render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(screen.queryByTestId('out')).toBeNull();
+    await act(async () => { resolve('gelap'); });
+    expect((await screen.findByTestId('out')).props.children).toBe('gelap|gelap|#0B0B0C');
+    spy.mockRestore();
   });
 });
