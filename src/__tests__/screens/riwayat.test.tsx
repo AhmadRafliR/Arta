@@ -81,6 +81,16 @@ describe('Riwayat', () => {
     expect(screen.queryByText('Gaji · cash')).toBeNull();
   });
 
+  it('kategori terpilih direset saat ganti bulan', async () => {
+    await render(<Riwayat />);
+    await fireEvent.press(screen.getByTestId('f-kat-Makan'));
+    expect(screen.queryByText('Gaji · cash')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Bulan sebelumnya' }));
+    // bulan baru berisi data yang sama: bila filter lengket, Gaji tetap tersembunyi
+    expect(screen.getByText('Gaji · cash')).toBeTruthy();
+    expect(screen.getByText('Makan · cash')).toBeTruthy();
+  });
+
   it('ketuk baris membuka /transaksi/[id] dengan bulan', async () => {
     await render(<Riwayat />);
     await fireEvent.press(screen.getByText('Makan · cash'));

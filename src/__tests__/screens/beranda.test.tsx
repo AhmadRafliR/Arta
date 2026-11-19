@@ -3,6 +3,8 @@ import Beranda from '../../../app/(tabs)/index';
 
 const mockNavigate = jest.fn();
 
+let mockBulan: { isLoading: boolean; error: unknown; data: unknown[] | undefined } | null = null;
+
 jest.mock('expo-router', () => ({ useRouter: () => ({ navigate: mockNavigate, push: jest.fn() }) }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -33,14 +35,20 @@ jest.mock('@/data/transactions', () => {
   const bln = jest.requireActual('@/lib/tanggal').hariIni('Asia/Jakarta').slice(0, 7);
   return {
     useAllTransactions: () => ({ data: [] }),
-    useTransactions: () => ({
-      isLoading: false,
-      data: [
-        { ...T('pemasukan', 1500000, 'GoPay', null, `${bln}-05`), kategori: 'Gaji' },
-        { ...T('pengeluaran', 25000, 'Cash', null, `${bln}-04`), kategori: 'Makan' },
-      ],
-    }),
+    useTransactions: () =>
+      mockBulan ?? {
+        isLoading: false,
+        error: null,
+        data: [
+          { ...T('pemasukan', 1500000, 'GoPay', null, `${bln}-05`), kategori: 'Gaji' },
+          { ...T('pengeluaran', 25000, 'Cash', null, `${bln}-04`), kategori: 'Makan' },
+        ],
+      },
   };
+});
+
+beforeEach(() => {
+  mockBulan = null;
 });
 
 describe('Beranda', () => {
@@ -61,5 +69,20 @@ describe('Beranda', () => {
     await render(<Beranda />);
     await fireEvent.press(screen.getByRole('button', { name: 'Semua transaksi' }));
     expect(mockNavigate).toHaveBeenCalledWith('/riwayat');
+  });
+
+  it('Bulan ini memuat: "…" bukan Rp0', async () => {
+    mockBulan = { isLoading: true, error: null, data: undefined };
+    await render(<Beranda />);
+    expect(screen.getAllByText('…')).toHaveLength(2);
+    expect(screen.queryByText('Rp0')).toBeNull();
+  });
+
+  it('Bulan ini galat: pesan galat bukan Rp0', async () => {
+    mockBulan = { isLoading: false, error: { kind: 'offline', pesan: 'Tidak ada koneksi. Coba lagi.' }, data: undefined };
+    await render(<Beranda />);
+    expect(screen.getAllByText('Tidak ada koneksi. Coba lagi.').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Rp0')).toBeNull();
+    expect(screen.queryByText('Belum ada transaksi bulan ini.')).toBeNull();
   });
 });

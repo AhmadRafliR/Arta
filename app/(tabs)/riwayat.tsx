@@ -23,6 +23,12 @@ export default function Riwayat() {
   const [bulan, setBulan] = useState(() => hariIni(profile?.zona_waktu || undefined).slice(0, 7));
   const [filter, setFilter] = useState<FilterTx>({});
 
+  // Ganti bulan: reset filter kategori (daftar kategori bergantung bulan, chip terpilih bisa hilang).
+  const gantiBulan = (d: number) => {
+    setBulan((b) => geserBulan(b, d));
+    setFilter((f) => ({ ...f, kategori: undefined }));
+  };
+
   const wallets = useWallets();
   const q = useTransactions(bulan);
   const dompet = wallets.data ?? [];
@@ -38,11 +44,11 @@ export default function Riwayat() {
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-3 px-4 pb-6" contentContainerStyle={{ paddingTop: insets.top + 12 }}>
       <View className="flex-row items-center justify-between">
-        <Pressable accessibilityRole="button" accessibilityLabel="Bulan sebelumnya" onPress={() => setBulan((b) => geserBulan(b, -1))} className="px-3 py-1">
+        <Pressable accessibilityRole="button" accessibilityLabel="Bulan sebelumnya" onPress={() => gantiBulan(-1)} className="px-3 py-1">
           <Text className="text-lg text-fg">‹</Text>
         </Pressable>
         <Text className="text-base font-bold text-fg">{labelBulan(bulan)}</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Bulan berikutnya" onPress={() => setBulan((b) => geserBulan(b, 1))} className="px-3 py-1">
+        <Pressable accessibilityRole="button" accessibilityLabel="Bulan berikutnya" onPress={() => gantiBulan(1)} className="px-3 py-1">
           <Text className="text-lg text-fg">›</Text>
         </Pressable>
       </View>

@@ -30,6 +30,9 @@ export default function Beranda() {
   const chips = dompet
     .filter((w) => w.tipe === 'harian' && !w.diarsip)
     .map((w) => ({ id: w.id, nama: w.nama, saldo: saldo[w.id] ?? 0 }));
+  const bulanBelumAda = bulanIni.data === undefined;
+  const bulanGalat = bulanBelumAda ? bulanIni.error : null;
+  const bulanMemuat = bulanBelumAda && !bulanGalat;
   const txBulan = bulanIni.data ?? [];
   const ringkasan = monthSummary(txBulan, bulan);
   const terbaru = txBulan.slice(0, 5);
@@ -55,16 +58,20 @@ export default function Beranda() {
       )}
 
       <Text className="mt-1 text-xs font-bold text-fg">Bulan ini</Text>
-      <View className="flex-row gap-6 rounded-2xl border border-line bg-card p-3">
-        <View>
-          <Text className="text-[11px] text-mid">Masuk</Text>
-          <Text className="text-base font-bold text-acc">{formatRupiah(ringkasan.masuk)}</Text>
+      {bulanGalat ? (
+        <Text className="text-fg">{bulanGalat.pesan}</Text>
+      ) : (
+        <View className="flex-row gap-6 rounded-2xl border border-line bg-card p-3">
+          <View>
+            <Text className="text-[11px] text-mid">Masuk</Text>
+            <Text className="text-base font-bold text-acc">{bulanMemuat ? '…' : formatRupiah(ringkasan.masuk)}</Text>
+          </View>
+          <View>
+            <Text className="text-[11px] text-mid">Keluar</Text>
+            <Text className="text-base font-bold text-fg">{bulanMemuat ? '…' : formatRupiah(ringkasan.keluar)}</Text>
+          </View>
         </View>
-        <View>
-          <Text className="text-[11px] text-mid">Keluar</Text>
-          <Text className="text-base font-bold text-fg">{formatRupiah(ringkasan.keluar)}</Text>
-        </View>
-      </View>
+      )}
 
       <View className="mt-1 flex-row items-center justify-between">
         <Text className="text-xs font-bold text-fg">Terbaru</Text>
@@ -73,8 +80,10 @@ export default function Beranda() {
         </Pressable>
       </View>
       <View className="rounded-2xl border border-line bg-card px-3">
-        {bulanIni.isLoading ? (
+        {bulanMemuat ? (
           <Text className="py-3 text-mid">Memuat…</Text>
+        ) : bulanGalat ? (
+          <Text className="py-3 text-fg">{bulanGalat.pesan}</Text>
         ) : terbaru.length === 0 ? (
           <Text className="py-3 text-mid">Belum ada transaksi bulan ini.</Text>
         ) : (
