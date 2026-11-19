@@ -3,6 +3,7 @@ import Catat from '../../../app/catat';
 import { PESAN_OFFLINE } from '@/data/errors';
 
 const mockSave = jest.fn();
+const mockUpdate = jest.fn();
 const mockBack = jest.fn();
 let mockId = 0;
 const mockNewTxId = jest.fn(() => `id-${++mockId}`);
@@ -12,6 +13,7 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('@/data/transactions', () => ({
   useSaveTransactions: () => ({ mutateAsync: mockSave }),
+  useUpdateTransaction: () => ({ mutateAsync: mockUpdate }),
   newTxId: () => mockNewTxId(),
 }));
 jest.mock('@/data/wallets', () => ({
@@ -40,6 +42,8 @@ const simpan = () => screen.getByRole('button', { name: 'Simpan' });
 beforeEach(() => {
   jest.clearAllMocks();
   mockId = 0;
+  mockSave.mockImplementation(async (items: unknown[]) => items); // sukses normal: id ada di hasil
+  mockUpdate.mockResolvedValue({});
 });
 
 describe('Catat manual', () => {
@@ -62,6 +66,7 @@ describe('Catat manual', () => {
     expect(a.id).toBe('id-1');
     expect(b.id).toBe('id-1');
     expect(mockNewTxId).toHaveBeenCalledTimes(1);
+    expect(mockUpdate).toHaveBeenCalledTimes(1); // [] = sudah ada: ikuti dengan update ke nilai form
     expect(a).toMatchObject({
       jenis: 'pengeluaran',
       kategori: 'Makan',
@@ -71,13 +76,49 @@ describe('Catat manual', () => {
     });
   });
 
+  it('simpan sukses normal: tanpa update lanjutan', async () => {
+    await render(<Catat />);
+    await fireEvent.changeText(screen.getByTestId('nominal'), '15000');
+    await fireEvent.press(screen.getByTestId('kat-Makan'));
+    await fireEvent.press(simpan());
+    await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('gagal lalu nominal diubah, retry mengembalikan [] -> update ke nominal baru', async () => {
+    mockSave.mockRejectedValueOnce({ kind: 'offline', pesan: PESAN_OFFLINE });
+    mockSave.mockResolvedValueOnce([]); // id sudah ada di server dengan nominal lama
+    await render(<Catat />);
+    await fireEvent.changeText(screen.getByTestId('nominal'), '15000');
+    await fireEvent.press(screen.getByTestId('kat-Makan'));
+    await fireEvent.press(simpan());
+    expect(await screen.findByText(PESAN_OFFLINE)).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('nominal'), '20000');
+    await fireEvent.press(simpan());
+    await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
+    expect(mockUpdate).toHaveBeenCalledWith({
+      id: 'id-1',
+      patch: expect.objectContaining({ nominal: 20000, jenis: 'pengeluaran', kategori: 'Makan', wallet_id: 'w1' }),
+    });
+  });
+
+  it('update lanjutan gagal: pesan tampil, tidak menutup', async () => {
+    mockSave.mockResolvedValueOnce([]);
+    mockUpdate.mockRejectedValueOnce({ kind: 'offline', pesan: 'Tidak ada koneksi. Coba lagi.' });
+    await render(<Catat />);
+    await fireEvent.changeText(screen.getByTestId('nominal'), '15000');
+    await fireEvent.press(screen.getByTestId('kat-Makan'));
+    await fireEvent.press(simpan());
+    expect(await screen.findByText('Tidak ada koneksi. Coba lagi.')).toBeTruthy();
+    expect(mockBack).not.toHaveBeenCalled();
+  });
+
   it('Simpan nonaktif tanpa nominal', async () => {
     await render(<Catat />);
     expect(simpan().props.accessibilityState?.disabled).toBe(true);
   });
 
   it('transfer: tujuan tidak memuat dompet asal, tanpa kategori', async () => {
-    mockSave.mockResolvedValue([]);
     await render(<Catat />);
     await fireEvent.press(screen.getByTestId('jenis-transfer'));
     expect(screen.queryByTestId('kat-Makan')).toBeNull();

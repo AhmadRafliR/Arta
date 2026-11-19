@@ -9,7 +9,7 @@ import { walletBalances } from '@/domain/balances';
 import { formatRupiah } from '@/domain/money';
 import { hariIni } from '@/lib/tanggal';
 import { pesanDompet } from '@/data/pesan';
-import { newTxId, useAllTransactions, useSaveTransactions } from '@/data/transactions';
+import { newTxId, useAllTransactions, useSaveTransactions, useUpdateTransaction, type NewTx } from '@/data/transactions';
 import { useUpdateWallet, useWallets } from '@/data/wallets';
 import { useTheme } from '@/theme/ThemeProvider';
 
@@ -26,6 +26,7 @@ export default function DetailDompet() {
   const txs = useAllTransactions();
   const update = useUpdateWallet();
   const simpanTx = useSaveTransactions();
+  const ubahTx = useUpdateTransaction();
   const [txId] = useState(() => newTxId()); // sekali per layar dibuka; dipakai ulang saat coba lagi
   const [nama, setNama] = useState<string | null>(null);
   const [saldoBaru, setSaldoBaru] = useState<number | null>(null);
@@ -43,16 +44,20 @@ export default function DetailDompet() {
   }
 
   const saldo = txs.data ? (walletBalances(wallets.data ?? [], txs.data)[wallet.id] ?? 0) : null;
+  // Dasar penyesuaian: saldo tanpa penyesuaian kita sendiri (id tetap), agar coba-ulang tidak menghitung ganda.
+  const saldoDasar = txs.data
+    ? (walletBalances(wallets.data ?? [], txs.data.filter((x) => x.id !== txId))[wallet.id] ?? 0)
+    : null;
   const namaIsi = nama ?? wallet.nama;
   const namaOk = namaIsi.trim() !== '' && namaIsi.trim() !== wallet.nama;
 
-  async function jalankan(fn: () => Promise<void>) {
+  async function jalankan(fn: () => Promise<void>, namaUnik = false) {
     setBusy(true);
     setPesan(null);
     try {
       await fn();
     } catch (e) {
-      setPesan(pesanDompet(e));
+      setPesan(pesanDompet(e, { namaUnik }));
     } finally {
       setBusy(false);
     }
@@ -62,30 +67,35 @@ export default function DetailDompet() {
     jalankan(async () => {
       await update.mutateAsync({ id: wallet.id, patch: { nama: namaIsi.trim() } });
       setNama(null);
-    });
+    }, true);
 
   const sesuaikan = () => {
-    if (saldo === null || saldoBaru === null) return;
-    const selisih = adjustmentFor(saldo, saldoBaru);
+    if (saldoDasar === null || saldoBaru === null) return;
+    const selisih = adjustmentFor(saldoDasar, saldoBaru);
     if (selisih === null) {
       setPesan(PESAN_SAMA);
       return;
     }
     void jalankan(async () => {
-      await simpanTx.mutateAsync([
-        {
-          id: txId,
-          tanggal: hariIni(profile?.zona_waktu),
-          jenis: 'penyesuaian',
-          kategori: 'penyesuaian',
-          nominal: selisih,
-          wallet_id: wallet.id,
-          wallet_tujuan_id: null,
-          catatan: 'Penyesuaian saldo',
-          transkrip: null,
-          sumber: 'manual',
-        },
-      ]);
+      const item: NewTx = {
+        id: txId,
+        tanggal: hariIni(profile?.zona_waktu),
+        jenis: 'penyesuaian',
+        kategori: 'penyesuaian',
+        nominal: selisih,
+        wallet_id: wallet.id,
+        wallet_tujuan_id: null,
+        catatan: 'Penyesuaian saldo',
+        transkrip: null,
+        sumber: 'manual',
+      };
+      const hasil = await simpanTx.mutateAsync([item]);
+      if (!hasil.some((x) => x.id === txId)) {
+        // Id sudah ada dari percobaan sebelumnya (respons hilang): server menyimpan nilai lama, jadi
+        // perbarui ke nominal yang baru dikonfirmasi pengguna.
+        const { id: _id, sumber: _sumber, ...patch } = item;
+        await ubahTx.mutateAsync({ id: txId, patch });
+      }
       tutup();
     });
   };

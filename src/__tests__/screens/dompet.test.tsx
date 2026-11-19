@@ -8,6 +8,7 @@ const mockPush = jest.fn();
 const mockUpdate = jest.fn();
 const mockCreate = jest.fn();
 const mockSave = jest.fn();
+const mockUpdateTx = jest.fn();
 const mockSetPref = jest.fn();
 const mockSignOut = jest.fn();
 let mockId = 'w1';
@@ -42,6 +43,7 @@ jest.mock('@/data/wallets', () => ({
 jest.mock('@/data/transactions', () => ({
   useAllTransactions: () => ({ data: mockTxs }),
   useSaveTransactions: () => ({ mutateAsync: mockSave }),
+  useUpdateTransaction: () => ({ mutateAsync: mockUpdateTx }),
   newTxId: jest.fn(() => 'tx-fixed'),
 }));
 jest.mock('@/auth/AuthProvider', () => ({
@@ -59,7 +61,8 @@ beforeEach(() => {
   mockTxs = [];
   mockUpdate.mockResolvedValue({});
   mockCreate.mockResolvedValue({});
-  mockSave.mockResolvedValue([]);
+  mockSave.mockImplementation(async (items: unknown[]) => items);
+  mockUpdateTx.mockResolvedValue({});
 });
 
 describe('Detail dompet', () => {
@@ -113,11 +116,38 @@ describe('Detail dompet', () => {
   });
 
   it('nama kembar: "Nama dompet sudah dipakai"', async () => {
-    mockUpdate.mockRejectedValue({ kind: 'lain', pesan: 'duplicate key value violates unique constraint "wallets_user_id_nama_key"' });
+    mockUpdate.mockRejectedValue({ kind: 'lain', pesan: 'Terjadi kesalahan. Coba lagi.', code: '23505' });
     await render(<Detail />);
     await fireEvent.changeText(screen.getByLabelText('Nama dompet'), 'Cash');
     await fireEvent.press(btn('Simpan nama'));
     expect(await screen.findByText('Nama dompet sudah dipakai')).toBeTruthy();
+  });
+});
+
+describe('Detail dompet: coba ulang setelah respons hilang', () => {
+  it('gagal, nominal diubah, retry [] -> update penyesuaian ke nominal baru', async () => {
+    mockSave.mockRejectedValueOnce({ kind: 'offline', pesan: 'Tidak ada koneksi. Coba lagi.' });
+    mockSave.mockResolvedValueOnce([]);
+    await render(<Detail />);
+    await fireEvent.changeText(screen.getByTestId('saldo-baru'), '3000');
+    await fireEvent.press(btn('Simpan penyesuaian'));
+    expect(await screen.findByText('Tidak ada koneksi. Coba lagi.')).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('saldo-baru'), '1000');
+    await fireEvent.press(btn('Simpan penyesuaian'));
+    await waitFor(() => expect(mockBack).toHaveBeenCalled());
+    expect(mockSave.mock.calls[1][0][0].id).toBe('tx-fixed');
+    expect(mockUpdateTx).toHaveBeenCalledWith({
+      id: 'tx-fixed',
+      patch: expect.objectContaining({ nominal: -4000, jenis: 'penyesuaian', wallet_id: 'w1' }),
+    });
+  });
+
+  it('23505 di luar ganti nama tidak jadi "nama kembar"', async () => {
+    mockId = 'w2';
+    mockUpdate.mockRejectedValue({ kind: 'lain', pesan: 'Terjadi kesalahan. Coba lagi.', code: '23505' });
+    await render(<Detail />);
+    await fireEvent.press(btn('Arsipkan'));
+    expect(await screen.findByText('Terjadi kesalahan. Coba lagi.')).toBeTruthy();
   });
 });
 

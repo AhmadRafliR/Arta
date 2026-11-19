@@ -214,10 +214,15 @@ type Props = {
 
 function FormBaru({ txId, onSaved }: { txId: string; onSaved: () => void }) {
   const save = useSaveTransactions();
+  const update = useUpdateTransaction();
   async function submit(v: NilaiForm) {
     const item: NewTx = { id: txId, ...v, transkrip: null, sumber: 'manual' };
-    // Hasil kosong ([]) berarti id sudah tersimpan oleh percobaan sebelumnya: tetap sukses.
-    await save.mutateAsync([item]);
+    const hasil = await save.mutateAsync([item]);
+    // Id tidak ada di hasil = sudah tersimpan oleh percobaan sebelumnya (respons hilang). Server menyimpan nilai
+    // lama, jadi perbarui ke nilai form saat ini sebelum menutup.
+    if (!hasil.some((t) => t.id === txId)) {
+      await update.mutateAsync({ id: txId, patch: v });
+    }
     onSaved();
   }
   return <TxFormBody submit={submit} />;
