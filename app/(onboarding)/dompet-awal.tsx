@@ -7,7 +7,7 @@ import { toAppError, type AppError } from '@/data/errors';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/theme/ThemeProvider';
 
-type Row = { key: number; nama: string; saldo: number | null };
+type Row = { key: number; nama: string; saldo: number | null; dibuat?: boolean };
 
 const BAWAAN = ['GoPay', 'Cash', 'ShopeePay'];
 
@@ -32,8 +32,6 @@ export default function DompetAwal() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const nextKey = useRef(BAWAAN.length);
-  // Baris yang dompetnya sudah dibuat di sesi ini: dilewati saat coba lagi (tanpa duplikat).
-  const dibuat = useRef(new Set<number>());
 
   const namaBersih = rows.map((r) => r.nama.trim().toLowerCase());
   const kembar = namaBersih.some((n, i) => n !== '' && namaBersih.indexOf(n) !== i);
@@ -51,14 +49,15 @@ export default function DompetAwal() {
     try {
       const tanggal = hariIniLokal();
       for (const r of rows) {
-        if (dibuat.current.has(r.key)) continue;
+        // Baris yang sudah dibuat (terkunci) dilewati saat coba lagi: tanpa duplikat.
+        if (r.dibuat) continue;
         await createWallet.mutateAsync({
           nama: r.nama.trim(),
           tipe: 'harian',
           saldo_awal: r.saldo ?? 0,
           tanggal_saldo_awal: tanggal,
         });
-        dibuat.current.add(r.key);
+        ubah(r.key, { dibuat: true });
       }
       const { error: err } = await supabase
         .from('profiles')
@@ -93,21 +92,26 @@ export default function DompetAwal() {
           <View className="flex-row items-center gap-2">
             <TextInput
               value={r.nama}
+              editable={!r.dibuat}
               onChangeText={(v) => ubah(r.key, { nama: v })}
               placeholder="Nama dompet"
               placeholderTextColor={t.mid}
               className="flex-1 rounded-xl border border-line px-4 py-2 text-fg"
             />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Hapus dompet"
-              onPress={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
-              className="px-3 py-2"
-            >
-              <Text className="text-mid">Hapus</Text>
-            </Pressable>
+            {r.dibuat ? (
+              <Text className="px-3 text-xs text-mid">sudah dibuat</Text>
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Hapus dompet"
+                onPress={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
+                className="px-3 py-2"
+              >
+                <Text className="text-mid">Hapus</Text>
+              </Pressable>
+            )}
           </View>
-          <AmountInput value={r.saldo} allowZero onChange={(n) => ubah(r.key, { saldo: n })} />
+          <AmountInput value={r.saldo} allowZero editable={!r.dibuat} onChange={(n) => ubah(r.key, { saldo: n })} />
         </View>
       ))}
 
@@ -116,7 +120,7 @@ export default function DompetAwal() {
         onPress={() => setRows((rs) => [...rs, { key: nextKey.current++, nama: '', saldo: 0 }])}
         className="items-center rounded-xl border border-line py-3"
       >
-        <Text className="font-semibold text-acc">Tambah dompet</Text>
+        <Text className="font-semibold text-fg">Tambah dompet</Text>
       </Pressable>
 
       {kembar ? <Text className="text-fg">Nama dompet tidak boleh sama.</Text> : null}

@@ -124,4 +124,32 @@ describe('Dompet awal', () => {
     await waitFor(() => expect(mockRefresh).toHaveBeenCalledTimes(1));
     expect(mockCreate).toHaveBeenCalledTimes(3);
   });
+
+  it('setelah gagal sebagian: baris dibuat terkunci tanpa Hapus; retry hanya sisanya', async () => {
+    mockCreate
+      .mockResolvedValueOnce({})
+      .mockRejectedValueOnce({ kind: 'offline', pesan: 'Tidak ada koneksi.' });
+    await render(<DompetAwal />);
+    await fireEvent.press(mulai());
+    expect(await screen.findByText('Tidak ada koneksi.')).toBeTruthy();
+    expect(screen.getByDisplayValue('GoPay').props.editable).toBe(false);
+    expect(screen.getByText('sudah dibuat')).toBeTruthy();
+    expect(screen.getAllByLabelText('Hapus dompet')).toHaveLength(2); // GoPay tidak punya Hapus
+    expect(screen.getByDisplayValue('Cash').props.editable).not.toBe(false);
+    expect(saldo(0).props.editable).toBe(false);
+    mockCreate.mockClear();
+    await fireEvent.press(mulai());
+    await waitFor(() => expect(mockRefresh).toHaveBeenCalledTimes(1));
+    expect(mockCreate.mock.calls.map((c) => c[0].nama)).toEqual(['Cash', 'ShopeePay']);
+  });
+
+  it('nama baris terkunci tetap dihitung dalam cek nama kembar', async () => {
+    mockCreate.mockResolvedValueOnce({}).mockRejectedValueOnce({ kind: 'lain', pesan: 'x' });
+    await render(<DompetAwal />);
+    await fireEvent.press(mulai());
+    await screen.findByText('x');
+    await fireEvent.press(screen.getByText('Tambah dompet'));
+    await fireEvent.changeText(screen.getAllByPlaceholderText('Nama dompet').at(-1)!, 'GoPay');
+    expect(nonaktif()).toBe(true);
+  });
 });

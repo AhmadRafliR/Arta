@@ -9,6 +9,7 @@ type Props = {
   onChange: (n: number | null) => void;
   /** Izinkan 0 dan isian kosong (dihitung 0), mis. saldo awal dompet. */
   allowZero?: boolean;
+  editable?: boolean;
   placeholder?: string;
   testID?: string;
 };
@@ -22,7 +23,7 @@ function parse(text: string, allowZero: boolean): number | null {
   return parseNominal(s);
 }
 
-export function AmountInput({ value, onChange, allowZero = false, placeholder = '0', testID }: Props) {
+export function AmountInput({ value, onChange, allowZero = false, editable = true, placeholder = '0', testID }: Props) {
   const [text, setText] = useState(value ? String(value) : '');
   const kosong = text.trim() === '';
   const nilai = parse(text, allowZero);
@@ -42,6 +43,7 @@ export function AmountInput({ value, onChange, allowZero = false, placeholder = 
         keyboardType="default"
         autoCapitalize="none"
         testID={testID}
+        editable={editable}
         className={`rounded-xl border bg-card px-4 py-3 text-fg ${salah ? 'border-fg' : 'border-line'}`}
       />
       {salah ? (
