@@ -96,9 +96,9 @@ test('wallet_id milik pengguna lain atau kosong ditolak', async () => {
   const b = await createTestUser();
   const wb = await bikinDompet(b.client, 'Punya B');
   const r1 = await a.client.rpc('save_transactions', { items: [item({ wallet_id: wb })] });
-  expect(r1.error).not.toBeNull();
+  expect(r1.error!.message).toMatch(/dompet tidak ditemukan/i);
   const r2 = await a.client.rpc('save_transactions', { items: [item({ wallet_id: null })] });
-  expect(r2.error).not.toBeNull();
+  expect(r2.error!.message).toMatch(/dompet wajib diisi/i);
   expect(await hitung(a.client)).toBe(0);
 });
 
@@ -108,7 +108,7 @@ test('satu item tidak valid -> tidak ada yang tersimpan', async () => {
   const { error } = await a.client.rpc('save_transactions', {
     items: [item({ wallet_id: w }), item({ wallet_id: randomUUID() })],
   });
-  expect(error).not.toBeNull();
+  expect(error!.message).toMatch(/dompet tidak ditemukan/i);
   expect(await hitung(a.client)).toBe(0);
 });
 
@@ -141,4 +141,5 @@ test('anon tidak boleh memanggil', async () => {
   });
   const { error } = await anon.rpc('save_transactions', { items: [] });
   expect(error).not.toBeNull();
+  expect(`${error!.code} ${error!.message}`).toMatch(/42501|permission denied/i);
 });
