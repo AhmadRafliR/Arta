@@ -15,7 +15,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.keuangan.app"
+      "package": "com.keuanganapp.dev"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
