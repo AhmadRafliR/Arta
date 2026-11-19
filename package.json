@@ -41,6 +41,7 @@
     "@testing-library/react-native": "^14.1.0",
     "@types/jest": "30.0.0",
     "@types/react": "~19.3.0",
+    "dotenv": "^18.0.10",
     "jest": "~30.5.2",
     "jest-expo": "~58.0.15",
     "typescript": "~6.0.3"
@@ -52,13 +53,18 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:integration": "jest --config jest.integration.config.js --runInBand"
   },
   "private": true,
   "jest": {
     "preset": "jest-expo",
     "setupFiles": [
       "./jest.setup.js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/tests/integration/"
     ]
   }
 }
