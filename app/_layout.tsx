@@ -38,7 +38,9 @@ export default function RootLayout() {
         <ThemeShell>
           <ThemeProfileBridge />
           <AuthGate>
-            <Stack screenOptions={{ headerShown: false }} />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="catat" options={{ presentation: "modal" }} />
+            </Stack>
           </AuthGate>
         </ThemeShell>
       </AuthProvider>

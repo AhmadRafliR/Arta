@@ -22,3 +22,22 @@ describe('gateView', () => {
     expect(gateView(base)).toBe('ready');
   });
 });
+
+describe('gateView: rute di luar grup saat target (tabs)', () => {
+  it('/catat (modal di luar grup) -> ready', () => {
+    expect(gateView({ ...base, group: 'catat' })).toBe('ready');
+  });
+  it('(auth) atau (onboarding) saat target (tabs) -> loading', () => {
+    expect(gateView({ ...base, group: '(auth)' })).toBe('loading');
+    expect(gateView({ ...base, group: '(onboarding)' })).toBe('loading');
+  });
+  it('group belum diketahui -> loading', () => {
+    expect(gateView({ ...base, group: undefined })).toBe('loading');
+  });
+  it('target (onboarding) tetap ketat: /catat -> loading', () => {
+    expect(gateView({ ...base, onboardingSelesai: false, group: 'catat' })).toBe('loading');
+  });
+  it('target (auth) tetap ketat: /catat -> loading', () => {
+    expect(gateView({ ...base, session: false, onboardingSelesai: null, group: 'catat' })).toBe('loading');
+  });
+});

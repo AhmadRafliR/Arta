@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from './AuthProvider';
 import { routeFor } from './routeFor';
-import { gateView } from './gateView';
+import { gateView, routeAllowed } from './gateView';
 
 // Mengarahkan ke grup rute sesuai keadaan masuk/onboarding. Children (Stack) tetap ter-mount
 // agar router.replace bekerja; tampilan memuat / galat ditumpuk di atasnya.
@@ -17,8 +17,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!target) return;
-    // '/(auth)/masuk' -> '(auth)'
-    if (group !== target.split('/')[1]) router.replace(target);
+    if (!routeAllowed(target, group)) router.replace(target);
   }, [target, group, router]);
 
   const view = gateView({ loading, session: !!session, profileError, onboardingSelesai, group });
