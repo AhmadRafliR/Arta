@@ -3,8 +3,14 @@ import { cleanupUsers, createTestUser } from './helpers';
 
 afterAll(cleanupUsers);
 
+// Akses eksplisit (aturan expo/no-dynamic-env-var).
+const ENV: Record<string, string | undefined> = {
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+};
 const env = (n: string) => {
-  const v = process.env[n];
+  const v = ENV[n];
   if (!v) throw new Error(`Missing env var ${n} (set it in .env.test)`);
   return v;
 };
