@@ -1,4 +1,4 @@
-import type { Jenis, TipeDompet, Tx, Wallet } from './types';
+import type { Hutang, Jenis, TipeDompet, Tx, Wallet } from './types';
 
 export const W = (id: string, saldo: number, tipe: TipeDompet = 'harian'): Wallet => ({
   id,
@@ -30,4 +30,28 @@ export const T = (
   catatan: null,
   transkrip: null,
   sumber: 'manual',
+});
+
+/** Hutang berbunga flat 2%/bulan, pokok 1.000.000, belum dibayar, tanpa jadwal. */
+export const buatHutang = (over: Partial<Hutang> = {}): Hutang => ({
+  id: 'h1',
+  pemberi: 'Kredivo',
+  tipe: 'berbunga',
+  tanggal_mulai: '2026-11-01',
+  pokok_awal: 1_000_000,
+  nominal_cicilan: null,
+  tenor_bulan: null,
+  bunga_persen_bulanan: 2,
+  metode: 'flat',
+  diarsip: false,
+  sisa_pokok: 1_000_000,
+  total_bunga: 0,
+  total_bayar: 0,
+  jumlah_tagihan: 0,
+  tagihan_lunas: 0,
+  jatuh_tempo_berikutnya: null,
+  nominal_berikutnya: null,
+  jatuh_tempo_terakhir: null,
+  bayar_terakhir: null,
+  ...over,
 });

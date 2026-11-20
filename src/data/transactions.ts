@@ -1,8 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { supabase } from '@/lib/supabase';
-import type { Jenis, Sumber, Tx } from '@/domain/types';
+import type { Jenis, MetodeBunga, Sumber, TipeHutang, Tx } from '@/domain/types';
 import { toAppError, type AppError } from './errors';
+
+/** Data hutang baru yang dibawa item `hutang_baru` ke RPC `save_transactions` v3. */
+export type HutangBaru = {
+  pemberi: string;
+  tipe: TipeHutang;
+  tanggal_mulai: string;
+  nominal_cicilan?: number;
+  tenor_bulan?: number;
+  jatuh_tempo_pertama?: string;
+  pokok_awal?: number;
+  bunga_persen_bulanan?: number;
+  metode?: MetodeBunga;
+  sisa_pokok_sekarang?: number;
+};
 
 export type NewTx = {
   id: string;
@@ -15,6 +29,10 @@ export type NewTx = {
   catatan: string | null;
   transkrip: string | null;
   sumber: Sumber;
+  /** Wajib untuk `hutang_baru`/`hutang_bayar`; opsional untuk `penyesuaian` hutang. */
+  debt_id?: string | null;
+  /** Hanya untuk `hutang_baru`. */
+  hutang?: HutangBaru;
 };
 
 type Row = Record<string, unknown>;
@@ -86,6 +104,23 @@ export function useTransaction(id: string, bulan?: string) {
   });
 }
 
+/** Semua transaksi satu hutang (hutang baru, bayar, penyesuaian), terbaru dulu. */
+export function useDebtTransactions(debtId: string) {
+  return useQuery<Tx[], AppError>({
+    queryKey: ['transactions', 'debt', debtId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select(COLS)
+        .eq('debt_id', debtId)
+        .order('tanggal', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw toAppError(error, { aksi: 'baca' });
+      return (data ?? []).map((r) => toTx(r as Row));
+    },
+  });
+}
+
 export type TxSaldo = Pick<
   Tx,
   'id' | 'tanggal' | 'jenis' | 'nominal' | 'wallet_id' | 'wallet_tujuan_id' | 'debt_id'
@@ -134,6 +169,7 @@ function useInvalidate() {
     Promise.all([
       qc.invalidateQueries({ queryKey: ['transactions'] }),
       qc.invalidateQueries({ queryKey: ['wallets'] }),
+      qc.invalidateQueries({ queryKey: ['debts'] }),
     ]);
 }
 
@@ -156,7 +192,7 @@ export function useSaveTransactions() {
 
 export function useUpdateTransaction() {
   const invalidate = useInvalidate();
-  return useMutation<Tx, AppError, { id: string; patch: Partial<Omit<NewTx, 'id'>> }>({
+  return useMutation<Tx, AppError, { id: string; patch: Partial<Omit<NewTx, 'id' | 'hutang'>> }>({
     mutationFn: async ({ id, patch }) => {
       const { data, error } = await supabase
         .from('transactions')

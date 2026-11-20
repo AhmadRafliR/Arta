@@ -110,7 +110,13 @@ function TxFormBody({ initial, submit }: BodyProps) {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-2 px-5 py-4" keyboardShouldPersistTaps="handled">
-      {terkunci ? <Text className="text-xs text-mid font-sans">{`${initial.jenis.replace('_', ' ')} · hanya tanggal dan catatan yang dapat diubah`}</Text> : null}
+      {terkunci ? (
+        <Text className="text-xs text-mid font-sans">
+          {initial.jenis.startsWith('hutang_')
+            ? 'Transaksi hutang · hanya tanggal dan catatan yang dapat diubah. Ubah hutangnya dari tab Hutang.'
+            : `${initial.jenis.replace('_', ' ')} · hanya tanggal dan catatan yang dapat diubah`}
+        </Text>
+      ) : null}
       <View className="flex-row flex-wrap gap-2">
         {(terkunci ? [] : JENIS).map((j) => (
           <Chip key={j.nilai} testID={`jenis-${j.nilai}`} label={j.label} selected={jenis === j.nilai} onPress={() => ubahJenis(j.nilai)} />

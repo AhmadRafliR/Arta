@@ -141,6 +141,7 @@ describe('Ubah transaksi', () => {
     expect(screen.queryByTestId('jenis-pengeluaran')).toBeNull();
     expect(screen.queryByTestId('jenis-transfer')).toBeNull();
     expect(screen.getByTestId('nominal').props.editable).toBe(false);
+    expect(screen.getByText('Transaksi hutang · hanya tanggal dan catatan yang dapat diubah. Ubah hutangnya dari tab Hutang.')).toBeTruthy();
     await fireEvent.changeText(screen.getByTestId('catatan'), 'revisi');
     await fireEvent.press(simpan());
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
@@ -151,6 +152,7 @@ describe('Ubah transaksi', () => {
     mockTx = { data: tx({ jenis: 'penyesuaian', kategori: null, nominal: -5000 }), isLoading: false, error: null };
     await render(<Ubah />);
     expect(screen.getByTestId('nominal').props.editable).toBe(false);
+    expect(screen.getByText('penyesuaian · hanya tanggal dan catatan yang dapat diubah')).toBeTruthy();
     expect(screen.queryByTestId('src-w1')).toBeNull();
     expect(screen.getByRole('button', { name: 'Hapus' })).toBeTruthy();
   });

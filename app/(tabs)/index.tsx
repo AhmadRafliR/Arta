@@ -4,11 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeroCard } from '@/components/HeroCard';
 import { WalletChips } from '@/components/WalletChips';
 import { TxRow } from '@/components/TxRow';
+import { KartuHutangBeranda } from '@/components/KartuHutangBeranda';
 import { KeadaanKosong } from '@/components/KeadaanKosong';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAllTransactions, useTransactions } from '@/data/transactions';
+import { useDebts, useRiwayatPokok } from '@/data/debts';
 import { useWallets } from '@/data/wallets';
 import { kekayaanBersih, sisaUang, walletBalances } from '@/domain/balances';
+import { ringkasHutang } from '@/domain/hutang';
 import { formatRupiah } from '@/domain/money';
 import { monthSummary } from '@/domain/summary';
 import { sapaan } from '@/lib/greeting';
@@ -28,6 +31,11 @@ export default function Beranda() {
   const wallets = useWallets();
   const semuaTx = useAllTransactions();
   const bulanIni = useTransactions(bulan);
+  // Hutang tidak boleh memblokir Beranda: selama memuat atau galat, hutang dianggap 0.
+  const hutang = useDebts({ arsip: false });
+  const riwayatPokok = useRiwayatPokok();
+  const ringkasHutangKini = ringkasHutang(hutang.data ?? [], hariIniStr, riwayatPokok.data ?? {});
+  const adaHutang = (hutang.data ?? []).some((h) => h.sisa_pokok > 0);
 
   const termuat = wallets.data !== undefined && semuaTx.data !== undefined;
   const galat = wallets.error ?? semuaTx.error;
@@ -58,7 +66,7 @@ export default function Beranda() {
 
       {termuat ? (
         <>
-          <HeroCard sisa={sisaUang(dompet, saldo)} kekayaan={kekayaanBersih(saldo, 0)} />
+          <HeroCard sisa={sisaUang(dompet, saldo)} kekayaan={kekayaanBersih(saldo, ringkasHutangKini.totalSisa)} />
           <WalletChips dompet={chips} />
         </>
       ) : galat ? (
@@ -82,6 +90,10 @@ export default function Beranda() {
           </View>
         </View>
       )}
+
+      {adaHutang ? (
+        <KartuHutangBeranda ringkas={ringkasHutangKini} hariIni={hariIniStr} onPress={() => router.navigate('/hutang')} />
+      ) : null}
 
       <View className="mt-1 flex-row items-center justify-between">
         <Text className="text-xs font-bold text-fg font-sans">Terbaru</Text>

@@ -43,4 +43,31 @@ describe('TxRow', () => {
     await render(<TxRow tx={tx} namaDompet={nama} />);
     expect(screen.getByText('Catatan yang sangat panjang sekali sampai tidak muat').props.numberOfLines).toBe(1);
   });
+
+  it('hutang_bayar: ikon nav-hutang dan tanda minus', async () => {
+    const tx = { ...dasar, jenis: 'hutang_bayar' as const, kategori: 'Kredivo', nominal: 100000, debt_id: 'd1' };
+    await render(<TxRow tx={tx} namaDompet={nama} />);
+    expect(screen.getByText('-Rp100.000')).toBeTruthy();
+    expect(screen.getByTestId('ikon-nav-hutang')).toBeTruthy();
+  });
+
+  it('hutang_baru tanpa dompet: tanpa tanda', async () => {
+    const tx = { ...dasar, jenis: 'hutang_baru' as const, kategori: 'Kredivo', nominal: 1200000, wallet_id: null, debt_id: 'd1' };
+    await render(<TxRow tx={tx} namaDompet={nama} />);
+    expect(screen.getByText('Rp1.200.000')).toBeTruthy();
+    expect(screen.getByTestId('ikon-nav-hutang')).toBeTruthy();
+  });
+
+  it('hutang_baru dengan dompet: tanda plus', async () => {
+    const tx = { ...dasar, jenis: 'hutang_baru' as const, kategori: 'Andi', nominal: 1000000, debt_id: 'd2' };
+    await render(<TxRow tx={tx} namaDompet={nama} />);
+    expect(screen.getByText('+Rp1.000.000')).toBeTruthy();
+  });
+
+  it('penyesuaian hutang: meta "Sisa hutang" dan nominal tanpa tanda', async () => {
+    const tx = { ...dasar, jenis: 'penyesuaian' as const, kategori: null, nominal: 50000, wallet_id: null, debt_id: 'd1', porsi_pokok: 50000 };
+    await render(<TxRow tx={tx} namaDompet={nama} hariIni="2026-11-20" />);
+    expect(screen.getByText('Sisa hutang · Hari ini')).toBeTruthy();
+    expect(screen.getByText('Rp50.000')).toBeTruthy();
+  });
 });
