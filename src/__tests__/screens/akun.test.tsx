@@ -57,8 +57,8 @@ it('Free: badge free, ekspor bertanda Pro, pengingat terkunci', async () => {
   await render(<Akun />);
   // Badge tier tampil di kartu profil dan kartu langganan.
   expect(screen.getAllByText('badge-free').length).toBe(2);
-  expect(screen.getByText('Catat AI bulan ini: sisa 18 kuota · reset 1 Des 2026')).toBeTruthy();
-  expect(screen.getByText('Free: catat AI 30× per bulan')).toBeTruthy();
+  expect(screen.getByText('Sisa 18 kuota · reset 1 Des 2026')).toBeTruthy();
+  expect(screen.getByText('Catat AI bulan ini')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Ekspor data · Pro' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'pengingat-false' })).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Lihat Pro' }));

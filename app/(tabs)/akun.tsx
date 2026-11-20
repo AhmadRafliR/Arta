@@ -320,11 +320,11 @@ export default function Akun() {
             </Text>
           ) : null}
         </View>
-        <Text className="mt-2.5 font-sans text-[15px] font-semibold text-fg">{teksStatusLangganan(langganan.data)}</Text>
+        <Text className="mt-2.5 font-sans text-[15px] font-semibold text-fg">{pro ? teksStatusLangganan(langganan.data) : 'Catat AI bulan ini'}</Text>
         {kuota && reset ? (
           <>
             <Text className="mt-[3px] font-sans text-xs leading-[17px] text-fg2">
-              {`Catat AI bulan ini: sisa ${sisaKuota(kuota)} kuota · reset 1 ${NAMA_BULAN[reset[1] - 1]} ${reset[0]}`}
+              {`${pro ? 'Catat AI bulan ini: sisa' : 'Sisa'} ${sisaKuota(kuota)} kuota · reset 1 ${NAMA_BULAN[reset[1] - 1]} ${reset[0]}`}
             </Text>
             <View
               accessible
