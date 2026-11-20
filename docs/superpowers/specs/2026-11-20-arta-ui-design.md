@@ -50,3 +50,12 @@ Yang dipilih: **port token + ikon ke sistem yang ada** (NativeWind CSS vars + `r
   - nominal penuh (`-Rp28.000`), format domain tetap tanpa spasi.
 - **Gambar SVG yang tidak ikut ekspor** (badge, 3 ilustrasi kosong, ikon app, splash): keadaan kosong memakai ikon + teks dulu. Ilustrasi menyusul saat Rafli menaruh file `.svg`-nya di `docs/design/arta/`.
 - **Teks keadaan kosong** "Tahan tombol mic" → "Tekan tombol mic" (mic kita ditekan, bukan ditahan; tahan-untuk-rekam datang di Rencana 2).
+
+## Tambahan 2026-11-20: navbar "pulau dinamis"
+Rafli minta navbar Dynamic Island dari SPHEREx (`docs/design/arta/dynamic-island-sphrx.md`) diintegrasikan sesuai gaya arta. Navbar arta ada di bawah (kit: Beranda · Riwayat · mic · Hutang · Akun), jadi perilakunya diadaptasi ke bawah:
+- Di posisi atas gulir: tab bar penuh seperti kit.
+- Saat digulir lewat 24 px: bar bermorfosis menjadi kapsul melayang (jarak 12 px dari tepi, radius penuh, garis tipis, bayangan lembut di mode terang). Label tab memudar, ikon dan titik aktif tetap, mic masuk ke kapsul.
+- Kembali ke bar penuh hanya saat gulir ≤ 8 px (histeresis anti-kedip).
+- Gerak 340 ms dengan easing pegas `cubic-bezier(0.32, 0.72, 0, 1)`; instan bila "kurangi gerakan" aktif; tanpa animasi saat layar dipulihkan di tengah gulir.
+- Konten tidak bergeser: tab bar melayang di atas konten, layar memakai spacer tetap setinggi bar penuh.
+- Panggilan Claude: tanpa state menu terbuka (semua tab selalu muat), tanpa blur (latar `card` solid), tanpa palet baru. Rafli menyebut "web kita"; produk kita app Android, jadi ini diterapkan di app.
