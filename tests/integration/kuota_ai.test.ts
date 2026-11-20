@@ -46,6 +46,7 @@ test('pemakaian paralel tidak melewati batas', async () => {
   const hasil = await Promise.all(
     Array.from({ length: 35 }, () => a.client.rpc('pakai_kuota_ai')),
   );
+  expect(hasil.every((r) => r.error === null)).toBe(true);
   expect(hasil.filter((r) => r.data?.ok === true)).toHaveLength(30);
   const { data: k } = await a.client.rpc('kuota_ai');
   expect(k.terpakai).toBe(30);
