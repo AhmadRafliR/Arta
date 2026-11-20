@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import type { ComponentProps } from 'react';
+import { useEffect, type ComponentProps } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import { TabBar } from '../TabBar';
 import { NavPulauProvider, useNavPulau } from '@/nav/NavPulauProvider';
@@ -36,7 +36,10 @@ const props = {
 
 let api: ReturnType<typeof useNavPulau>;
 function Pengendali() {
-  api = useNavPulau();
+  const v = useNavPulau();
+  useEffect(() => {
+    api = v;
+  });
   return null;
 }
 
@@ -65,13 +68,13 @@ describe('TabBar', () => {
     expect(screen.getByTestId('ikon-nav-mic')).toBeTruthy();
   });
 
-  it('tekan tab pindah rute; tekan mic membuka /catat', async () => {
+  it('tekan tab pindah rute; tekan mic membuka /rekam', async () => {
     await tampilkan();
     await fireEvent.press(screen.getByLabelText('Riwayat'));
     expect(emit).toHaveBeenCalledWith({ type: 'tabPress', target: 'riwayat-key', canPreventDefault: true });
     expect(navigateToTab).toHaveBeenCalledWith('riwayat-key');
     await fireEvent.press(screen.getByLabelText('Catat transaksi'));
-    expect(mockPush).toHaveBeenCalledWith('/catat');
+    expect(mockPush).toHaveBeenCalledWith('/rekam');
   });
 
   it('menekan tab aktif tidak berpindah rute', async () => {

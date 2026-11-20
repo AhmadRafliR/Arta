@@ -94,7 +94,7 @@ function ItemTab({
 }
 
 // Tab bar "pulau dinamis": penuh selebar layar di atas gulir, kapsul melayang saat konten digulir.
-// Beranda · Riwayat · [mic] · Hutang · Akun. Mic bukan rute: membuka /catat.
+// Beranda · Riwayat · [mic] · Hutang · Akun. Mic bukan rute: membuka modal /rekam (catat pakai suara).
 export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const router = useRouter();
   const { t, mode } = useTheme();
@@ -202,7 +202,7 @@ export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarPr
         <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }, gayaBaris]}>
           {items.slice(0, tengah)}
           <Animated.View style={[{ width: 80, alignItems: 'center', alignSelf: 'stretch' }, gayaSlotMic]}>
-            <MicButton onPress={() => router.push('/catat')} style={gayaMic} />
+            <MicButton onPress={() => router.push('/rekam')} style={gayaMic} />
           </Animated.View>
           {items.slice(tengah)}
         </Animated.View>
