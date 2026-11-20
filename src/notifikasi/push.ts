@@ -19,6 +19,8 @@ export async function siapkanSaluran(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(SALURAN_PENGINGAT, {
     name: 'Pengingat jatuh tempo',
+    // eslint-plugin-import tidak melihat enum yang diekspor ulang lewat `export *`; nilainya ada (lihat .d.ts).
+    // eslint-disable-next-line import/namespace
     importance: Notifications.AndroidImportance.HIGH,
   });
 }

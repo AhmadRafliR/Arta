@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import { createTestUser, uuidV4 } from './helpers';
 
 const env = (n: string) => {
+  // Tes integrasi berjalan di Node (bukan bundle Expo), jadi akses dinamis aman.
+  // eslint-disable-next-line expo/no-dynamic-env-var
   const v = process.env[n];
   if (!v) throw new Error(`Missing env var ${n} (set it in .env.test)`);
   return v;
