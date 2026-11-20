@@ -68,7 +68,7 @@ export default function Riwayat() {
         <Text className={`font-sans ${q.error ? 'text-fg' : 'text-mid'}`}>{q.error ? q.error.pesan : 'Memuat…'}</Text>
       ) : grup.length === 0 ? (
         <KeadaanKosong
-          ikon="cat-lainnya"
+          ilustrasi="transaksi"
           pesan={
             semua.length > 0 && (filter.jenis || filter.kategori || filter.walletId)
               ? 'Tidak ada transaksi yang cocok dengan filter.'

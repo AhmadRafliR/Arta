@@ -90,7 +90,7 @@ export default function Beranda() {
         </Pressable>
       </View>
       {!bulanMemuat && !bulanGalat && terbaru.length === 0 ? (
-        <KeadaanKosong ikon="cat-lainnya" pesan="Belum ada transaksi bulan ini. Tekan tombol mic untuk mencatat yang pertama." />
+        <KeadaanKosong ilustrasi="transaksi" pesan="Belum ada transaksi bulan ini. Tekan tombol mic untuk mencatat yang pertama." />
       ) : (
         <View className="rounded-2xl border border-line bg-card px-3 py-1">
           {bulanMemuat ? (

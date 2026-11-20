@@ -11,7 +11,7 @@ export default function Hutang() {
   useGulirPulau('hutang');
   return (
     <View className="flex-1 justify-center bg-bg px-4" style={{ paddingBottom: spacerNav(insets.bottom) }}>
-      <KeadaanKosong ikon="nav-hutang" pesan="Pencatatan hutang & paylater segera hadir." />
+      <KeadaanKosong ilustrasi="hutang" pesan="Pencatatan hutang & paylater segera hadir." />
     </View>
   );
 }
