@@ -72,7 +72,8 @@
           "microphonePermission": "arta butuh mikrofon untuk mencatat transaksi lewat suara.",
           "enableBackgroundPlayback": false
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
