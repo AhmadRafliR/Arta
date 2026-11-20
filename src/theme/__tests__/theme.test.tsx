@@ -17,6 +17,17 @@ describe('tokens', () => {
     expect(tokens.terang.heroTo).toBe('#1F6A76');
   });
 
+  it('token kartu saldo dan ilustrasi ada di kedua mode', () => {
+    const kunci = ['kartuFrom', 'kartuTo', 'kartuFg', 'kartuSub', 'kartuLine', 'aksiBg', 'aksiFg',
+      'ilusTintFrom', 'ilusTintTo', 'ilusOnTint', 'ilusAksen', 'ilusGaris'] as const;
+    for (const k of kunci) {
+      expect(tokens.terang[k]).toMatch(/^#[0-9A-F]{6}$/);
+      expect(tokens.gelap[k]).toMatch(/^#[0-9A-F]{6}$/);
+    }
+    expect(tokens.terang.ilusTintFrom).toBe('#0B424F');
+    expect(tokens.terang.ilusAksen).toBe('#52C3BF');
+  });
+
   it('token arta terang & gelap', () => {
     expect(tokens.terang).toMatchObject({
       bg: '#EEF3F5', card: '#FFFFFF', card2: '#F6FAFB', fg: '#0B424F', fg2: '#47646B', mid: '#52727A',
