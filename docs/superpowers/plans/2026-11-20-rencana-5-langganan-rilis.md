@@ -462,8 +462,8 @@ Acuan visual: `docs/design/arta/premium-trial.html` (layar Premium), komponen `M
 
 | Task | Status | Commit | Catatan |
 |---|---|---|---|
-| 0 Paket & konfigurasi | belum | | |
-| 1 Migrasi + hook status | belum | | |
+| 0 Paket & konfigurasi | belum | | `npm ci` di worktree sudah dijalankan (node_modules belum ada sebelumnya). Paket belum dipasang. |
+| 1 Migrasi + hook status | sebagian | lihat `git log` (`feat(db): migrasi langganan…`) | Migrasi 0040/0041/0042 sudah ditulis, belum diuji. Yang belum: tes integrasi (`tests/integration/langganan.test.ts`, `push_pengingat.test.ts`, `hapus_akun.test.ts`), `src/data/langganan.ts` + tesnya. |
 | 2 Webhook RevenueCat | belum | | |
 | 3 Langganan app + Premium | belum | | |
 | 4 Push app + pengaturan | belum | | |
