@@ -88,7 +88,33 @@ npx supabase functions deploy delete-account
 
 - [ ] Aktifkan ekstensi `pg_cron` dan `pg_net` (Dashboard, Database, Extensions), lalu jalankan SQL jadwal pengingat per jam di SQL Editor:
 
-<!-- SQL cron: diisi orkestrator -->
+Ganti `<ref>` dengan project ref. Nilai `cron_secret` harus sama dengan secret `CRON_SECRET` di fungsi. Jadwal harus tepat di menit 0, karena fungsi mencocokkan jam lokal dengan `pengaturan_pengingat.jam`.
+
+```sql
+-- sekali saja
+select vault.create_secret('<isi-CRON_SECRET>', 'cron_secret');
+
+select cron.schedule(
+  'debt-reminders-hourly',
+  '0 * * * *',
+  $$
+  select net.http_post(
+    url := 'https://<ref>.supabase.co/functions/v1/debt-reminders',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret')
+    ),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 30000
+  );
+  $$
+);
+
+-- cek: select * from cron.job; select * from cron.job_run_details order by start_time desc limit 5;
+-- hapus: select cron.unschedule('debt-reminders-hourly');
+```
+
+Catatan: pengingat baru benar-benar terkirim setelah Rencana 3 menyediakan RPC `tagihan_untuk_pengingat` (lihat dokumen rencana 5, bagian Titik integrasi). Sebelum itu fungsi membalas `catatan: 'tagihan_untuk_pengingat belum tersedia'`.
 
 - [ ] Jalankan tes integrasi (lihat `docs/uji-manual-rencana-5.md`).
 

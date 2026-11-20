@@ -462,13 +462,15 @@ Acuan visual: `docs/design/arta/premium-trial.html` (layar Premium), komponen `M
 
 | Task | Status | Commit | Catatan |
 |---|---|---|---|
-| 0 Paket & konfigurasi | belum | | `npm ci` di worktree sudah dijalankan (node_modules belum ada sebelumnya). Paket belum dipasang. |
-| 1 Migrasi + hook status | sebagian | lihat `git log` (`feat(db): migrasi langganan…`) | Migrasi 0040/0041/0042 sudah ditulis, belum diuji. Yang belum: tes integrasi (`tests/integration/langganan.test.ts`, `push_pengingat.test.ts`, `hapus_akun.test.ts`), `src/data/langganan.ts` + tesnya. |
-| 2 Webhook RevenueCat | belum | | |
-| 3 Langganan app + Premium | belum | | |
-| 4 Push app + pengaturan | belum | | |
-| 5 debt-reminders | belum | | |
-| 6 Ekspor | belum | | |
-| 7 Hapus akun | belum | | |
-| 8 Konfigurasi rilis | belum | | |
-| 9 Integrasi + panduan | belum | | |
+| 0 Paket & konfigurasi | selesai | `298ea16` | expo-notifications ~58.1.9, expo-sharing ~58.0.23, react-native-purchases ^11.0.4; mock Jest global di `jest.setup.js`. |
+| 1 Migrasi + hook status | selesai (tes integrasi belum dijalankan) | `108f8ff`, `cf9805e` | Tes integrasi menunggu `db push` oleh Rafli. |
+| 2 Webhook RevenueCat | selesai | `2ae0ac0` | 28 tes. |
+| 3 Langganan app + Premium | selesai | `5a3ddca` | `useLangganan()` jatuh ke penyedia bawaan tanpa Provider. |
+| 4 Push app + pengaturan | selesai | `92c4e23` | + `src/notifikasi/sinkron.ts` (daftar ulang diam) di Task 9. |
+| 5 debt-reminders | selesai | `4ec4edd` | Menunggu RPC `tagihan_untuk_pengingat` (Rencana 3). |
+| 6 Ekspor | berjalan | | |
+| 7 Hapus akun | selesai | `d0f6520` | Web: isi konstanta & placeholder. |
+| 8 Konfigurasi rilis | selesai | `3e8722c` | `app.config.ts` pakai `/// <reference types="node" />`. `.gitignore` + `google-services.json`. |
+| 9 Integrasi + panduan | sebagian | `531e46d` | Panduan uji & SQL cron di commit docs berikutnya; lint akhir belum. |
+
+Catatan tes unit di Windows: `npx jest` tanpa argumen ikut menjalankan `tests/integration` (gagal tanpa env). Pakai `npx jest --testPathIgnorePatterns /node_modules/ integration`.
