@@ -305,4 +305,10 @@ _Diperbarui setiap task selesai. Saat melanjutkan sesi: baca bagian ini dan `git
 - [ ] Task 8 — UI laporan & menu Akun
 - [ ] Task 9 — panduan uji
 
-**Langkah berikutnya:** Gelombang A (Task 1–4) paralel.
+**Catatan sesi 2026-11-20 (terhenti karena batas pemakaian):**
+- Selesai: dokumen rencana ini (commit `docs: rencana 4 …`). Belum ada kode.
+- Worktree awalnya tanpa `node_modules`; `npm ci` dijalankan di latar belakang. Jika folder `node_modules` belum lengkap, jalankan ulang `npm ci` sebelum `npx jest`/`npx tsc --noEmit`/`npx expo lint`.
+- Baseline lint/tsc/jest belum dicek. Galat tsc lama yang diketahui (milik Rencana 2, belum di-commit di checkout lain) tidak ada di branch ini.
+- `supabase/functions/_shared/handler.ts` sudah mengekspor `GalatSesi`, `CORS`, `tanggalDiZona` (bisa dipakai Task 5).
+
+**Langkah berikutnya:** Gelombang A (Task 1–4) paralel lewat subagent, lalu Gelombang B (Task 5–8), lalu Task 9.
