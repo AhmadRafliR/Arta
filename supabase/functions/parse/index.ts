@@ -7,12 +7,13 @@ import { SKEMA_PARSE, type Konteks } from '../_shared/parsing.ts';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const MODEL_STT = Deno.env.get('OPENAI_MODEL_STT') || 'gpt-4o-mini-transcribe';
-// 'transcriptions' = /audio/transcriptions (OpenAI); 'chat' = input_audio di chat/completions (Gemini).
+// 'transcriptions' = /audio/transcriptions (OpenAI); 'gemini' = generateContent native Gemini.
 const STT_MODE = Deno.env.get('OPENAI_STT_MODE') || 'transcriptions';
 const MODEL_PARSE = Deno.env.get('OPENAI_MODEL_PARSE') || 'gpt-5-mini';
 // Endpoint kompatibel OpenAI. Bawaan OpenAI; ganti lewat secret, misalnya router.bangunweb.com/v1.
 const OPENAI = (Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1').replace(/\/+$/, '');
 // Transkripsi boleh memakai penyedia/kunci lain (router teks belum tentu punya model suara).
+const GEMINI = (Deno.env.get('GEMINI_BASE_URL') || 'https://generativelanguage.googleapis.com/v1beta').replace(/\/+$/, '');
 const OPENAI_STT = (Deno.env.get('OPENAI_STT_BASE_URL') || OPENAI).replace(/\/+$/, '');
 // reasoning_effort hanya dikenal model OpenAI; kirim hanya bila diatur.
 const REASONING = Deno.env.get('OPENAI_REASONING_EFFORT') || (OPENAI.includes('api.openai.com') ? 'low' : '');
@@ -86,16 +87,16 @@ function base64(bytes: Uint8Array): string {
   return btoa(biner);
 }
 
-// Format yang dikenal input_audio Gemini: wav, mp3, aac, ogg, flac, aiff.
+// MIME yang dikenal Gemini untuk audio: wav, mp3, aiff, aac, ogg, flac.
 // m4a/mp4/webm/3gp/caf tidak didukung dan ditolak; jangan melabeli kontainer MP4 sebagai aac.
-function formatAudioChat(mime: string): string | null {
+function formatAudioGemini(mime: string): string | null {
   const m = mime.toLowerCase();
-  if (m.includes('wav')) return 'wav';
-  if (m.includes('mpeg') || m.includes('mp3')) return 'mp3';
-  if (m.includes('aac')) return 'aac';
-  if (m.includes('ogg')) return 'ogg';
-  if (m.includes('flac')) return 'flac';
-  if (m.includes('aiff')) return 'aiff';
+  if (m.includes('wav')) return 'audio/wav';
+  if (m.includes('mpeg') || m.includes('mp3')) return 'audio/mp3';
+  if (m.includes('aac')) return 'audio/aac';
+  if (m.includes('ogg')) return 'audio/ogg';
+  if (m.includes('flac')) return 'audio/flac';
+  if (m.includes('aiff')) return 'audio/aiff';
   return null;
 }
 
@@ -127,32 +128,33 @@ async function cekRespons(res: Response, tahap: string): Promise<void> {
 
 const openai = {
   async transkripsi(audio: Uint8Array, mime: string): Promise<string> {
-    // Gemini (lewat endpoint OpenAI-compatible) tidak punya /audio/transcriptions;
-    // audio dikirim sebagai input_audio di chat/completions.
-    if (STT_MODE === 'chat') {
-      const format = formatAudioChat(mime);
+    // Gemini: endpoint kompatibel-OpenAI hanya menerima wav/mp3 untuk input_audio, jadi
+    // transkripsi memakai API native generateContent (mendukung aac, ogg, flac, aiff).
+    if (STT_MODE === 'gemini') {
+      const format = formatAudioGemini(mime);
       if (!format) throw new Error(`format audio tidak didukung: ${mime}`);
-      const res = await fetch(`${OPENAI_STT}/chat/completions`, {
+      const res = await fetch(`${GEMINI}/models/${encodeURIComponent(MODEL_STT)}:generateContent`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${kunciOpenAI(true)}`, 'Content-Type': 'application/json' },
+        headers: { 'x-goog-api-key': kunciOpenAI(true), 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: MODEL_STT,
-          temperature: 0,
-          messages: [
+          contents: [
             {
-              role: 'user',
-              content: [
-                { type: 'text', text: 'Transkripsikan audio ini ke teks Bahasa Indonesia. Keluarkan hanya teksnya, tanpa penjelasan.' },
-                { type: 'input_audio', input_audio: { data: base64(audio), format } },
+              parts: [
+                { text: 'Transkripsikan audio ini ke teks Bahasa Indonesia. Keluarkan hanya teksnya, tanpa penjelasan.' },
+                { inlineData: { mimeType: format, data: base64(audio) } },
               ],
             },
           ],
+          generationConfig: { temperature: 0 },
         }),
       });
       await cekRespons(res, 'stt');
       const data = await res.json();
-      const isi = data?.choices?.[0]?.message?.content;
-      return typeof isi === 'string' ? isi.trim() : '';
+      const bagian: unknown[] = data?.candidates?.[0]?.content?.parts ?? [];
+      return bagian
+        .map((p) => (typeof (p as { text?: unknown })?.text === 'string' ? (p as { text: string }).text : ''))
+        .join('')
+        .trim();
     }
 
     const form = new FormData();
