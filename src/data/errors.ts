@@ -1,4 +1,4 @@
-export type AppError = { kind: 'offline' | 'validasi' | 'lain'; pesan: string; code?: string };
+export type AppError = { kind: 'offline' | 'validasi' | 'kuota' | 'lain'; pesan: string; code?: string };
 
 export const PESAN_OFFLINE = 'Tidak ada koneksi. Transaksi belum tersimpan, coba lagi.';
 export const PESAN_OFFLINE_UMUM = 'Tidak ada koneksi. Coba lagi.';
