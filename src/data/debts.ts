@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import type { PokokBulanan } from '@/domain/hutang';
 import type { Hutang, MetodeBunga, Tagihan, TipeHutang } from '@/domain/types';
 import { toAppError, type AppError } from './errors';
 
@@ -166,5 +167,44 @@ export function useTambahJadwal() {
       return toTagihan(row as Row);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['debts'] }),
+  });
+}
+
+/** Baris `hutang_bayar` -> pokok per bulan per hutang, untuk `perkiraanBebas`/`ringkasHutang`. */
+export function kelompokPokok(rows: Row[]): Record<string, PokokBulanan[]> {
+  const peta: Record<string, Record<string, number>> = {};
+  for (const r of rows) {
+    const id = r.debt_id as string | null;
+    const pokok = Number(r.porsi_pokok ?? 0);
+    if (!id || !pokok) continue;
+    const bulan = (r.tanggal as string).slice(0, 7);
+    const perBulan = (peta[id] ??= {});
+    perBulan[bulan] = (perBulan[bulan] ?? 0) + pokok;
+  }
+  const out: Record<string, PokokBulanan[]> = {};
+  for (const [id, perBulan] of Object.entries(peta)) {
+    out[id] = Object.entries(perBulan)
+      .map(([bulan, pokok]) => ({ bulan, pokok }))
+      .sort((a, b) => (a.bulan < b.bulan ? -1 : 1));
+  }
+  return out;
+}
+
+/**
+ * Riwayat pokok dibayar per bulan untuk semua hutang (argumen ketiga `ringkasHutang`).
+ * Kunci: ['debts', 'riwayat-pokok'] (ikut diinvalidasi bersama ['debts']).
+ */
+export function useRiwayatPokok() {
+  return useQuery<Record<string, PokokBulanan[]>, AppError>({
+    queryKey: ['debts', 'riwayat-pokok'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('debt_id,tanggal,porsi_pokok')
+        .eq('jenis', 'hutang_bayar')
+        .order('tanggal', { ascending: true });
+      if (error) throw toAppError(error, { aksi: 'baca' });
+      return kelompokPokok((data ?? []) as Row[]);
+    },
   });
 }

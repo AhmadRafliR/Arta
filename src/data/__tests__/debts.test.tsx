@@ -4,6 +4,7 @@ import { renderHook, act, waitFor } from '@testing-library/react-native';
 import type { Hutang } from '@/domain/types';
 import {
   toHutang,
+  kelompokPokok,
   toTagihan,
   useDebt,
   useDebts,
@@ -299,5 +300,24 @@ describe('useTambahJadwal', () => {
     });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.kind).toBe('offline');
+  });
+});
+
+describe('kelompokPokok', () => {
+  it('menjumlah porsi_pokok per bulan per hutang, urut bulan', () => {
+    expect(
+      kelompokPokok([
+        { debt_id: 'd1', tanggal: '2026-12-03', porsi_pokok: '30000' },
+        { debt_id: 'd1', tanggal: '2026-11-10', porsi_pokok: '280000' },
+        { debt_id: 'd1', tanggal: '2026-11-25', porsi_pokok: 100000 },
+        { debt_id: 'd2', tanggal: '2026-11-25', porsi_pokok: 0 },
+        { debt_id: null, tanggal: '2026-11-25', porsi_pokok: 5 },
+      ]),
+    ).toEqual({
+      d1: [
+        { bulan: '2026-11', pokok: 380000 },
+        { bulan: '2026-12', pokok: 30000 },
+      ],
+    });
   });
 });
