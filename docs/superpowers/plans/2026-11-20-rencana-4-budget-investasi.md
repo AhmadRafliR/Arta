@@ -295,10 +295,10 @@
 
 _Diperbarui setiap task selesai. Saat melanjutkan sesi: baca bagian ini dan `git log --oneline` dulu._
 
-- [ ] Task 1 — skema budget & laporan
-- [ ] Task 2 — domain murni
-- [ ] Task 3 — lapisan data app
-- [ ] Task 4 — inti laporan murni
+- [x] Task 1 — skema budget & laporan (`7bfac49`; trigger penerima = security invoker; tes integrasi menunggu `db push`)
+- [x] Task 2 — domain murni (`0122ff0`)
+- [x] Task 3 — lapisan data app (`3bae456`; galat server → `kind: 'lain'` + pesan server)
+- [x] Task 4 — inti laporan murni (`c90df43`)
 - [ ] Task 5 — edge function
 - [ ] Task 6 — UI budget
 - [ ] Task 7 — UI dana darurat & investasi
@@ -311,4 +311,6 @@ _Diperbarui setiap task selesai. Saat melanjutkan sesi: baca bagian ini dan `git
 - Baseline lint/tsc/jest belum dicek. Galat tsc lama yang diketahui (milik Rencana 2, belum di-commit di checkout lain) tidak ada di branch ini.
 - `supabase/functions/_shared/handler.ts` sudah mengekspor `GalatSesi`, `CORS`, `tanggalDiZona` (bisa dipakai Task 5).
 
-**Langkah berikutnya:** Gelombang A (Task 1–4) paralel lewat subagent, lalu Gelombang B (Task 5–8), lalu Task 9.
+**Langkah berikutnya:** Gelombang B (Task 5–8) sedang berjalan paralel, lalu Task 9.
+
+**Catatan baseline:** `npx jest` di worktree ini ikut menjalankan `tests/integration/*` (gagal tanpa `.env.test`; sudah begitu sebelum rencana 4). Proyek belum punya konfigurasi ESLint, sehingga `npx expo lint` belum memeriksa apa pun (dibereskan Rencana 2).
