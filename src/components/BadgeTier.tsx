@@ -52,10 +52,13 @@ export function BadgeTier({ tier, tinggi = 32 }: { tier: 'free' | 'pro'; tinggi?
             </Defs>
             <Rect x="0" y="0" width="100%" height="100%" fill="url(#proBadgeGrad)" />
           </Svg>
-          <Svg width={27.2 * s} height={43.1 * s} viewBox={CREST_VIEWBOX_RAPAT}>
-            <BentukCrestSvg bentuk={CREST_BADAN} fill="#FFFFFF" />
-            <BentukCrestSvg bentuk={CREST_AKSEN} fill="#52C3BF" />
-          </Svg>
+          {/* Dibungkus View (position relative) agar di web tidak tertutup Svg gradien absolut. */}
+          <View>
+            <Svg width={27.2 * s} height={43.1 * s} viewBox={CREST_VIEWBOX_RAPAT}>
+              <BentukCrestSvg bentuk={CREST_BADAN} fill="#FFFFFF" />
+              <BentukCrestSvg bentuk={CREST_AKSEN} fill="#52C3BF" />
+            </Svg>
+          </View>
         </>
       ) : (
         <Svg width={27.5 * s} height={19 * s} viewBox="13.5 20 27.5 19">
