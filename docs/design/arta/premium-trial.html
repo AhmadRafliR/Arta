@@ -1,0 +1,1409 @@
+<!doctype html>
+<html lang="id" data-theme="light"><head><script data-od-srcdoc-transport-activation>(function(){
+  var generation = "";
+  var bodyComplete = false;
+  function containsCompletionMarker(node){
+    if (!node || node.nodeType !== 1) return false;
+    if (node.tagName === 'TEMPLATE' && node.getAttribute('data-od-srcdoc-transport-body-complete') === generation) return true;
+    var candidates = node.querySelectorAll ? node.querySelectorAll('template[data-od-srcdoc-transport-body-complete]') : [];
+    for (var i = 0; i < candidates.length; i += 1) {
+      if (candidates[i].getAttribute('data-od-srcdoc-transport-body-complete') === generation) return true;
+    }
+    return false;
+  }
+  var completionObserver = typeof MutationObserver === 'function' ? new MutationObserver(function(records){
+    if (bodyComplete) return;
+    for (var i = 0; i < records.length; i += 1) {
+      var added = records[i].addedNodes || [];
+      for (var j = 0; j < added.length; j += 1) {
+        if (!containsCompletionMarker(added[j])) continue;
+        bodyComplete = true;
+        completionObserver.disconnect();
+        return;
+      }
+    }
+  }) : null;
+  if (completionObserver && document.documentElement) {
+    completionObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
+  function announceReady(probeId){
+    if (!generation) return;
+    try {
+      if (window.parent && window.parent !== window) {
+        var message = { type: 'od:srcdoc-transport-activated', generation: generation };
+        if (typeof probeId === 'string' && probeId) message.probeId = probeId;
+        message.bodyComplete = bodyComplete;
+        message.documentReadyState = document.readyState;
+        message.bodyPresent = !!document.body;
+        message.bodyChildCount = document.body ? document.body.children.length : 0;
+        message.documentElementChildCount = document.documentElement ? document.documentElement.children.length : 0;
+        window.parent.postMessage(message, '*');
+      }
+    } catch (_) { /* sandboxed parent */ }
+  }
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (data && data.type === 'od:srcdoc-transport-ready-probe') {
+      if (data.generation === generation) announceReady(data.probeId);
+      return;
+    }
+    if (!data || data.type !== 'od:srcdoc-transport-activate' || typeof data.html !== 'string' || typeof data.generation !== 'string' || !data.generation) return;
+    // document.open/write keeps the current Window realm. Re-running an
+    // authored classic script there can fail before execution when it declares
+    // a top-level let/const that the previous document already declared. Ask
+    // the host to remount the shared bootstrap so this generation gets a fresh
+    // realm, then let the one-shot shell perform the initial write.
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'od:srcdoc-transport-reset-required',
+          generation: data.generation
+        }, '*');
+      }
+    } catch (_) { /* sandboxed parent — host recovery will remount on timeout */ }
+  });
+  announceReady();
+})();</script><script data-od-preview-redirect-guard>(function(){
+  var NAME_PREFIX = '__odRedirectGuard=';
+  var MAX_HOPS = 15;
+  var WINDOW_MS = 4000;
+  var SELF_MIN_DELAY_MS = 2000;
+  var MESSAGE_TYPE = "od:redirect-loop-blocked";
+  var BLOCK_LOAD_TIME_SCRIPT_REDIRECT = false;
+  function nowMs(){ try { return Date.now(); } catch (_) { return 0; } }
+  function readState(){
+    try {
+      var raw = window.name;
+      if (typeof raw === 'string' && raw.indexOf(NAME_PREFIX) === 0) {
+        var parsed = JSON.parse(raw.slice(NAME_PREFIX.length));
+        if (parsed && typeof parsed.hops === 'number' && typeof parsed.windowStart === 'number') return parsed;
+      }
+    } catch (_) {}
+    return null;
+  }
+  function writeState(state){
+    try { window.name = NAME_PREFIX + JSON.stringify({ hops: state.hops, windowStart: state.windowStart }); } catch (_) {}
+  }
+  function clearState(){
+    try { if (typeof window.name === 'string' && window.name.indexOf(NAME_PREFIX) === 0) window.name = ''; } catch (_) {}
+  }
+  function nextState(){
+    var t = nowMs();
+    var prev = readState();
+    var withinWindow = prev && (t - prev.windowStart) <= WINDOW_MS;
+    return { hops: (withinWindow ? prev.hops : 0) + 1, windowStart: withinWindow ? prev.windowStart : t };
+  }
+  function scheduleCandidateReset(state){
+    try {
+      if (typeof setTimeout !== 'function') return;
+      setTimeout(function(){
+        try {
+          var current = readState();
+          if (current && current.hops === state.hops && current.windowStart === state.windowStart) clearState();
+        } catch (_) {}
+      }, WINDOW_MS + 1);
+    } catch (_) {}
+  }
+  function recordScriptRedirectCandidate(){
+    if (!BLOCK_LOAD_TIME_SCRIPT_REDIRECT) return;
+    var state = nextState();
+    if (state.hops > MAX_HOPS) {
+      clearState();
+      report(state.hops);
+      return;
+    }
+    writeState(state);
+    scheduleCandidateReset(state);
+  }
+  function metaRefreshes(){
+    var out = [];
+    try {
+      var metas = document.getElementsByTagName('meta');
+      for (var i = 0; i < metas.length; i++) {
+        var equiv = metas[i].getAttribute ? metas[i].getAttribute('http-equiv') : null;
+        if (equiv && String(equiv).toLowerCase() === 'refresh') out.push(metas[i]);
+      }
+    } catch (_) {}
+    return out;
+  }
+  function parseContent(meta){
+    var content = '';
+    try { content = String(meta.getAttribute('content') || ''); } catch (_) {}
+    var delayMatch = content.match(/^\s*([0-9]+(?:\.[0-9]+)?)/);
+    var delayMs = delayMatch ? Math.round(parseFloat(delayMatch[1]) * 1000) : 0;
+    var urlMatch = content.match(/[;,]\s*url\s*=\s*['"]?\s*([^'"\s]+)/i);
+    return { delayMs: delayMs, url: urlMatch ? urlMatch[1] : '' };
+  }
+  function currentArtifactHref(){
+    try {
+      var href = String(location.href || '');
+      if (href === 'about:srcdoc') {
+        return String(document.baseURI || href);
+      }
+      return href;
+    } catch (_) {
+      return '';
+    }
+  }
+  function isSelfTarget(url){
+    if (!url) return true; // no url => refresh the current document
+    try {
+      var base = (document.baseURI) || location.href;
+      return new URL(url, base).href === currentArtifactHref();
+    } catch (_) { return false; }
+  }
+  function isFastSrcdocUrlHop(parsed){
+    if (!parsed.url || parsed.delayMs > SELF_MIN_DELAY_MS) return false;
+    try { return String(location.href || '') === 'about:srcdoc'; } catch (_) { return false; }
+  }
+  function neutralize(metas){
+    for (var i = 0; i < metas.length; i++) {
+      try { metas[i].parentNode && metas[i].parentNode.removeChild(metas[i]); } catch (_) {}
+    }
+    try { if (window.stop) window.stop(); } catch (_) {}
+  }
+  function report(hops){
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: MESSAGE_TYPE, hops: hops }, '*');
+      }
+    } catch (_) {}
+  }
+  function evaluate(){
+    var metas = metaRefreshes();
+    if (!metas.length) {
+      // No refresh directive: this document breaks any accumulating chain.
+      if (!BLOCK_LOAD_TIME_SCRIPT_REDIRECT) clearState();
+      return;
+    }
+    var selfLoop = false;
+    for (var i = 0; i < metas.length; i++) {
+      var parsed = parseContent(metas[i]);
+      if (parsed.delayMs <= SELF_MIN_DELAY_MS && isSelfTarget(parsed.url)) { selfLoop = true; break; }
+      if (isFastSrcdocUrlHop(parsed)) { selfLoop = true; break; }
+    }
+    var state = nextState();
+    if (selfLoop || state.hops > MAX_HOPS) {
+      neutralize(metas);
+      clearState();
+      report(state.hops);
+      return;
+    }
+    writeState(state);
+  }
+  recordScriptRedirectCandidate();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', evaluate);
+  } else {
+    evaluate();
+  }
+})();</script><script data-od-sandbox-shim>(function(){
+  function makeStore(){
+    var data = {};
+    var api = {
+      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+      setItem: function(k, v){ data[k] = String(v); },
+      removeItem: function(k){ delete data[k]; },
+      clear: function(){ data = {}; },
+      key: function(i){ return Object.keys(data)[i] || null; }
+    };
+    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
+    return api;
+  }
+  function tryShim(name){
+    var works = false;
+    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
+    catch (_) { works = false; }
+    if (works) return;
+    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
+    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
+  }
+  tryShim('localStorage');
+  tryShim('sessionStorage');
+  function shimHistoryMethod(name){
+    try {
+      var h = window.history;
+      var original = h && h[name];
+      if (typeof original !== 'function') return;
+      h[name] = function(state, title, url){
+        try { return original.call(h, state, title, url); }
+        catch (_) { return undefined; }
+      };
+    } catch (_) {}
+  }
+  shimHistoryMethod('pushState');
+  shimHistoryMethod('replaceState');
+  // A strict iframe blocks native form submission before a submit event is
+  // dispatched. Preserve local JS handlers without invoking native navigation.
+  var localSubmitActivations = new WeakMap();
+  var localSubmitCounts = new WeakMap();
+  document.addEventListener('submit', function(e){
+    if (e.target instanceof HTMLFormElement) {
+      localSubmitCounts.set(e.target, (localSubmitCounts.get(e.target) || 0) + 1);
+    }
+  }, true);
+  function rememberLocalSubmit(e){
+    if (!(e.target instanceof Element)) return;
+    var control;
+    if (e.type === 'click') {
+      control = e.target.closest('button, input');
+      if (!control || control.type !== 'submit') return;
+    } else {
+      if (e.key !== 'Enter' || e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      var input = e.target;
+      if (!(input instanceof HTMLInputElement) || !/^(text|email|tel|url|search|password|number)$/.test(input.type)) return;
+      var inputForm = input.form;
+      if (!inputForm) return;
+      control = Array.from(inputForm.elements).find(function(el){
+        return (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) && el.type === 'submit' && !el.matches(':disabled');
+      });
+    }
+    if (!control || control.matches(':disabled') || !control.form) return;
+    localSubmitActivations.set(e, { form: control.form, submitter: control, count: localSubmitCounts.get(control.form) || 0 });
+  }
+  function finishLocalSubmit(e){
+    var activation = localSubmitActivations.get(e);
+    if (!activation) return;
+    // Let authored handlers and any native submit complete first. A genuine
+    // submit or canceled action must never cause a second local mutation.
+    setTimeout(function(){
+      var form = activation.form;
+      var submitter = activation.submitter;
+      if (e.defaultPrevented || !form.isConnected || submitter.matches(':disabled')) return;
+      if ((localSubmitCounts.get(form) || 0) !== activation.count) return;
+      if (!form.noValidate && !submitter.formNoValidate && !form.reportValidity()) return;
+      form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: submitter }));
+    }, 0);
+  }
+  ['click', 'keydown'].forEach(function(type){
+    document.addEventListener(type, rememberLocalSubmit, true);
+    document.addEventListener(type, finishLocalSubmit);
+  });
+  function setLocalHash(hash){
+    if (location.hash === hash) return;
+    if (location.protocol === 'blob:') {
+      // Chromium rejects fragment navigation of an opaque sandboxed blob.
+      // A same-document history update keeps the artifact and its scripts alive.
+      var oldUrl = location.href;
+      try {
+        history.pushState(null, '', oldUrl.split('#')[0] + hash);
+        if (location.hash === hash) {
+          window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL: oldUrl, newURL: location.href }));
+        }
+      } catch (_) {}
+      return;
+    }
+    location.hash = hash;
+  }
+  document.addEventListener('click', function(e){
+    if (e.defaultPrevented) return;
+    if (!e.target || !(e.target instanceof Element)) return;
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (href === null) return;
+    var isAnchor = href.indexOf('#') === 0 || href === '';
+    if (isAnchor) {
+      e.preventDefault();
+      if (href === '' || href === '#') {
+        window.scrollTo({ top: 0 });
+        history.replaceState(null, '', ' ');
+      } else {
+        var targetId = href.slice(1);
+        var target = targetId ? document.getElementById(targetId) : null;
+        if (target) {
+          target.scrollIntoView();
+          if (location.hash === href) history.replaceState(null, '', ' ');
+          setLocalHash(href);
+        } else {
+          // Hash routers do not have matching element IDs. Keep navigation
+          // inside this document rather than following its asset base URL.
+          setLocalHash(href);
+        }
+      }
+    } else if (link.getAttribute('target') === '_blank') {
+      e.preventDefault();
+      var safe = false;
+      try {
+        var parsedUrl = new URL(href, location.href);
+        safe = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'mailto:';
+      } catch (_) {}
+      if (safe) window.open(href, '_blank', 'noopener,noreferrer');
+    }
+  });
+})();</script><style data-od-preview-hidden-guard="">:root [hidden]:where(:not([hidden="until-found" i])) { display: none; }</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>arta premium — coba 14 hari</title>
+<link rel="icon" href="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/favicon.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" type="image/svg+xml">
+<script>
+(function () {
+  var m = null;
+  try { m = localStorage.getItem('arta-trial-theme'); } catch (e) {}
+  if (!m) {
+    m = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', m);
+})();
+</script>
+<style>
+:root{
+  --ground:#EEF3F5;
+  --surface:#FFFFFF;
+  --surface-2:#F6FAFB;
+  --hero-from:#0B424F;
+  --hero-to:#1F6A76;
+  --hero-text:#FFFFFF;
+  --hero-sub:rgba(255,255,255,.84);
+  --text:#0B424F;
+  --text-secondary:#47646B;
+  --text-muted:#52727A;
+  --line:#DDE7EA;
+  --accent:#52C3BF;
+  --accent-ink:#17726F;
+  --on-accent:#08343D;
+  --radius-sm:10px;
+  --radius:16px;
+  --radius-lg:22px;
+  --shadow:0 1px 2px rgba(11,66,79,.05), 0 10px 28px rgba(11,66,79,.06);
+  --font-display:'Avenir Next','Century Gothic',Futura,'Trebuchet MS',sans-serif;
+  --font-body:'Avenir Next','Segoe UI',system-ui,-apple-system,sans-serif;
+}
+[data-theme="dark"]{
+  --ground:#0B0B0C;
+  --surface:#161618;
+  --surface-2:#1D1D20;
+  --hero-from:#FFFFFF;
+  --hero-to:#FFFFFF;
+  --hero-text:#0B0B0C;
+  --hero-sub:#52727A;
+  --text:#FFFFFF;
+  --text-secondary:#B9B9BF;
+  --text-muted:#8A8A8F;
+  --line:#26262A;
+  --accent:#C6F432;
+  --accent-ink:#C6F432;
+  --on-accent:#0B0B0C;
+  --shadow:none;
+}
+
+*{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  min-height:100dvh;
+  background:var(--ground);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  transition:background-color .2s ease, color .2s ease;
+}
+h1,h2,p{ margin:0; }
+ul{ margin:0; padding:0; list-style:none; }
+button{ font:inherit; }
+:focus-visible{ outline:2px solid var(--accent-ink); outline-offset:2px; border-radius:8px; }
+
+.screen{
+  width:100%;
+  max-width:420px;
+  min-height:100dvh;
+  margin:0 auto;
+  padding:16px 20px 28px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+@media (min-width:480px){
+  body{ padding:28px 16px; }
+  .screen{
+    min-height:0;
+    border:1px solid var(--line);
+    border-radius:32px;
+    box-shadow:0 30px 70px -30px rgba(11,66,79,.35);
+    background:var(--ground);
+  }
+  [data-theme="dark"] .screen{ box-shadow:0 30px 70px -30px rgba(0,0,0,.8); }
+  .cta{ position:static; padding-top:4px; background:none; }
+  .cta::before{ display:none; }
+}
+
+/* ---------- bar atas ---------- */
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.cm-accent{ fill:#52C3BF; }
+.top-mark{ width:30px; height:30px; flex:none; display:block; }
+.top-mark-body{ fill:url(#topGrad); }
+[data-theme="dark"] .top-mark-body{ fill:#F2F7F8; }
+[data-theme="dark"] .top-mark .cm-accent{ fill:#0B424F; }
+.top-name{
+  display:block;
+  font-family:var(--font-display);
+  font-size:19px;
+  font-weight:600;
+  letter-spacing:.02em;
+  line-height:1;
+}
+.theme-switch{
+  margin-left:auto;
+  display:flex;
+  gap:3px;
+  padding:3px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--surface);
+}
+.theme-switch button{
+  appearance:none;
+  border:0;
+  cursor:pointer;
+  border-radius:999px;
+  padding:6px 11px;
+  min-height:32px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--text-secondary);
+  background:transparent;
+  transition:background-color .18s ease, color .18s ease;
+}
+.theme-switch button[aria-pressed="true"]{ background:var(--hero-from); color:var(--hero-text); }
+[data-theme="dark"] .theme-switch button[aria-pressed="true"]{ background:var(--accent); color:var(--on-accent); }
+.theme-switch button:hover{ color:var(--text); }
+[data-theme="dark"] .theme-switch button[aria-pressed="true"]:hover{ color:var(--on-accent); }
+
+/* ---------- hero tawaran ---------- */
+.offer{
+  display:grid;
+  justify-items:center;
+  text-align:center;
+  gap:4px;
+  padding:8px 0 4px;
+}
+.crest-wrap{
+  display:grid;
+  justify-items:center;
+  width:76px;
+  height:auto;
+  margin:0 auto 12px;
+}
+.crest-mark{ display:block; width:76px; height:114px; }
+.crest-main{ fill:url(#crestMain); }
+.crest-mark .cm-accent{ fill:#52C3BF; }
+[data-theme="dark"] .crest-main{ fill:#F2F7F8; }
+[data-theme="dark"] .crest-mark .cm-accent{ fill:#0B424F; }
+.title-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:4px;
+}
+.title-row h1{ margin:0; }
+.trial-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 11px;
+  border-radius:999px;
+  background:var(--accent);
+  color:var(--on-accent);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.02em;
+  white-space:nowrap;
+  transform:translateY(2px);
+}
+.kicker{
+  display:block;
+  font-size:11.5px;
+  font-weight:600;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--accent-ink);
+}
+.offer h1{
+  font-family:var(--font-display);
+  font-size:30px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  line-height:1.15;
+}
+.offer-sub{
+  display:block;
+  margin-top:8px;
+  max-width:30ch;
+  font-size:14.5px;
+  color:var(--text-secondary);
+}
+
+/* ---------- kartu paket ---------- */
+.plans{ display:grid; gap:12px; }
+.plan{
+  padding:18px 18px 8px;
+  border-radius:var(--radius-lg);
+  background:var(--surface);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+}
+.plan-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--row-line, var(--line));
+}
+.plan-name{
+  font-family:var(--font-display);
+  font-size:18px;
+  font-weight:600;
+  letter-spacing:.01em;
+}
+.plan-note{
+  display:block;
+  margin-left:auto;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.02em;
+  color:var(--text-muted);
+  white-space:nowrap;
+}
+
+.feat-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 0;
+  border-bottom:1px solid var(--row-line, var(--line));
+  min-height:42px;
+}
+.feat-row:last-child{ border-bottom:0; }
+.feat-icon{
+  display:grid;
+  place-items:center;
+  flex:none;
+  width:22px;
+  height:22px;
+  color:var(--row-icon, var(--accent-ink));
+}
+.od-icon{ display:block; width:20px; height:20px; flex:none; }
+.feat-icon.is-off{ color:var(--text-muted); }
+.feat-label{
+  display:block;
+  flex:1 1 auto;
+  min-width:0;
+  font-size:15px;
+  line-height:1.4;
+  color:var(--row-label, var(--text));
+}
+.feat-row.is-off .feat-label{ color:var(--text-muted); }
+.feat-value{
+  display:block;
+  flex:none;
+  font-size:13px;
+  font-weight:600;
+  color:var(--row-value, var(--text-secondary));
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.plan-pro{
+  --row-line:rgba(255,255,255,.16);
+  --row-label:#FFFFFF;
+  --row-value:rgba(255,255,255,.9);
+  --row-icon:#9FF0EC;
+  --cm-body:#FFFFFF;
+  --cm-accent:#52C3BF;
+  background:linear-gradient(150deg, var(--hero-from), var(--hero-to));
+  border-color:transparent;
+  color:var(--hero-text);
+}
+.plan-pro .plan-name{ color:var(--hero-text); }
+.plan-pro .plan-note{ color:var(--hero-sub); }
+.plan-pro .feat-label{ color:var(--row-label); }
+.plan-pro .feat-value{ color:var(--row-value); }
+[data-theme="dark"] .plan-pro{
+  --row-line:#DDE7EA;
+  --row-label:#0B424F;
+  --row-value:#47646B;
+  --row-icon:#17726F;
+  --cm-body:#0B424F;
+  --cm-accent:#52C3BF;
+}
+[data-theme="dark"] .plan-pro .plan-name{ color:#0B424F; }
+[data-theme="dark"] .plan-pro .plan-note{ color:#52727A; }
+.crest-mini{
+  width:18px;
+  height:27px;
+  flex:none;
+  display:block;
+}
+.crest-mini .cm-body{ fill:var(--cm-body,#FFFFFF); }
+.crest-mini .cm-accent{ fill:var(--cm-accent,#52C3BF); }
+
+/* ---------- aksi ---------- */
+.cta{
+  position:sticky;
+  bottom:0;
+  display:grid;
+  gap:8px;
+  padding:12px 0 max(8px, env(safe-area-inset-bottom));
+  background:var(--ground);
+}
+.cta::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:100%;
+  height:26px;
+  background:linear-gradient(to top, var(--ground), transparent);
+  pointer-events:none;
+}
+.btn-primary{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  min-height:54px;
+  padding:14px 20px;
+  border:0;
+  border-radius:var(--radius);
+  background:var(--accent);
+  color:var(--on-accent);
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:.01em;
+  cursor:pointer;
+  transition:transform .18s ease, filter .18s ease;
+}
+.btn-primary:hover{ filter:brightness(1.04); transform:translateY(-1px); }
+.btn-primary:active{ transform:translateY(0); }
+.cta-note{
+  display:block;
+  text-align:center;
+  font-size:12.5px;
+  color:var(--text-secondary);
+}
+.fine{
+  display:block;
+  font-size:11.5px;
+  line-height:1.6;
+  color:var(--text-secondary);
+  text-align:center;
+  max-width:34ch;
+  margin:0 auto;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ transition:none !important; animation:none !important; }
+}
+</style>
+<style data-od-tweaks-bridge-style>
+[data-od-tweaks-hidden] .tw-panel {
+  transform: translateX(calc(100% + 32px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.tw-restore { display: none !important; }
+</style><script data-od-tweaks-bridge>(function(){
+  // Synchronously hide BEFORE the artifact body parses so the panel never
+  // flashes on initial paint. The host removes the attribute via postMessage
+  // once it knows the desired state.
+  document.documentElement.setAttribute('data-od-tweaks-hidden', '');
+
+  var suppressEcho = false;
+  var observer = null;
+
+  function panelEl(){ return document.querySelector('.tw-panel'); }
+
+  function applyClassesToPanel(visible){
+    var panel = panelEl();
+    if (panel) panel.classList.toggle('tw-hidden', !visible);
+  }
+
+  function setPanelVisible(visible){
+    suppressEcho = true;
+    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !visible);
+    applyClassesToPanel(visible);
+    // Clear flag after the MutationObserver has had a chance to fire for this
+    // change so we don't echo our own host-driven toggles back to the host.
+    Promise.resolve().then(function(){ suppressEcho = false; });
+  }
+
+  function postState(){
+    var panel = panelEl();
+    if (!panel) return;
+    try {
+      parent.postMessage({
+        type: 'od:tweaks-panel-state',
+        visible: !panel.classList.contains('tw-hidden'),
+      }, '*');
+    } catch (e) {}
+  }
+
+  function postAvailability(){
+    try {
+      parent.postMessage({
+        type: 'od:tweaks-available',
+        available: !!panelEl(),
+      }, '*');
+    } catch (e) {}
+  }
+
+  function attachObserver(){
+    var panel = panelEl();
+    if (!panel || observer) return;
+    observer = new MutationObserver(function(){
+      if (suppressEcho) return;
+      postState();
+    });
+    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function onReady(){
+    // Capture the panel authored visibility BEFORE we apply the host hidden
+    // attribute. The bridge sets data-od-tweaks-hidden synchronously in head
+    // (before the body parses), so on entry to onReady the attribute is
+    // always present even though the artifact may have authored the panel
+    // as default-visible. Reading the panel class first is the only place
+    // we can still observe the author intent. Then drive the attribute,
+    // classes, and posted state from that captured value so a default
+    // visible tw-panel reports visible:true and the toolbar toggle starts
+    // ON. Issue surfaced in PR #1643 review.
+    var panel = panelEl();
+    var initialVisible = !!panel && !panel.classList.contains('tw-hidden');
+    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !initialVisible);
+    applyClassesToPanel(initialVisible);
+    attachObserver();
+    postAvailability();
+    // Post the captured initial visibility so the toolbar toggle reflects
+    // the default state on mount. Without this the toggle reads OFF while
+    // a default-visible tw-panel artifact clearly shows its panel and the
+    // user would have to click toggle-on then toggle-off to actually hide.
+    postState();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady);
+  } else {
+    onReady();
+  }
+
+  window.addEventListener('message', function(ev){
+    if (!ev.data || ev.data.type !== 'od:tweaks-panel-visible') return;
+    setPanelVisible(!!ev.data.visible);
+  });
+})();</script></head>
+<body>
+
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.75"></circle>
+      <path d="M7.8 12.2 L10.7 15.1 L16.4 9" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+    </symbol>
+    <symbol id="i-off" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.75"></circle>
+      <path d="M6.2 6.2 L17.8 17.8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="screen">
+
+  <div class="topbar">
+    <svg class="top-mark" viewBox="0 0 512 512" role="img" aria-label="Mark arta">
+      <defs>
+        <linearGradient id="topGrad" x1="95" y1="106" x2="417" y2="406" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#0B424F"></stop><stop offset="1" stop-color="#1F6A76"></stop>
+        </linearGradient>
+      </defs>
+      <g class="top-mark-body">
+        <circle cx="267" cy="256" r="150"></circle>
+        <rect x="95" y="226" width="96" height="96" rx="48"></rect>
+      </g>
+      <g class="cm-accent">
+        <rect x="225" y="148" width="84" height="20" rx="10"></rect>
+        <circle cx="130" cy="262" r="8"></circle>
+        <circle cx="130" cy="286" r="8"></circle>
+      </g>
+    </svg>
+    <span class="top-name">arta</span>
+    <div class="theme-switch" role="group" aria-label="Mode tampilan">
+      <button type="button" id="modeLight" aria-pressed="true">Terang</button>
+      <button type="button" id="modeDark" aria-pressed="false">Gelap</button>
+    </div>
+  </div>
+
+  <section class="offer">
+    <div class="crest-wrap">
+      <svg class="crest-mark" viewBox="132 70 248 372" role="img" aria-label="Crest premium arta">
+        <defs>
+          <linearGradient id="crestMain" x1="150" y1="86" x2="362" y2="422" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#0B424F"></stop>
+            <stop offset="1" stop-color="#1F6A76"></stop>
+          </linearGradient>
+        </defs>
+        <g class="crest-main">
+          <path d="M150 244 L150 186 L196 112 L226 186 L256 86 L286 186 L316 112 L362 186 L362 244 Z"></path>
+          <rect x="150" y="204" width="212" height="44" rx="8"></rect>
+          <circle cx="262.05" cy="340" r="82.5"></circle>
+          <rect x="167.45" y="323.5" width="52.8" height="52.8" rx="26.4"></rect>
+        </g>
+        <g class="cm-accent">
+          <path d="M256 122 L282 150 L256 178 L230 150 Z"></path>
+          <rect x="238.95" y="280.6" width="46.2" height="11" rx="5.5"></rect>
+          <circle cx="186.7" cy="343.3" r="4.4"></circle>
+          <circle cx="186.7" cy="356.5" r="4.4"></circle>
+          <circle cx="190" cy="226" r="5"></circle>
+          <circle cx="223" cy="226" r="5"></circle>
+          <circle cx="256" cy="226" r="5"></circle>
+          <circle cx="289" cy="226" r="5"></circle>
+          <circle cx="322" cy="226" r="5"></circle>
+        </g>
+      </svg>
+    </div>
+    <span class="kicker">arta premium</span>
+    <div class="title-row">
+      <h1>Coba Premium</h1>
+      <span class="trial-badge">14 hari</span>
+    </div>
+    <p class="offer-sub">Semua fitur Pro terbuka selama 14 hari. Bandingkan dulu, baru putuskan.</p>
+  </section>
+
+  <section class="plans" aria-label="Perbandingan paket">
+
+    <article class="plan plan-free">
+      <div class="plan-head">
+        <h2 class="plan-name">Tanpa Pro</h2>
+        <span class="plan-note">Gratis selamanya</span>
+      </div>
+      <ul>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Catat pakai AI</span>
+          <span class="feat-value">30× / bulan</span>
+        </li>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Catat manual</span>
+          <span class="feat-value">Tanpa batas</span>
+        </li>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Dompet, budget, dana darurat</span>
+        </li>
+        <li class="feat-row is-off">
+          <span class="feat-icon is-off"><svg class="od-icon" aria-hidden="true"><use href="#i-off"></use></svg></span>
+          <span class="feat-label">Laporan email bulanan</span>
+        </li>
+        <li class="feat-row is-off">
+          <span class="feat-icon is-off"><svg class="od-icon" aria-hidden="true"><use href="#i-off"></use></svg></span>
+          <span class="feat-label">Pengingat jatuh tempo</span>
+        </li>
+        <li class="feat-row is-off">
+          <span class="feat-icon is-off"><svg class="od-icon" aria-hidden="true"><use href="#i-off"></use></svg></span>
+          <span class="feat-label">Ekspor CSV / XLSX</span>
+        </li>
+      </ul>
+    </article>
+
+    <article class="plan plan-pro">
+      <div class="plan-head">
+        <svg class="crest-mini" viewBox="132 70 248 372" aria-hidden="true">
+          <g class="cm-body">
+            <path d="M150 244 L150 186 L196 112 L226 186 L256 86 L286 186 L316 112 L362 186 L362 244 Z"></path>
+            <rect x="150" y="204" width="212" height="44" rx="8"></rect>
+            <circle cx="262.05" cy="340" r="82.5"></circle>
+            <rect x="167.45" y="323.5" width="52.8" height="52.8" rx="26.4"></rect>
+          </g>
+          <g class="cm-accent">
+            <path d="M256 122 L282 150 L256 178 L230 150 Z"></path>
+            <rect x="238.95" y="280.6" width="46.2" height="11" rx="5.5"></rect>
+            <circle cx="190" cy="226" r="5"></circle>
+            <circle cx="223" cy="226" r="5"></circle>
+            <circle cx="256" cy="226" r="5"></circle>
+            <circle cx="289" cy="226" r="5"></circle>
+            <circle cx="322" cy="226" r="5"></circle>
+          </g>
+        </svg>
+        <h2 class="plan-name">Pro</h2>
+        <span class="plan-note">Selama uji coba</span>
+      </div>
+      <ul>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Catat pakai AI</span>
+          <span class="feat-value">Tanpa batas</span>
+        </li>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Catat manual</span>
+          <span class="feat-value">Tanpa batas</span>
+        </li>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Dompet, budget, dana darurat</span>
+        </li>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Laporan email bulanan</span>
+          <span class="feat-value">3 penerima</span>
+        </li>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Pengingat jatuh tempo</span>
+        </li>
+        <li class="feat-row">
+          <span class="feat-icon"><svg class="od-icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+          <span class="feat-label">Ekspor CSV / XLSX</span>
+        </li>
+      </ul>
+    </article>
+
+  </section>
+
+  <p class="fine">Saat uji coba berakhir, langganan Pro berlanjut sebagai langganan berbayar lewat Google Play. Harga dan ketentuan tampil sebelum kamu mengonfirmasi.</p>
+
+  <div class="cta">
+    <button class="btn-primary" type="button">Mulai uji coba 14 hari</button>
+    <span class="cta-note">Batalkan kapan saja, tanpa biaya.</span>
+  </div>
+
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btnLight = document.getElementById('modeLight');
+  var btnDark = document.getElementById('modeDark');
+  if (!btnLight || !btnDark) return;
+
+  function apply(mode) {
+    root.setAttribute('data-theme', mode);
+    btnLight.setAttribute('aria-pressed', String(mode === 'light'));
+    btnDark.setAttribute('aria-pressed', String(mode === 'dark'));
+    try { localStorage.setItem('arta-trial-theme', mode); } catch (e) {}
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem('arta-trial-theme'); } catch (e) {}
+  if (!saved) {
+    saved = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  apply(saved);
+
+  btnLight.addEventListener('click', function () { apply('light'); });
+  btnDark.addEventListener('click', function () { apply('dark'); });
+})();
+</script>
+
+
+<script data-od-preview-content-size-bridge>(function(){
+  if (window.__odPreviewContentSizeBridge) return;
+  window.__odPreviewContentSizeBridge = true;
+  var pending = false;
+  var lastRequest = null;
+  var documentEpoch = "";
+  function measure(){
+    var root = document.documentElement;
+    var body = document.body || root;
+    if (!root) return null;
+    var scrollValues = [
+      root.scrollWidth,
+      body && body.scrollWidth,
+    ];
+    var clientValues = [
+      root.clientWidth,
+      body && body.clientWidth
+    ];
+    var scrollWidth = 0;
+    var clientWidth = 0;
+    for (var i = 0; i < scrollValues.length; i += 1) {
+      var nextScroll = Number(scrollValues[i] || 0);
+      if (Number.isFinite(nextScroll) && nextScroll > scrollWidth) scrollWidth = nextScroll;
+    }
+    for (var j = 0; j < clientValues.length; j += 1) {
+      var nextClient = Number(clientValues[j] || 0);
+      if (Number.isFinite(nextClient) && nextClient > clientWidth) clientWidth = nextClient;
+    }
+    return {
+      scrollWidth: scrollWidth > 0 ? Math.ceil(scrollWidth) : null,
+      clientWidth: clientWidth > 0 ? Math.ceil(clientWidth) : null
+    };
+  }
+  function post(){
+    if (!lastRequest) return;
+    var size = measure();
+    try {
+      window.parent.postMessage({
+        type: 'od:preview-content-size',
+        measurementId: lastRequest.measurementId,
+        generation: lastRequest.generation,
+        documentEpoch: documentEpoch,
+        scrollWidth: size && size.scrollWidth,
+        clientWidth: size && size.clientWidth
+      }, '*');
+    } catch (_) {}
+  }
+  function schedule(){
+    if (pending) return;
+    pending = true;
+    window.requestAnimationFrame(function(){
+      pending = false;
+      post();
+    });
+  }
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:preview-content-size-request') return;
+    if (typeof data.measurementId !== 'string' || typeof data.generation !== 'string') return;
+    lastRequest = {
+      measurementId: data.measurementId,
+      generation: data.generation
+    };
+    schedule();
+  });
+  window.addEventListener('resize', schedule);
+  if (typeof ResizeObserver !== 'undefined') {
+    try {
+      var observer = new ResizeObserver(schedule);
+      observer.observe(document.documentElement);
+      if (document.body) observer.observe(document.body);
+    } catch (_) {}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', schedule);
+  } else {
+    setTimeout(schedule, 0);
+  }
+  setTimeout(schedule, 80);
+  setTimeout(schedule, 260);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(schedule).catch(function(){});
+  }
+})();</script><script data-od-snapshot-bridge>(function(){
+  var SNAPSHOT_STYLE_PROPS = [
+    'display','position','box-sizing','width','height','min-width','max-width','min-height','max-height',
+    'margin','margin-top','margin-right','margin-bottom','margin-left',
+    'padding','padding-top','padding-right','padding-bottom','padding-left',
+    'border','border-top','border-right','border-bottom','border-left','border-radius',
+    'font','font-family','font-size','font-weight','font-style','line-height','letter-spacing',
+    'color','background-color','opacity','transform','transform-origin','overflow','overflow-x','overflow-y',
+    'white-space','text-align','vertical-align','object-fit','object-position',
+    'flex','flex-direction','flex-wrap','flex-grow','flex-shrink','flex-basis',
+    'grid','grid-template-columns','grid-template-rows','grid-column','grid-row',
+    'gap','row-gap','column-gap','align-items','align-content','align-self',
+    'justify-items','justify-content','justify-self','inset','top','right','bottom','left',
+    'z-index','box-shadow','text-shadow'
+  ];
+  function copyComputedStyle(source, target){
+    if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
+    var computed = window.getComputedStyle(source);
+    var style = target.getAttribute('style') || '';
+    for (var i = 0; i < SNAPSHOT_STYLE_PROPS.length; i++){
+      var prop = SNAPSHOT_STYLE_PROPS[i];
+      var value = computed.getPropertyValue(prop);
+      if (value) style += prop + ':' + value + ';';
+    }
+    target.setAttribute('style', style);
+  }
+  function syncElementState(source, target){
+    var tag = source.tagName ? source.tagName.toLowerCase() : '';
+    if (tag === 'img' && source.currentSrc) target.setAttribute('src', source.currentSrc);
+    if (tag === 'input' || tag === 'textarea') target.setAttribute('value', source.value || '');
+    if (tag === 'canvas') {
+      try {
+        var img = document.createElement('img');
+        img.setAttribute('src', source.toDataURL('image/png'));
+        img.setAttribute('style', target.getAttribute('style') || '');
+        target.parentNode && target.parentNode.replaceChild(img, target);
+      } catch (_) {}
+    }
+  }
+  function inlineSnapshotStyles(originalRoot, cloneRoot){
+    copyComputedStyle(originalRoot, cloneRoot);
+    syncElementState(originalRoot, cloneRoot);
+    var originals = originalRoot.querySelectorAll('*');
+    var clones = cloneRoot.querySelectorAll('*');
+    var count = Math.min(originals.length, clones.length, 3500);
+    for (var i = 0; i < count; i++){
+      copyComputedStyle(originals[i], clones[i]);
+      syncElementState(originals[i], clones[i]);
+    }
+  }
+  // Must run AFTER pruneHiddenSnapshotNodes: prune pairs originalRoot/cloneRoot
+  // querySelectorAll('*') lists by index, so removing clone nodes (scripts,
+  // links) before it shifts every later clone under the wrong original and the
+  // misdirected removals can delete the visible content (or the body itself),
+  // yielding a uniform "empty-render" frame.
+  function stripSnapshotResources(cloneRoot){
+    var scripts = cloneRoot.querySelectorAll('script');
+    for (var s = scripts.length - 1; s >= 0; s--) scripts[s].remove();
+    var links = cloneRoot.querySelectorAll('link[rel~="stylesheet"], link[rel~="preload"], link[rel~="preconnect"]');
+    for (var l = links.length - 1; l >= 0; l--) links[l].remove();
+    var styles = cloneRoot.querySelectorAll('style');
+    for (var st = 0; st < styles.length; st++) {
+      styles[st].textContent = (styles[st].textContent || '')
+        .replace(/@import[^;]+;/gi, '')
+        .replace(/@font-face\s*\{[^}]*\}/gi, '');
+    }
+    // HTML tolerates attribute names XML rejects (@click, :href, {shorthand}).
+    // One such attribute anywhere makes the whole foreignObject SVG unparseable,
+    // so drop any attribute whose name is not a valid XML Name.
+    var XML_NAME = /^[A-Za-z_][A-Za-z0-9_.-]*(?::[A-Za-z_][A-Za-z0-9_.-]*)?$/;
+    var all = cloneRoot.querySelectorAll('*');
+    for (var e = 0; e < all.length; e++) {
+      var attrs = all[e].attributes;
+      for (var a = attrs.length - 1; a >= 0; a--) {
+        if (!XML_NAME.test(attrs[a].name)) all[e].removeAttribute(attrs[a].name);
+      }
+    }
+  }
+  // innerHTML uses the HTML serializer, which emits void elements (<br>, <img>)
+  // without self-closing slashes — invalid XML, so the foreignObject SVG image
+  // fails to parse (img.onerror → 'snapshot image failed'). XMLSerializer emits
+  // well-formed XHTML instead.
+  function serializeSnapshotXhtml(node){
+    try {
+      var serializer = new XMLSerializer();
+      var out = '';
+      for (var i = 0; i < node.childNodes.length; i++) out += serializer.serializeToString(node.childNodes[i]);
+      return out;
+    } catch (_) { return node.innerHTML || ''; }
+  }
+  function pruneHiddenSnapshotNodes(originalRoot, cloneRoot){
+    var originals = originalRoot.querySelectorAll('*');
+    var clones = cloneRoot.querySelectorAll('*');
+    var count = Math.min(originals.length, clones.length);
+    var removals = [];
+    for (var i = 0; i < count; i++){
+      var original = originals[i];
+      var clone = clones[i];
+      if (!original || !clone || !clone.parentNode) continue;
+      var computed = window.getComputedStyle(original);
+      if (computed && (computed.display === 'none' || computed.visibility === 'hidden')) {
+        removals.push(clone);
+      }
+    }
+    for (var r = removals.length - 1; r >= 0; r--){
+      if (removals[r].parentNode) removals[r].parentNode.removeChild(removals[r]);
+    }
+  }
+  function waitForImages(){
+    var imgs = Array.prototype.slice.call(document.images || []);
+    return Promise.all(imgs.map(function(img){
+      if (img.complete) return Promise.resolve();
+      return new Promise(function(resolve){
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
+    }));
+  }
+  function scrollOffset(){
+    var doc = document.documentElement;
+    var body = document.body;
+    return {
+      x: Math.max(window.scrollX || 0, doc ? doc.scrollLeft || 0 : 0, body ? body.scrollLeft || 0 : 0),
+      y: Math.max(window.scrollY || 0, doc ? doc.scrollTop || 0 : 0, body ? body.scrollTop || 0 : 0)
+    };
+  }
+  function escapeAttribute(value){
+    return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+  function snapshotBackgroundColor(){
+    try {
+      var probe = window.getComputedStyle(document.body || document.documentElement);
+      var bg = probe && probe.backgroundColor || '';
+      if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') return '#ffffff';
+      return bg;
+    } catch (_) { return '#ffffff'; }
+  }
+  // After painting, sample the canvas: a uniform (single-color) bitmap means
+  // the foreignObject rasterizer painted nothing — Chromium frequently refuses
+  // to paint <foreignObject> HTML loaded via <img>. Treating that as an honest
+  // 'empty-render' error (instead of shipping the background-only frame) lets
+  // the host fall back / surface a real failure rather than a silent black PNG.
+  function canvasLooksBlank(ctx, cw, ch){
+    try {
+      var data = ctx.getImageData(0, 0, cw, ch).data;
+      var step = Math.max(4, Math.floor((cw * ch) / 4096)) * 4;
+      var first = null, samples = 0;
+      for (var i = 0; i + 3 < data.length; i += step){
+        samples++;
+        if (!first){ first = [data[i], data[i+1], data[i+2], data[i+3]]; continue; }
+        if (Math.abs(data[i]-first[0]) > 6 || Math.abs(data[i+1]-first[1]) > 6 ||
+            Math.abs(data[i+2]-first[2]) > 6 || Math.abs(data[i+3]-first[3]) > 6) return false;
+      }
+      return samples > 8;
+    } catch (_) { return false; }
+  }
+  // Rasterize the current view (or the whole document, when opts.full) via an
+  // SVG <foreignObject>. Returns a Promise so it can be reused by both the
+  // od:snapshot message handler AND the export-capture bridge (image export /
+  // PDF) — the foreignObject path is fast and never blocks on external
+  // image network loads the way a DOM-cloning rasterizer does.
+  function captureSnapshot(opts){
+    opts = opts || {};
+    return new Promise(function(resolve, reject){
+      var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+      var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+      var dpr = window.devicePixelRatio || 1;
+      var bgColor = snapshotBackgroundColor();
+      var docW = Math.max(w, document.documentElement.scrollWidth || 0, document.body ? document.body.scrollWidth : 0);
+      var docH = Math.max(h, document.documentElement.scrollHeight || 0, document.body ? document.body.scrollHeight : 0);
+      var full = !!opts.full;
+      var capW = full ? docW : w;
+      var capH = full ? docH : h;
+      var clone = document.documentElement.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      inlineSnapshotStyles(document.documentElement, clone);
+      pruneHiddenSnapshotNodes(document.documentElement, clone);
+      stripSnapshotResources(clone);
+      var scroll = full ? { x: 0, y: 0 } : scrollOffset();
+      var cloneBody = clone.querySelector('body');
+      var rootStyle = clone.getAttribute('style') || '';
+      var bodyStyle = cloneBody ? cloneBody.getAttribute('style') || '' : '';
+      var bodyContent = serializeSnapshotXhtml(cloneBody || clone);
+      var wrapperStyle = rootStyle + bodyStyle +
+        'margin:0;position:relative;left:' + (-scroll.x) + 'px;top:' + (-scroll.y) + 'px;' +
+        'width:' + docW + 'px;height:' + docH + 'px;overflow:visible;';
+      var html = '<div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeAttribute(wrapperStyle) + '">' + bodyContent + '</div>';
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + capW + '" height="' + capH + '" viewBox="0 0 ' + capW + ' ' + capH + '">' +
+        '<foreignObject x="0" y="0" width="' + docW + '" height="' + docH + '">' +
+        html +
+        '</foreignObject></svg>';
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.floor(capW * dpr));
+          canvas.height = Math.max(1, Math.floor(capH * dpr));
+          var ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('no 2d context');
+          ctx.scale(dpr, dpr);
+          // Opaque base so a transparent (un-painted) raster never flattens to
+          // pure black in clipboards / PNG viewers.
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, capW, capH);
+          ctx.drawImage(img, 0, 0, capW, capH);
+          if (canvasLooksBlank(ctx, canvas.width, canvas.height)) {
+            reject(new Error('empty-render'));
+            return;
+          }
+          resolve({ dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height });
+        } catch (err) {
+          reject(err instanceof Error ? err : new Error(String(err && err.message || err)));
+        }
+      };
+      img.onerror = function(){ reject(new Error('snapshot image failed')); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  }
+  // Exposed so the export-capture bridge (same document) can reuse this renderer.
+  window.__odCaptureSnapshot = function(opts){
+    return waitForImages().then(function(){ return captureSnapshot(opts || {}); });
+  };
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:snapshot' || !data.id) return;
+    window.__odCaptureSnapshot({ full: !!data.full }).then(function(res){
+      window.parent.postMessage({ type: 'od:snapshot:result', id: String(data.id), dataUrl: res.dataUrl, w: res.w, h: res.h }, '*');
+    }, function(err){
+      window.parent.postMessage({ type: 'od:snapshot:result', id: String(data.id), error: String(err && err.message || err) }, '*');
+    });
+  });
+})();</script><script data-od-export-capture-bridge>(function(){
+  function raf(){ return new Promise(function(r){ requestAnimationFrame(function(){ r(); }); }); }
+  function settle(){
+    var fonts = (document.fonts && document.fonts.ready) ? document.fonts.ready.catch(function(){}) : Promise.resolve();
+    var imgs = Promise.all(Array.prototype.slice.call(document.images||[]).map(function(img){
+      if (img.complete) return Promise.resolve();
+      return new Promise(function(r){ img.addEventListener('load', r, {once:true}); img.addEventListener('error', r, {once:true}); });
+    }));
+    return Promise.all([fonts, imgs]).then(raf).then(raf);
+  }
+  function deckState(){
+    try { if (typeof window.__odDeckSlideState === 'function') return window.__odDeckSlideState(); } catch(_){}
+    return { active: 0, count: 1 };
+  }
+  function navTo(index, delay){
+    return new Promise(function(resolve){
+      try { window.postMessage({ type:'od:slide', action:'go', index: index }, '*'); } catch(_){}
+      var tries = 0;
+      function check(){
+        tries++;
+        if (deckState().active === index || tries > 14) { resolve(); return; }
+        setTimeout(check, 80);
+      }
+      setTimeout(check, Math.max(60, delay||0));
+    });
+  }
+  function captureImage(deck){
+    // Reuse the shared SVG-foreignObject renderer (injectSnapshotBridge). For a
+    // deck the active slide fills the viewport, so a viewport capture IS the
+    // slide; a non-deck page captures the full document.
+    if (typeof window.__odCaptureSnapshot !== 'function') {
+      return Promise.reject(new Error('snapshot renderer unavailable'));
+    }
+    return window.__odCaptureSnapshot({ full: !deck });
+  }
+  function notes(){
+    var el = document.getElementById('speaker-notes');
+    if (el) {
+      var t = el.textContent || '';
+      try { var j = JSON.parse(t); if (Array.isArray(j)) return j; } catch(_){}
+      var plain = t.replace(/\s+/g,' ').trim();
+      if (plain) return plain;
+    }
+    var list = [];
+    // Match every .slide in document order — per-slide notes must line up
+    // 1:1 with the slide list regardless of the deck's container nesting.
+    var slideNodes = document.querySelectorAll('.slide');
+    for (var i = 0; i < slideNodes.length; i++) {
+      var noteEl = slideNodes[i].querySelector('.notes');
+      list.push(noteEl ? (noteEl.textContent || '').replace(/\s+/g, ' ').trim() : '');
+    }
+    return list.length ? list : '';
+  }
+  function send(msg){ try { window.parent.postMessage(msg, '*'); } catch(_){} }
+  function run(req){
+    var id = req.id;
+    var deck = !!req.deck;
+    var single = !!req.single;
+    var delay = req.delay || 350;
+    Promise.resolve().then(function(){
+      var st = deckState();
+      var total = (!single && deck && st.count > 1) ? st.count : 1;
+      var notesAll = notes();
+      function noteFor(i){ return Array.isArray(notesAll) ? (notesAll[i]||'') : (i===0 ? notesAll : ''); }
+      var idx = 0;
+      function step(){
+        if (idx >= total){ send({ type:'od:export-capture:done', id:id, total: total }); return; }
+        var i = idx;
+        var navP = (!single && deck && total > 1) ? navTo(i, delay) : Promise.resolve();
+        navP.then(settle).then(function(){
+          try {
+            captureImage(deck).then(function(img){
+              send({ type:'od:export-capture:slide', id:id, index:i, total:total, dataUrl: img.dataUrl, w: img.w, h: img.h, notes: noteFor(i) });
+              idx++; setTimeout(step, 0);
+            }).catch(function(err){ send({ type:'od:export-capture:error', id:id, error: String(err && err.message || err) }); });
+          } catch(err){ send({ type:'od:export-capture:error', id:id, error: String(err && err.message || err) }); }
+        });
+      }
+      step();
+    }).catch(function(err){
+      send({ type:'od:export-capture:error', id:id, error: String(err && err.message || err) });
+    });
+  }
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:export-capture' || !data.id) return;
+    run(data);
+  });
+})();</script><template data-od-srcdoc-transport-body-complete=""></template></body></html>

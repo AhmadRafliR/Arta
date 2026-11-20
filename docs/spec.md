@@ -1,7 +1,7 @@
 # Desain: App Keuangan "Ngomong aja, beres." (Android)
 
 Tanggal: 2026-11-19 · Status: draf untuk disetujui
-Nama app: **belum ditentukan** (pakai nama kerja `keuangan-app` sampai diputuskan).
+Nama app: **arta** — "Own Your Money" (dari design kit Rafli, 2026-11-20; acuan visual di `docs/design/arta/`). ID paket Play Store diputuskan saat rilis.
 
 ---
 
@@ -71,6 +71,8 @@ Tagline kerja: *"Ngomong aja, beres."*
 | Laporan email bulanan otomatis + kirim sekarang | — | ✓, maks. 3 penerima |
 | Pengingat jatuh tempo hutang (push) | — | ✓ |
 | Ekspor ke Sheets/Excel (CSV/XLSX) | — | ✓ |
+
+Uji coba: **Pro gratis 14 hari** (keputusan Rafli lewat desain layar Premium, 2026-11-20), lalu berlanjut sebagai langganan berbayar Google Play; harga dan ketentuan tampil sebelum konfirmasi, bisa dibatalkan kapan saja. Layar Premium: `docs/design/arta/premium-trial.html`, dibangun bersama sistem langganan.
 
 Harga: belum final, usulan awal ~Rp19.000/bulan (plus opsi tahunan). Satu "catat pakai AI" = satu permintaan parsing, berapa pun transaksi yang dihasilkan.
 

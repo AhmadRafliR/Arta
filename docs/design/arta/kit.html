@@ -1,0 +1,1813 @@
+<!doctype html>
+<html lang="id" data-theme="light"><head><script data-od-srcdoc-transport-activation>(function(){
+  var generation = "";
+  var bodyComplete = false;
+  function containsCompletionMarker(node){
+    if (!node || node.nodeType !== 1) return false;
+    if (node.tagName === 'TEMPLATE' && node.getAttribute('data-od-srcdoc-transport-body-complete') === generation) return true;
+    var candidates = node.querySelectorAll ? node.querySelectorAll('template[data-od-srcdoc-transport-body-complete]') : [];
+    for (var i = 0; i < candidates.length; i += 1) {
+      if (candidates[i].getAttribute('data-od-srcdoc-transport-body-complete') === generation) return true;
+    }
+    return false;
+  }
+  var completionObserver = typeof MutationObserver === 'function' ? new MutationObserver(function(records){
+    if (bodyComplete) return;
+    for (var i = 0; i < records.length; i += 1) {
+      var added = records[i].addedNodes || [];
+      for (var j = 0; j < added.length; j += 1) {
+        if (!containsCompletionMarker(added[j])) continue;
+        bodyComplete = true;
+        completionObserver.disconnect();
+        return;
+      }
+    }
+  }) : null;
+  if (completionObserver && document.documentElement) {
+    completionObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
+  function announceReady(probeId){
+    if (!generation) return;
+    try {
+      if (window.parent && window.parent !== window) {
+        var message = { type: 'od:srcdoc-transport-activated', generation: generation };
+        if (typeof probeId === 'string' && probeId) message.probeId = probeId;
+        message.bodyComplete = bodyComplete;
+        message.documentReadyState = document.readyState;
+        message.bodyPresent = !!document.body;
+        message.bodyChildCount = document.body ? document.body.children.length : 0;
+        message.documentElementChildCount = document.documentElement ? document.documentElement.children.length : 0;
+        window.parent.postMessage(message, '*');
+      }
+    } catch (_) { /* sandboxed parent */ }
+  }
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (data && data.type === 'od:srcdoc-transport-ready-probe') {
+      if (data.generation === generation) announceReady(data.probeId);
+      return;
+    }
+    if (!data || data.type !== 'od:srcdoc-transport-activate' || typeof data.html !== 'string' || typeof data.generation !== 'string' || !data.generation) return;
+    // document.open/write keeps the current Window realm. Re-running an
+    // authored classic script there can fail before execution when it declares
+    // a top-level let/const that the previous document already declared. Ask
+    // the host to remount the shared bootstrap so this generation gets a fresh
+    // realm, then let the one-shot shell perform the initial write.
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'od:srcdoc-transport-reset-required',
+          generation: data.generation
+        }, '*');
+      }
+    } catch (_) { /* sandboxed parent — host recovery will remount on timeout */ }
+  });
+  announceReady();
+})();</script><script data-od-preview-redirect-guard>(function(){
+  var NAME_PREFIX = '__odRedirectGuard=';
+  var MAX_HOPS = 15;
+  var WINDOW_MS = 4000;
+  var SELF_MIN_DELAY_MS = 2000;
+  var MESSAGE_TYPE = "od:redirect-loop-blocked";
+  var BLOCK_LOAD_TIME_SCRIPT_REDIRECT = false;
+  function nowMs(){ try { return Date.now(); } catch (_) { return 0; } }
+  function readState(){
+    try {
+      var raw = window.name;
+      if (typeof raw === 'string' && raw.indexOf(NAME_PREFIX) === 0) {
+        var parsed = JSON.parse(raw.slice(NAME_PREFIX.length));
+        if (parsed && typeof parsed.hops === 'number' && typeof parsed.windowStart === 'number') return parsed;
+      }
+    } catch (_) {}
+    return null;
+  }
+  function writeState(state){
+    try { window.name = NAME_PREFIX + JSON.stringify({ hops: state.hops, windowStart: state.windowStart }); } catch (_) {}
+  }
+  function clearState(){
+    try { if (typeof window.name === 'string' && window.name.indexOf(NAME_PREFIX) === 0) window.name = ''; } catch (_) {}
+  }
+  function nextState(){
+    var t = nowMs();
+    var prev = readState();
+    var withinWindow = prev && (t - prev.windowStart) <= WINDOW_MS;
+    return { hops: (withinWindow ? prev.hops : 0) + 1, windowStart: withinWindow ? prev.windowStart : t };
+  }
+  function scheduleCandidateReset(state){
+    try {
+      if (typeof setTimeout !== 'function') return;
+      setTimeout(function(){
+        try {
+          var current = readState();
+          if (current && current.hops === state.hops && current.windowStart === state.windowStart) clearState();
+        } catch (_) {}
+      }, WINDOW_MS + 1);
+    } catch (_) {}
+  }
+  function recordScriptRedirectCandidate(){
+    if (!BLOCK_LOAD_TIME_SCRIPT_REDIRECT) return;
+    var state = nextState();
+    if (state.hops > MAX_HOPS) {
+      clearState();
+      report(state.hops);
+      return;
+    }
+    writeState(state);
+    scheduleCandidateReset(state);
+  }
+  function metaRefreshes(){
+    var out = [];
+    try {
+      var metas = document.getElementsByTagName('meta');
+      for (var i = 0; i < metas.length; i++) {
+        var equiv = metas[i].getAttribute ? metas[i].getAttribute('http-equiv') : null;
+        if (equiv && String(equiv).toLowerCase() === 'refresh') out.push(metas[i]);
+      }
+    } catch (_) {}
+    return out;
+  }
+  function parseContent(meta){
+    var content = '';
+    try { content = String(meta.getAttribute('content') || ''); } catch (_) {}
+    var delayMatch = content.match(/^\s*([0-9]+(?:\.[0-9]+)?)/);
+    var delayMs = delayMatch ? Math.round(parseFloat(delayMatch[1]) * 1000) : 0;
+    var urlMatch = content.match(/[;,]\s*url\s*=\s*['"]?\s*([^'"\s]+)/i);
+    return { delayMs: delayMs, url: urlMatch ? urlMatch[1] : '' };
+  }
+  function currentArtifactHref(){
+    try {
+      var href = String(location.href || '');
+      if (href === 'about:srcdoc') {
+        return String(document.baseURI || href);
+      }
+      return href;
+    } catch (_) {
+      return '';
+    }
+  }
+  function isSelfTarget(url){
+    if (!url) return true; // no url => refresh the current document
+    try {
+      var base = (document.baseURI) || location.href;
+      return new URL(url, base).href === currentArtifactHref();
+    } catch (_) { return false; }
+  }
+  function isFastSrcdocUrlHop(parsed){
+    if (!parsed.url || parsed.delayMs > SELF_MIN_DELAY_MS) return false;
+    try { return String(location.href || '') === 'about:srcdoc'; } catch (_) { return false; }
+  }
+  function neutralize(metas){
+    for (var i = 0; i < metas.length; i++) {
+      try { metas[i].parentNode && metas[i].parentNode.removeChild(metas[i]); } catch (_) {}
+    }
+    try { if (window.stop) window.stop(); } catch (_) {}
+  }
+  function report(hops){
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: MESSAGE_TYPE, hops: hops }, '*');
+      }
+    } catch (_) {}
+  }
+  function evaluate(){
+    var metas = metaRefreshes();
+    if (!metas.length) {
+      // No refresh directive: this document breaks any accumulating chain.
+      if (!BLOCK_LOAD_TIME_SCRIPT_REDIRECT) clearState();
+      return;
+    }
+    var selfLoop = false;
+    for (var i = 0; i < metas.length; i++) {
+      var parsed = parseContent(metas[i]);
+      if (parsed.delayMs <= SELF_MIN_DELAY_MS && isSelfTarget(parsed.url)) { selfLoop = true; break; }
+      if (isFastSrcdocUrlHop(parsed)) { selfLoop = true; break; }
+    }
+    var state = nextState();
+    if (selfLoop || state.hops > MAX_HOPS) {
+      neutralize(metas);
+      clearState();
+      report(state.hops);
+      return;
+    }
+    writeState(state);
+  }
+  recordScriptRedirectCandidate();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', evaluate);
+  } else {
+    evaluate();
+  }
+})();</script><script data-od-sandbox-shim>(function(){
+  function makeStore(){
+    var data = {};
+    var api = {
+      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+      setItem: function(k, v){ data[k] = String(v); },
+      removeItem: function(k){ delete data[k]; },
+      clear: function(){ data = {}; },
+      key: function(i){ return Object.keys(data)[i] || null; }
+    };
+    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
+    return api;
+  }
+  function tryShim(name){
+    var works = false;
+    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
+    catch (_) { works = false; }
+    if (works) return;
+    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
+    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
+  }
+  tryShim('localStorage');
+  tryShim('sessionStorage');
+  function shimHistoryMethod(name){
+    try {
+      var h = window.history;
+      var original = h && h[name];
+      if (typeof original !== 'function') return;
+      h[name] = function(state, title, url){
+        try { return original.call(h, state, title, url); }
+        catch (_) { return undefined; }
+      };
+    } catch (_) {}
+  }
+  shimHistoryMethod('pushState');
+  shimHistoryMethod('replaceState');
+  // A strict iframe blocks native form submission before a submit event is
+  // dispatched. Preserve local JS handlers without invoking native navigation.
+  var localSubmitActivations = new WeakMap();
+  var localSubmitCounts = new WeakMap();
+  document.addEventListener('submit', function(e){
+    if (e.target instanceof HTMLFormElement) {
+      localSubmitCounts.set(e.target, (localSubmitCounts.get(e.target) || 0) + 1);
+    }
+  }, true);
+  function rememberLocalSubmit(e){
+    if (!(e.target instanceof Element)) return;
+    var control;
+    if (e.type === 'click') {
+      control = e.target.closest('button, input');
+      if (!control || control.type !== 'submit') return;
+    } else {
+      if (e.key !== 'Enter' || e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      var input = e.target;
+      if (!(input instanceof HTMLInputElement) || !/^(text|email|tel|url|search|password|number)$/.test(input.type)) return;
+      var inputForm = input.form;
+      if (!inputForm) return;
+      control = Array.from(inputForm.elements).find(function(el){
+        return (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) && el.type === 'submit' && !el.matches(':disabled');
+      });
+    }
+    if (!control || control.matches(':disabled') || !control.form) return;
+    localSubmitActivations.set(e, { form: control.form, submitter: control, count: localSubmitCounts.get(control.form) || 0 });
+  }
+  function finishLocalSubmit(e){
+    var activation = localSubmitActivations.get(e);
+    if (!activation) return;
+    // Let authored handlers and any native submit complete first. A genuine
+    // submit or canceled action must never cause a second local mutation.
+    setTimeout(function(){
+      var form = activation.form;
+      var submitter = activation.submitter;
+      if (e.defaultPrevented || !form.isConnected || submitter.matches(':disabled')) return;
+      if ((localSubmitCounts.get(form) || 0) !== activation.count) return;
+      if (!form.noValidate && !submitter.formNoValidate && !form.reportValidity()) return;
+      form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: submitter }));
+    }, 0);
+  }
+  ['click', 'keydown'].forEach(function(type){
+    document.addEventListener(type, rememberLocalSubmit, true);
+    document.addEventListener(type, finishLocalSubmit);
+  });
+  function setLocalHash(hash){
+    if (location.hash === hash) return;
+    if (location.protocol === 'blob:') {
+      // Chromium rejects fragment navigation of an opaque sandboxed blob.
+      // A same-document history update keeps the artifact and its scripts alive.
+      var oldUrl = location.href;
+      try {
+        history.pushState(null, '', oldUrl.split('#')[0] + hash);
+        if (location.hash === hash) {
+          window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL: oldUrl, newURL: location.href }));
+        }
+      } catch (_) {}
+      return;
+    }
+    location.hash = hash;
+  }
+  document.addEventListener('click', function(e){
+    if (e.defaultPrevented) return;
+    if (!e.target || !(e.target instanceof Element)) return;
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (href === null) return;
+    var isAnchor = href.indexOf('#') === 0 || href === '';
+    if (isAnchor) {
+      e.preventDefault();
+      if (href === '' || href === '#') {
+        window.scrollTo({ top: 0 });
+        history.replaceState(null, '', ' ');
+      } else {
+        var targetId = href.slice(1);
+        var target = targetId ? document.getElementById(targetId) : null;
+        if (target) {
+          target.scrollIntoView();
+          if (location.hash === href) history.replaceState(null, '', ' ');
+          setLocalHash(href);
+        } else {
+          // Hash routers do not have matching element IDs. Keep navigation
+          // inside this document rather than following its asset base URL.
+          setLocalHash(href);
+        }
+      }
+    } else if (link.getAttribute('target') === '_blank') {
+      e.preventDefault();
+      var safe = false;
+      try {
+        var parsedUrl = new URL(href, location.href);
+        safe = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'mailto:';
+      } catch (_) {}
+      if (safe) window.open(href, '_blank', 'noopener,noreferrer');
+    }
+  });
+})();</script><style data-od-preview-hidden-guard="">:root [hidden]:where(:not([hidden="until-found" i])) { display: none; }</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>arta — design kit</title>
+<link rel="icon" href="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/favicon.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" type="image/svg+xml">
+<style>
+/* OD-LAYOUT-PRIMITIVES v1 — structure only: display, flex/grid, overflow, wrapping, ratio, geometry.
+   Put this @layer first; product CSS outside the layer wins ordinary layout rules.
+   Native hidden and closed-dialog states take precedence over component display rules. */
+@layer od-layout {
+  [hidden]:not([hidden="until-found" i]) { display: none !important; }
+  dialog:not([open]) { display: none !important; }
+
+  :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+
+  /* containers */
+  .od-stack   { display: flex; flex-direction: column; gap: var(--od-gap, 8px); }
+  .od-row     { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+  .od-row-top { display: flex; align-items: flex-start; gap: var(--od-gap, 8px); }
+  .od-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--od-gap, 8px); }
+  .od-fill    { flex: 1 1 0; min-width: 0; }
+  .od-fixed   { flex: none; }
+  .od-grid    { display: grid; gap: var(--od-gap, 12px); grid-template-columns: repeat(var(--od-cols, 3), minmax(0, 1fr)); }
+
+  /* stacked information: each piece is its own line — never sibling inline spans */
+  .od-stat, .od-field, .od-cell { display: grid; gap: var(--od-gap, 2px); }
+  :where(.od-stat,.od-field,.od-cell) > :where(*) { display: block; }
+  .od-tile { display: grid; grid-template-rows: auto 1fr; }
+  :where(.od-tile) > :where(*) { display: block; }
+
+  /* media keeps its intrinsic ratio by default; never a distorted or cropped
+     cover by accident. height:auto lets the ratio win over an <img height="…">
+     attribute. Cropping to a uniform box is an explicit opt-in: set --od-ratio
+     AND add .od-media-cover together (per the core rule, only where a crop is
+     deliberate — tile thumbs, decorative fills — never on full-frame content). */
+  .od-media { display: block; width: 100%; height: auto; aspect-ratio: var(--od-ratio, auto); }
+  .od-media-cover { object-fit: cover; }
+
+  /* functional inline SVG icons opt into bounded geometry; content SVGs keep their own */
+  .od-icon { display: inline-block; inline-size: var(--od-icon-size, 1em); block-size: var(--od-icon-size, 1em); flex: none; }
+
+  /* data text only — authored copy is rewritten to its budget instead */
+  .od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .od-clamp-2, .od-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .od-clamp-2 { -webkit-line-clamp: 2; }
+  .od-clamp-3 { -webkit-line-clamp: 3; }
+  .od-lines-2 { min-height: calc(2 * 1.4em); }   /* block-level reservation for a shared baseline */
+  .od-nowrap  { white-space: nowrap; }           /* 数字+单位 · 价格+起 · 日期+星期 */
+  .od-keep    { word-break: keep-all; overflow-wrap: anywhere; } /* CJK labels break at spaces / <wbr> first */
+
+  /* screen skeleton (optional): bars take their own space, the middle scrolls — no padding guessed for chrome */
+  .od-screen { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; }
+  .od-scroll { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+
+  /* horizontal rail: the next item peeks at the edge; trailing room survives overflow */
+  .od-rail { display: flex; gap: var(--od-gap, 8px); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+             padding-inline: var(--od-rail-pad, 16px); scroll-padding-inline: var(--od-rail-pad, 16px); }
+  .od-rail::-webkit-scrollbar { display: none; }
+  :where(.od-rail) > :where(*) { flex: none; scroll-snap-align: start; }
+  :where(.od-rail) > :where(:last-child) { margin-inline-end: var(--od-rail-pad, 16px); }
+
+  .od-spacer { flex: none; visibility: hidden; pointer-events: none; }
+  .od-touch  { min-width: 44px; min-height: 44px; }
+}
+:root [hidden]:where(:not([hidden="until-found" i])) { display: none; }
+/* /OD-LAYOUT-PRIMITIVES v1 */
+
+
+
+</style>
+<style>
+:root{
+  --ground:#EEF3F5;
+  --surface:#FFFFFF;
+  --surface-2:#F6FAFB;
+  --hero-from:#0B424F;
+  --hero-to:#1F6A76;
+  --hero-text:#FFFFFF;
+  --hero-sub:rgba(255,255,255,.74);
+  --text:#0B424F;
+  --text-secondary:#47646B;
+  --text-muted:#52727A;
+  --line:#DDE7EA;
+  --accent:#52C3BF;
+  --accent-ink:#17726F;
+  --on-accent:#08343D;
+  --warn:#E0A93B;
+  --warn-ink:#8A5A00;
+  --danger:#D95C5C;
+  --danger-ink:#A32B2B;
+  --radius-sm:10px;
+  --radius:16px;
+  --radius-lg:22px;
+  --shadow:0 1px 2px rgba(11,66,79,.05), 0 10px 28px rgba(11,66,79,.06);
+  --font-display:'Avenir Next','Century Gothic',Futura,'Trebuchet MS',sans-serif;
+  --font-body:'Avenir Next','Segoe UI',system-ui,-apple-system,sans-serif;
+  --font-mono:'Cascadia Mono','SFMono-Regular',Consolas,monospace;
+}
+[data-theme="dark"]{
+  --ground:#0B0B0C;
+  --surface:#161618;
+  --surface-2:#1D1D20;
+  --hero-from:#FFFFFF;
+  --hero-to:#FFFFFF;
+  --hero-text:#0B0B0C;
+  --hero-sub:rgba(11,66,79,.78);
+  --text:#FFFFFF;
+  --text-secondary:#B9B9BF;
+  --text-muted:#8A8A8F;
+  --line:#26262A;
+  --accent:#C6F432;
+  --accent-ink:#C6F432;
+  --on-accent:#0B0B0C;
+  --warn:#E9C46A;
+  --warn-ink:#E9C46A;
+  --danger:#FF8A8A;
+  --danger-ink:#FF8A8A;
+  --shadow:none;
+}
+
+*{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  transition:background-color .2s ease, color .2s ease;
+}
+h1,h2,h3,p{ margin:0; }
+code{ font-family:var(--font-mono); }
+a{ color:inherit; }
+
+.od-icon{ color:currentColor; }
+.od-icon .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+.od-icon .fill{ fill:currentColor; stroke:none; }
+
+.page{ max-width:1120px; margin:0 auto; padding:32px 24px 96px; }
+
+.masthead{
+  display:flex; flex-wrap:wrap; align-items:center; gap:24px;
+  padding:20px 0 28px; border-bottom:1px solid var(--line);
+}
+.brand{ display:flex; align-items:center; gap:14px; }
+.brand-mark{ width:52px; height:52px; flex:none; }
+.brand-text{ display:block; }
+.brand-name{
+  display:block; font-family:var(--font-display); font-size:30px; font-weight:600;
+  letter-spacing:.02em; line-height:1.1;
+}
+.brand-tag{
+  display:block; margin-top:4px; font-size:12px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--text-muted);
+}
+.masthead-meta{ margin-left:auto; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.theme-switch{
+  display:flex; gap:4px; padding:4px; border:1px solid var(--line);
+  border-radius:999px; background:var(--surface);
+}
+.theme-switch button{
+  appearance:none; border:0; cursor:pointer; border-radius:999px;
+  padding:8px 16px; min-height:40px; font:inherit; font-size:14px; font-weight:600;
+  color:var(--text-secondary); background:transparent;
+  transition:background-color .18s ease, color .18s ease;
+}
+.theme-switch button[aria-pressed="true"]{ background:var(--hero-from); color:var(--hero-text); }
+[data-theme="dark"] .theme-switch button[aria-pressed="true"]{ background:var(--accent); color:var(--on-accent); }
+.theme-switch button:hover{ color:var(--text); }
+.theme-switch button[aria-pressed="true"]:hover{ color:var(--hero-text); }
+[data-theme="dark"] .theme-switch button[aria-pressed="true"]:hover{ color:var(--on-accent); }
+:focus-visible{ outline:2px solid var(--accent-ink); outline-offset:2px; border-radius:6px; }
+
+.lede{
+  display:block; max-width:64ch; margin:32px 0 0;
+  font-size:17px; color:var(--text-secondary);
+}
+.lede strong{ color:var(--text); font-weight:600; }
+
+.section{ margin-top:64px; }
+.section-head{ display:block; margin-bottom:20px; }
+.eyebrow{
+  display:block; font-size:12px; font-weight:600; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent-ink);
+}
+.section-title{
+  display:block; margin-top:6px; font-family:var(--font-display);
+  font-size:26px; font-weight:600; letter-spacing:.01em;
+}
+.section-sub{ display:block; margin-top:6px; max-width:62ch; font-size:15px; color:var(--text-secondary); }
+
+.icon-grid{
+  list-style:none; margin:0; padding:0;
+  display:grid; gap:12px;
+  grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+}
+.icon-cell{
+  display:grid; gap:8px; padding:18px 16px 16px;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--shadow);
+}
+.glyph{
+  display:grid; place-items:center; width:48px; height:48px;
+  border-radius:14px; background:var(--surface-2); color:var(--text);
+  border:1px solid var(--line);
+}
+.icon-name{ display:block; font-size:14px; font-weight:600; }
+.icon-slug{ display:block; font-size:11px; color:var(--text-muted); letter-spacing:.01em; }
+
+.panel{
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--radius-lg); box-shadow:var(--shadow);
+  padding:24px;
+}
+.panel-grid{ display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); align-items:start; }
+.panel-label{
+  display:block; margin-bottom:14px; font-size:12px; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted);
+}
+
+/* ---------- komponen ---------- */
+.phone-stage{
+  width:360px; max-width:100%; margin:0 auto;
+  background:var(--ground); border:1px solid var(--line);
+  border-radius:28px; padding:18px 14px 0; overflow:hidden;
+}
+.hero-card{
+  display:block; padding:20px 22px 22px; border-radius:var(--radius-lg);
+  background:linear-gradient(150deg, var(--hero-from), var(--hero-to));
+  color:var(--hero-text);
+}
+.hero-eyebrow{ display:block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--hero-sub); }
+.hero-amount{
+  display:block; margin-top:6px; font-family:var(--font-display);
+  font-size:34px; font-weight:600; line-height:1.15; letter-spacing:-.01em;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.hero-sub{ display:block; margin-top:8px; font-size:13px; color:var(--hero-sub); }
+
+.chip-rail{ display:flex; gap:8px; overflow-x:auto; padding:14px 2px 4px; scrollbar-width:none; }
+.chip-rail::-webkit-scrollbar{ display:none; }
+.wallet-chip{
+  display:flex; align-items:center; gap:8px; flex:none;
+  padding:9px 14px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--line);
+  color:var(--text); font-size:13px;
+}
+.wallet-chip .chip-name{ font-weight:600; }
+.wallet-chip .chip-amount{ color:var(--text-secondary); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.wallet-chip.is-active{ background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+.wallet-chip.is-active .chip-amount{ color:var(--on-accent); opacity:.85; }
+
+.card{
+  display:block; padding:16px 18px; border-radius:var(--radius);
+  background:var(--surface); border:1px solid var(--line);
+}
+.card-row{ display:flex; align-items:center; gap:12px; }
+.tx-icon{
+  display:grid; place-items:center; flex:none; width:40px; height:40px;
+  border-radius:12px; background:var(--surface-2); color:var(--text-secondary);
+}
+.tx-title{ display:block; font-size:15px; font-weight:600; }
+.tx-meta{ display:block; font-size:12.5px; color:var(--text-secondary); }
+.tx-amount{
+  display:block; margin-left:auto; font-size:15px; font-weight:600;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.tx-amount.is-in{ color:var(--accent-ink); }
+
+.bar-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.bar-name{ display:block; font-size:14px; font-weight:600; }
+.bar-value{ display:block; font-size:12.5px; color:var(--text-secondary); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.bar-track{
+  display:block; margin-top:10px; height:8px; border-radius:999px;
+  background:var(--line); overflow:hidden;
+}
+.bar-fill{ display:block; height:100%; border-radius:999px; background:var(--accent-ink); }
+.bar-fill.is-warn{ background:var(--warn); }
+.bar-fill.is-over{ background:var(--danger); }
+
+.status-row{ display:flex; align-items:center; gap:10px; font-size:14px; }
+.status-row .od-icon{ color:var(--accent-ink); }
+.status-row.is-warn .od-icon{ color:var(--warn-ink); }
+.status-row.is-over .od-icon{ color:var(--danger-ink); }
+
+.quota-pill{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 14px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--line);
+  font-size:13px; color:var(--text-secondary);
+}
+.quota-pill .od-icon{ color:var(--accent-ink); }
+
+.debt-card{ display:block; padding:16px 18px; border-radius:var(--radius); background:var(--surface); border:1px solid var(--line); }
+.debt-head{ display:flex; align-items:center; gap:10px; }
+.debt-name{ display:block; font-size:15px; font-weight:600; }
+.debt-due{
+  display:inline-flex; align-items:center; gap:6px; margin-left:auto;
+  padding:4px 10px; border-radius:999px;
+  background:var(--surface-2); border:1px solid var(--line);
+  font-size:12px; font-weight:600; color:var(--warn-ink);
+}
+.debt-due .od-icon{ color:var(--warn-ink); }
+.debt-amount{ display:block; margin-top:10px; font-family:var(--font-display); font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; }
+.debt-sub{ display:block; font-size:12.5px; color:var(--text-secondary); }
+
+.bottom-nav{
+  display:grid; grid-template-columns:repeat(5, 1fr); align-items:end;
+  gap:4px; margin-top:18px; padding:10px 6px 14px;
+  border-top:1px solid var(--line); background:var(--surface);
+  border-radius:22px 22px 0 0;
+}
+.nav-item{
+  display:grid; justify-items:center; gap:4px; min-height:52px;
+  padding:6px 2px; border:0; background:transparent; cursor:pointer;
+  font:inherit; font-size:11px; color:var(--text-muted); border-radius:12px;
+}
+.nav-item .od-icon{ color:currentColor; }
+.nav-item.is-current{ color:var(--text); }
+.nav-item.is-current .nav-dot{
+  display:block; width:5px; height:5px; border-radius:50%; background:var(--accent-ink);
+}
+.nav-dot{ display:none; }
+.nav-item:hover{ color:var(--text); }
+.nav-mic{
+  display:grid; place-items:center; justify-self:center;
+  width:56px; height:56px; margin-bottom:6px; border-radius:50%; border:0;
+  background:var(--accent); color:var(--on-accent); cursor:pointer;
+  box-shadow:0 6px 18px rgba(82,195,191,.4);
+  transition:transform .18s ease;
+}
+.nav-mic:hover{ transform:translateY(-2px); }
+[data-theme="dark"] .nav-mic{ box-shadow:0 6px 18px rgba(198,244,50,.22); }
+
+.badge-stage{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+.badge-stage img{ height:52px; width:auto; display:block; }
+
+.empty-stage{
+  display:grid; gap:20px; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+}
+.empty-card{
+  display:grid; justify-items:center; gap:10px; padding:20px 16px 18px;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius);
+  text-align:center;
+}
+.empty-card img{ width:100%; max-width:220px; height:auto; display:block; }
+.empty-card p{ font-size:13.5px; color:var(--text-secondary); max-width:26ch; }
+
+.swatches{ display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); }
+.swatch{
+  display:flex; align-items:center; gap:12px; padding:10px 12px;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-sm);
+}
+.swatch-dot{ display:block; width:36px; height:36px; border-radius:10px; border:1px solid rgba(0,0,0,.08); flex:none; }
+.swatch-name{ display:block; font-size:13px; font-weight:600; }
+.swatch-hex{ display:block; font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono); }
+
+.asset-stage{ display:grid; gap:20px; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); }
+.asset-card{
+  display:grid; justify-items:center; gap:12px; padding:24px 16px;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius);
+}
+.asset-card img{ display:block; }
+.asset-icon img{ width:104px; height:104px; border-radius:24px; }
+.asset-splash img{ width:128px; height:128px; }
+.asset-fav img{ width:64px; height:64px; border-radius:14px; }
+.asset-card span{ font-size:12.5px; color:var(--text-secondary); text-align:center; }
+
+.footnote{
+  display:block; margin-top:56px; padding-top:24px; border-top:1px solid var(--line);
+  font-size:13px; color:var(--text-muted); max-width:70ch;
+}
+
+@media (max-width:520px){
+  .page{ padding:20px 16px 72px; }
+  .hero-amount{ font-size:30px; }
+  .theme-switch button{ padding:8px 12px; }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ transition:none !important; animation:none !important; }
+}
+</style>
+<style data-od-tweaks-bridge-style>
+[data-od-tweaks-hidden] .tw-panel {
+  transform: translateX(calc(100% + 32px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.tw-restore { display: none !important; }
+</style><script data-od-tweaks-bridge>(function(){
+  // Synchronously hide BEFORE the artifact body parses so the panel never
+  // flashes on initial paint. The host removes the attribute via postMessage
+  // once it knows the desired state.
+  document.documentElement.setAttribute('data-od-tweaks-hidden', '');
+
+  var suppressEcho = false;
+  var observer = null;
+
+  function panelEl(){ return document.querySelector('.tw-panel'); }
+
+  function applyClassesToPanel(visible){
+    var panel = panelEl();
+    if (panel) panel.classList.toggle('tw-hidden', !visible);
+  }
+
+  function setPanelVisible(visible){
+    suppressEcho = true;
+    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !visible);
+    applyClassesToPanel(visible);
+    // Clear flag after the MutationObserver has had a chance to fire for this
+    // change so we don't echo our own host-driven toggles back to the host.
+    Promise.resolve().then(function(){ suppressEcho = false; });
+  }
+
+  function postState(){
+    var panel = panelEl();
+    if (!panel) return;
+    try {
+      parent.postMessage({
+        type: 'od:tweaks-panel-state',
+        visible: !panel.classList.contains('tw-hidden'),
+      }, '*');
+    } catch (e) {}
+  }
+
+  function postAvailability(){
+    try {
+      parent.postMessage({
+        type: 'od:tweaks-available',
+        available: !!panelEl(),
+      }, '*');
+    } catch (e) {}
+  }
+
+  function attachObserver(){
+    var panel = panelEl();
+    if (!panel || observer) return;
+    observer = new MutationObserver(function(){
+      if (suppressEcho) return;
+      postState();
+    });
+    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function onReady(){
+    // Capture the panel authored visibility BEFORE we apply the host hidden
+    // attribute. The bridge sets data-od-tweaks-hidden synchronously in head
+    // (before the body parses), so on entry to onReady the attribute is
+    // always present even though the artifact may have authored the panel
+    // as default-visible. Reading the panel class first is the only place
+    // we can still observe the author intent. Then drive the attribute,
+    // classes, and posted state from that captured value so a default
+    // visible tw-panel reports visible:true and the toolbar toggle starts
+    // ON. Issue surfaced in PR #1643 review.
+    var panel = panelEl();
+    var initialVisible = !!panel && !panel.classList.contains('tw-hidden');
+    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !initialVisible);
+    applyClassesToPanel(initialVisible);
+    attachObserver();
+    postAvailability();
+    // Post the captured initial visibility so the toolbar toggle reflects
+    // the default state on mount. Without this the toggle reads OFF while
+    // a default-visible tw-panel artifact clearly shows its panel and the
+    // user would have to click toggle-on then toggle-off to actually hide.
+    postState();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady);
+  } else {
+    onReady();
+  }
+
+  window.addEventListener('message', function(ev){
+    if (!ev.data || ev.data.type !== 'od:tweaks-panel-visible') return;
+    setPanelVisible(!!ev.data.visible);
+  });
+})();</script></head>
+<body>
+<main class="page">
+
+  <header class="masthead">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 512 512" role="img" aria-label="Mark arta">
+        <defs>
+          <linearGradient id="brandGrad" x1="95" y1="106" x2="417" y2="406" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#0B424F"></stop><stop offset="1" stop-color="#1F6A76"></stop>
+          </linearGradient>
+        </defs>
+        <g fill="url(#brandGrad)">
+          <circle cx="267" cy="256" r="150"></circle>
+          <rect x="95" y="226" width="96" height="96" rx="48"></rect>
+        </g>
+        <g fill="#52C3BF">
+          <rect x="225" y="148" width="84" height="20" rx="10"></rect>
+          <circle cx="130" cy="262" r="8"></circle>
+          <circle cx="130" cy="286" r="8"></circle>
+        </g>
+      </svg>
+      <span class="brand-text">
+        <span class="brand-name">arta</span>
+        <span class="brand-tag">Own Your Money</span>
+      </span>
+    </div>
+    <div class="masthead-meta">
+      <div class="theme-switch" role="group" aria-label="Mode tampilan">
+        <button type="button" id="modeLight" aria-pressed="true">Terang</button>
+        <button type="button" id="modeDark" aria-pressed="false">Gelap</button>
+      </div>
+    </div>
+  </header>
+
+  <p class="lede">Design kit sistem <strong>arta</strong> — 28 ikon monoline, badge tier, empty state, splash, aset ikon aplikasi, dan komponen UI kecil. Semua glyph dibangun di grid 24×24 dengan stroke 1,75 dan satu keluarga bentuk, jadi bisa dipakai langsung di build Expo nanti. Sakelar Terang/Gelap di kanan atas menukar token warna seluruh halaman.</p>
+
+  <section class="section" aria-labelledby="palet">
+    <div class="section-head">
+      <span class="eyebrow">Fondasi</span>
+      <h2 class="section-title" id="palet">Palet &amp; peran warna</h2>
+      <p class="section-sub">Aturan 60/30/10: latar 60%, kartu &amp; teks 30%, aksen 10% khusus aksi penting. Nilai di bawah mengikuti mode yang sedang aktif.</p>
+    </div>
+    <div class="swatches">
+      <div class="swatch"><span class="swatch-dot" style="background:var(--ground)"></span><span><span class="swatch-name">Latar</span><span class="swatch-hex">60%</span></span></div>
+      <div class="swatch"><span class="swatch-dot" style="background:linear-gradient(150deg,var(--hero-from),var(--hero-to))"></span><span><span class="swatch-name">Kartu utama</span><span class="swatch-hex">gradien teal</span></span></div>
+      <div class="swatch"><span class="swatch-dot" style="background:var(--surface)"></span><span><span class="swatch-name">Kartu biasa</span><span class="swatch-hex">30%</span></span></div>
+      <div class="swatch"><span class="swatch-dot" style="background:var(--text)"></span><span><span class="swatch-name">Teks</span><span class="swatch-hex">utama</span></span></div>
+      <div class="swatch"><span class="swatch-dot" style="background:var(--text-secondary)"></span><span><span class="swatch-name">Teks sekunder</span><span class="swatch-hex">≥ 4.5:1</span></span></div>
+      <div class="swatch"><span class="swatch-dot" style="background:var(--line)"></span><span><span class="swatch-name">Garis</span><span class="swatch-hex">pemisah</span></span></div>
+      <div class="swatch"><span class="swatch-dot" style="background:var(--accent)"></span><span><span class="swatch-name">Aksen</span><span class="swatch-hex">10%</span></span></div>
+      <div class="swatch"><span class="swatch-dot" style="background:var(--warn)"></span><span><span class="swatch-name">Waspada</span><span class="swatch-hex">status</span></span></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="nav">
+    <div class="section-head">
+      <span class="eyebrow">Ikon · 5</span>
+      <h2 class="section-title" id="nav">Navigasi bawah</h2>
+      <p class="section-sub">Beranda · Riwayat · Mic besar di tengah · Hutang · Akun. Mic satu-satunya elemen aksen penuh di bar.</p>
+    </div>
+    <div class="panel">
+      <div class="phone-stage">
+        <span class="panel-label">Contoh bar</span>
+        <nav class="bottom-nav" aria-label="Contoh navigasi bawah">
+          <button type="button" class="nav-item is-current" aria-current="page">
+            <svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:22px"><path class="ln" d="M3.5 10.4 L12 3.6 L20.5 10.4 V19 A1.6 1.6 0 0 1 18.9 20.6 H15 V14.2 H9 V20.6 H5.1 A1.6 1.6 0 0 1 3.5 19 Z"></path></svg>
+            <span>Beranda</span>
+            <span class="nav-dot"></span>
+          </button>
+          <button type="button" class="nav-item">
+            <svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:22px"><circle class="ln" cx="12" cy="12" r="8.2"></circle>
+    <path class="ln" d="M12 7.6 V12.2 L15.4 14.4"></path>
+    <path class="ln" d="M4.6 5.2 V8.9 H8.3"></path></svg>
+            <span>Riwayat</span>
+            <span class="nav-dot"></span>
+          </button>
+          <button type="button" class="nav-mic" aria-label="Rekam transaksi">
+            <svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="9.1" y="3.4" width="5.8" height="10" rx="2.9"></rect>
+    <path class="ln" d="M5.8 11.4 A6.2 6.2 0 0 0 18.2 11.4"></path>
+    <path class="ln" d="M12 17.6 V20.4"></path>
+    <path class="ln" d="M9 20.6 H15"></path></svg>
+          </button>
+          <button type="button" class="nav-item">
+            <svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:22px"><rect class="ln" x="3.2" y="6.2" width="17.6" height="12.6" rx="2.6"></rect>
+    <path class="ln" d="M3.2 10.2 H20.8"></path>
+    <path class="ln" d="M16.4 14.9 H17.4"></path>
+    <path class="ln" d="M6.6 3.4 L12 6.2 L17.4 3.4"></path></svg>
+            <span>Hutang</span>
+            <span class="nav-dot"></span>
+          </button>
+          <button type="button" class="nav-item">
+            <svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:22px"><circle class="ln" cx="12" cy="8.4" r="3.9"></circle>
+    <path class="ln" d="M4.6 20.4 C4.6 16.2 7.9 13.9 12 13.9 C16.1 13.9 19.4 16.2 19.4 20.4"></path></svg>
+            <span>Akun</span>
+            <span class="nav-dot"></span>
+          </button>
+        </nav>
+      </div>
+      <ul class="icon-grid" style="margin-top:24px">
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M3.5 10.4 L12 3.6 L20.5 10.4 V19 A1.6 1.6 0 0 1 18.9 20.6 H15 V14.2 H9 V20.6 H5.1 A1.6 1.6 0 0 1 3.5 19 Z"></path></svg></span>
+          <span class="icon-name">Beranda</span>
+          <code class="icon-slug">nav-beranda</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><circle class="ln" cx="12" cy="12" r="8.2"></circle>
+    <path class="ln" d="M12 7.6 V12.2 L15.4 14.4"></path>
+    <path class="ln" d="M4.6 5.2 V8.9 H8.3"></path></svg></span>
+          <span class="icon-name">Riwayat</span>
+          <code class="icon-slug">nav-riwayat</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="9.1" y="3.4" width="5.8" height="10" rx="2.9"></rect>
+    <path class="ln" d="M5.8 11.4 A6.2 6.2 0 0 0 18.2 11.4"></path>
+    <path class="ln" d="M12 17.6 V20.4"></path>
+    <path class="ln" d="M9 20.6 H15"></path></svg></span>
+          <span class="icon-name">Merekam</span>
+          <code class="icon-slug">nav-mic</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="3.2" y="6.2" width="17.6" height="12.6" rx="2.6"></rect>
+    <path class="ln" d="M3.2 10.2 H20.8"></path>
+    <path class="ln" d="M16.4 14.9 H17.4"></path>
+    <path class="ln" d="M6.6 3.4 L12 6.2 L17.4 3.4"></path></svg></span>
+          <span class="icon-name">Hutang</span>
+          <code class="icon-slug">nav-hutang</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><circle class="ln" cx="12" cy="8.4" r="3.9"></circle>
+    <path class="ln" d="M4.6 20.4 C4.6 16.2 7.9 13.9 12 13.9 C16.1 13.9 19.4 16.2 19.4 20.4"></path></svg></span>
+          <span class="icon-name">Akun</span>
+          <code class="icon-slug">nav-akun</code>
+        </li>
+
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="dompet">
+    <div class="section-head">
+      <span class="eyebrow">Ikon · 3</span>
+      <h2 class="section-title" id="dompet">Tipe dompet</h2>
+      <p class="section-sub">Tiga glyph berbeda bentuk, bukan sekadar beda warna — tetap terbaca saat dicetak satu warna.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-grid">
+        <div>
+          <span class="panel-label">Ikon</span>
+          <ul class="icon-grid">
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="3" y="6" width="18" height="13" rx="2.8"></rect>
+    <path class="ln" d="M15.4 12.5 H20.4 V16.1 H15.4 A1.8 1.8 0 0 1 15.4 12.5 Z"></path>
+    <path class="ln" d="M6.6 6 V4.2 A1.4 1.4 0 0 1 8.6 2.9 L17.8 4.7 A1.4 1.4 0 0 1 18.9 6"></path></svg></span>
+          <span class="icon-name">Harian</span>
+          <code class="icon-slug">wallet-harian</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M12 2.9 L19.4 6.3 V11.8 C19.4 16.6 16.2 19.9 12 21.3 C7.8 19.9 4.6 16.6 4.6 11.8 V6.3 Z"></path>
+    <path class="ln" d="M12 8.2 V15.6"></path>
+    <path class="ln" d="M8.3 11.9 H15.7"></path></svg></span>
+          <span class="icon-name">Dana darurat</span>
+          <code class="icon-slug">wallet-darurat</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M3 20.2 H21"></path>
+    <path class="ln" d="M4.6 16.4 L9.4 11.4 L13 14.2 L20.2 6.4"></path>
+    <path class="ln" d="M15.6 6.2 H20.6 V11.2"></path>
+    <path class="ln" d="M4.6 20.2 V18.8"></path></svg></span>
+          <span class="icon-name">Investasi</span>
+          <code class="icon-slug">wallet-investasi</code>
+        </li>
+
+          </ul>
+        </div>
+        <div>
+          <span class="panel-label">Chip saldo dompet</span>
+          <div class="chip-rail">
+            <span class="wallet-chip is-active"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><rect class="ln" x="3" y="6" width="18" height="13" rx="2.8"></rect>
+    <path class="ln" d="M15.4 12.5 H20.4 V16.1 H15.4 A1.8 1.8 0 0 1 15.4 12.5 Z"></path>
+    <path class="ln" d="M6.6 6 V4.2 A1.4 1.4 0 0 1 8.6 2.9 L17.8 4.7 A1.4 1.4 0 0 1 18.9 6"></path></svg><span class="chip-name">GoPay</span><span class="chip-amount">Rp 412.000</span></span>
+            <span class="wallet-chip"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><path class="ln" d="M12 2.9 L19.4 6.3 V11.8 C19.4 16.6 16.2 19.9 12 21.3 C7.8 19.9 4.6 16.6 4.6 11.8 V6.3 Z"></path>
+    <path class="ln" d="M12 8.2 V15.6"></path>
+    <path class="ln" d="M8.3 11.9 H15.7"></path></svg><span class="chip-name">Dana darurat</span><span class="chip-amount">Rp 1.200.000</span></span>
+            <span class="wallet-chip"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><path class="ln" d="M3 20.2 H21"></path>
+    <path class="ln" d="M4.6 16.4 L9.4 11.4 L13 14.2 L20.2 6.4"></path>
+    <path class="ln" d="M15.6 6.2 H20.6 V11.2"></path>
+    <path class="ln" d="M4.6 20.2 V18.8"></path></svg><span class="chip-name">Saham</span><span class="chip-amount">Rp 860.000</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="kategori">
+    <div class="section-head">
+      <span class="eyebrow">Ikon · 8</span>
+      <h2 class="section-title" id="kategori">Kategori transaksi</h2>
+      <p class="section-sub">Kategori bawaan dari spec: rokok, makan, parkir, kuliah, transport, ortu, gaji, lainnya.</p>
+    </div>
+    <div class="panel">
+      <ul class="icon-grid">
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="2.8" y="12.6" width="18.4" height="6.6" rx="1.6"></rect>
+    <path class="ln" d="M10.4 12.6 V19.2"></path>
+    <path class="ln" d="M16.8 12.6 V19.2"></path>
+    <path class="ln" d="M15.2 9 V7.2 A2.2 2.2 0 0 0 13 5"></path>
+    <path class="ln" d="M18.6 9 V7.2 A2.2 2.2 0 0 0 16.4 5"></path></svg></span>
+          <span class="icon-name">Rokok</span>
+          <code class="icon-slug">cat-rokok</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M8.2 2.8 V10.4 M5.2 2.8 V7.2 A3 3 0 0 0 8.2 10.2 A3 3 0 0 0 11.2 7.2 V2.8"></path>
+    <path class="ln" d="M8.2 10.4 V21.2"></path>
+    <path class="ln" d="M16.4 2.8 C14.4 2.8 13.4 5.4 13.4 8.6 C13.4 10.8 14.2 12 15.6 12.2 V21.2"></path></svg></span>
+          <span class="icon-name">Makan</span>
+          <code class="icon-slug">cat-makan</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><circle class="ln" cx="12" cy="12" r="8.6"></circle>
+    <path class="ln" d="M9.6 16.6 V7.4 H13.4 A3 3 0 0 1 13.4 13.4 H9.6"></path></svg></span>
+          <span class="icon-name">Parkir</span>
+          <code class="icon-slug">cat-parkir</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M12 3.4 L21 7.6 L12 11.8 L3 7.6 Z"></path>
+    <path class="ln" d="M6.4 9.9 V14.8 C6.4 16.6 8.9 18 12 18 C15.1 18 17.6 16.6 17.6 14.8 V9.9"></path>
+    <path class="ln" d="M21 7.6 V13.2"></path></svg></span>
+          <span class="icon-name">Kuliah</span>
+          <code class="icon-slug">cat-kuliah</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M3.4 15.6 V12.2 L5.8 7.6 A1.8 1.8 0 0 1 7.4 6.6 H16.6 A1.8 1.8 0 0 1 18.2 7.6 L20.6 12.2 V15.6 A1.2 1.2 0 0 1 19.4 16.8 H4.6 A1.2 1.2 0 0 1 3.4 15.6 Z"></path>
+    <path class="ln" d="M3.4 12.2 H20.6"></path>
+    <path class="ln" d="M7.2 16.8 V19.4"></path>
+    <path class="ln" d="M16.8 16.8 V19.4"></path></svg></span>
+          <span class="icon-name">Transport</span>
+          <code class="icon-slug">cat-transport</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M12 8.1 C10.2 5.9 6.8 8.6 8.2 11.4 C9 13 12 15.1 12 15.1 C12 15.1 15 13 15.8 11.4 C17.2 8.6 13.8 5.9 12 8.1 Z"></path>
+    <path class="ln" d="M3.2 14.6 H7.4 L10.4 17.2 H13.2 A1.5 1.5 0 0 1 13.2 20.2 H10.2 L5.4 18.2"></path>
+    <path class="ln" d="M20.8 14.6 H17.2"></path></svg></span>
+          <span class="icon-name">Ortu</span>
+          <code class="icon-slug">cat-ortu</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="2.8" y="6.2" width="18.4" height="11.6" rx="2.4"></rect>
+    <path class="ln" d="M2.8 9.6 H21.2"></path>
+    <circle class="ln" cx="12" cy="14" r="2.4"></circle>
+    <path class="ln" d="M6 12.8 V15.4 M18 12.8 V15.4"></path></svg></span>
+          <span class="icon-name">Gaji</span>
+          <code class="icon-slug">cat-gaji</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="3.2" y="4.6" width="17.6" height="14.8" rx="3.4"></rect>
+    <circle class="fill" cx="7.8" cy="12" r="1.05"></circle>
+    <circle class="fill" cx="12" cy="12" r="1.05"></circle>
+    <circle class="fill" cx="16.2" cy="12" r="1.05"></circle></svg></span>
+          <span class="icon-name">Lainnya</span>
+          <code class="icon-slug">cat-lainnya</code>
+        </li>
+
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="status">
+    <div class="section-head">
+      <span class="eyebrow">Ikon · 6</span>
+      <h2 class="section-title" id="status">Status &amp; progres</h2>
+      <p class="section-sub">Status tidak pernah bergantung pada warna saja — bentuk glyph berbeda untuk aman, waspada, dan lewat.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-grid">
+        <div>
+          <span class="panel-label">Bar progres budget</span>
+          <div class="od-stack" style="--od-gap:20px">
+            <div>
+              <div class="bar-head">
+                <span class="bar-name">Makan</span>
+                <span class="bar-value">Rp 320.000 / Rp 800.000</span>
+              </div>
+              <span class="bar-track"><span class="bar-fill" style="width:40%"></span></span>
+              <div class="status-row" style="margin-top:8px"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><circle class="ln" cx="12" cy="12" r="8.6"></circle>
+    <path class="ln" d="M7.9 12.3 L10.8 15.2 L16.2 9.4"></path></svg><span>Aman, 40% terpakai</span></div>
+            </div>
+            <div>
+              <div class="bar-head">
+                <span class="bar-name">Transport</span>
+                <span class="bar-value">Rp 264.000 / Rp 300.000</span>
+              </div>
+              <span class="bar-track"><span class="bar-fill is-warn" style="width:88%"></span></span>
+              <div class="status-row is-warn" style="margin-top:8px"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><circle class="ln" cx="12" cy="12" r="8.6"></circle>
+    <path class="ln" d="M12 7.3 V13.1"></path>
+    <circle class="fill" cx="12" cy="16.3" r="1.05"></circle></svg><span>Hampir habis, 88% terpakai</span></div>
+            </div>
+            <div>
+              <div class="bar-head">
+                <span class="bar-name">Rokok</span>
+                <span class="bar-value">Rp 390.000 / Rp 300.000</span>
+              </div>
+              <span class="bar-track"><span class="bar-fill is-over" style="width:100%"></span></span>
+              <div class="status-row is-over" style="margin-top:8px"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><circle class="ln" cx="12" cy="12" r="8.6"></circle>
+    <path class="ln" d="M8.6 8.6 L15.4 15.4 M15.4 8.6 L8.6 15.4"></path></svg><span>Lewat budget Rp 90.000</span></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="panel-label">Kartu hutang</span>
+          <div class="debt-card">
+            <div class="debt-head">
+              <span class="debt-name">Kredivo</span>
+              <span class="debt-due"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><rect class="ln" x="3.4" y="5.4" width="17.2" height="15.2" rx="2.6"></rect>
+    <path class="ln" d="M3.4 9.6 H20.6"></path>
+    <path class="ln" d="M8 3.4 V6.8 M16 3.4 V6.8"></path>
+    <circle class="fill" cx="12" cy="15.1" r="1.5"></circle></svg><span>3 hari lagi</span></span>
+            </div>
+            <span class="debt-amount">Rp 1.200.000</span>
+            <span class="debt-sub">Sisa pokok · 4 dari 12 cicilan lunas</span>
+            <span class="bar-track" style="margin-top:12px"><span class="bar-fill" style="width:33%"></span></span>
+          </div>
+          <span class="panel-label" style="margin-top:22px">Pill kuota AI</span>
+          <span class="quota-pill"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><rect class="ln" x="2.6" y="7.4" width="16.4" height="9.2" rx="2.4"></rect>
+    <path class="ln" d="M21.4 10.6 V13.4"></path>
+    <rect class="fill" x="4.8" y="9.6" width="6.4" height="4.8" rx="1.2"></rect></svg><span>Sisa 12 catat AI bulan ini</span></span>
+        </div>
+      </div>
+      <ul class="icon-grid" style="margin-top:24px">
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><circle class="ln" cx="12" cy="12" r="8.6"></circle>
+    <path class="ln" d="M7.9 12.3 L10.8 15.2 L16.2 9.4"></path></svg></span>
+          <span class="icon-name">Budget aman</span>
+          <code class="icon-slug">status-budget-aman</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><circle class="ln" cx="12" cy="12" r="8.6"></circle>
+    <path class="ln" d="M12 7.3 V13.1"></path>
+    <circle class="fill" cx="12" cy="16.3" r="1.05"></circle></svg></span>
+          <span class="icon-name">Budget ≥80%</span>
+          <code class="icon-slug">status-budget-waspada</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><circle class="ln" cx="12" cy="12" r="8.6"></circle>
+    <path class="ln" d="M8.6 8.6 L15.4 15.4 M15.4 8.6 L8.6 15.4"></path></svg></span>
+          <span class="icon-name">Lewat budget</span>
+          <code class="icon-slug">status-budget-lewat</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="3.4" y="5.4" width="17.2" height="15.2" rx="2.6"></rect>
+    <path class="ln" d="M3.4 9.6 H20.6"></path>
+    <path class="ln" d="M8 3.4 V6.8 M16 3.4 V6.8"></path>
+    <circle class="fill" cx="12" cy="15.1" r="1.5"></circle></svg></span>
+          <span class="icon-name">Jatuh tempo</span>
+          <code class="icon-slug">status-jatuh-tempo</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><circle class="ln" cx="12" cy="12" r="8.6"></circle>
+    <path class="ln" d="M7.8 12.2 L10.7 15.1 L16.4 9"></path></svg></span>
+          <span class="icon-name">Lunas</span>
+          <code class="icon-slug">status-lunas</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="2.6" y="7.4" width="16.4" height="9.2" rx="2.4"></rect>
+    <path class="ln" d="M21.4 10.6 V13.4"></path>
+    <rect class="fill" x="4.8" y="9.6" width="6.4" height="4.8" rx="1.2"></rect></svg></span>
+          <span class="icon-name">Sisa kuota AI</span>
+          <code class="icon-slug">status-kuota</code>
+        </li>
+
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="aksi">
+    <div class="section-head">
+      <span class="eyebrow">Ikon · 6</span>
+      <h2 class="section-title" id="aksi">Ikon aksi</h2>
+      <p class="section-sub">Dipakai di tombol, baris daftar, dan bilah alat layar Cek dulu.</p>
+    </div>
+    <div class="panel">
+      <ul class="icon-grid">
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><rect class="ln" x="9.1" y="3.4" width="5.8" height="10" rx="2.9"></rect>
+    <path class="ln" d="M5.8 11.4 A6.2 6.2 0 0 0 18.2 11.4"></path>
+    <path class="ln" d="M12 17.6 V20.4"></path>
+    <path class="ln" d="M9 20.6 H15"></path></svg></span>
+          <span class="icon-name">Rekam</span>
+          <code class="icon-slug">act-mic</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M4.4 19.6 L4.9 16.2 L15.6 5.5 A2.2 2.2 0 0 1 18.7 5.5 L18.7 5.5 A2.2 2.2 0 0 1 18.7 8.6 L8 19.3 Z"></path>
+    <path class="ln" d="M14.2 6.9 L17.3 10"></path></svg></span>
+          <span class="icon-name">Ketik</span>
+          <code class="icon-slug">act-ketik</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M6.4 3.6 H15.4 L20.4 8.6 V18 A2.4 2.4 0 0 1 18 20.4 H6.4 A2.4 2.4 0 0 1 4 18 V6 A2.4 2.4 0 0 1 6.4 3.6 Z"></path>
+    <path class="ln" d="M7.6 3.6 V9 H15 V3.6"></path>
+    <rect class="ln" x="7.2" y="13.4" width="9.6" height="7" rx="1.4"></rect></svg></span>
+          <span class="icon-name">Simpan</span>
+          <code class="icon-slug">act-simpan</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M4.6 6.6 H19.4"></path>
+    <path class="ln" d="M9 6.6 V4.8 A1.4 1.4 0 0 1 10.4 3.4 H13.6 A1.4 1.4 0 0 1 15 4.8 V6.6"></path>
+    <path class="ln" d="M6.4 6.6 L7.3 19.2 A1.8 1.8 0 0 0 9.1 20.9 H14.9 A1.8 1.8 0 0 0 16.7 19.2 L17.6 6.6"></path>
+    <path class="ln" d="M10.4 10.4 V17.2 M13.6 10.4 V17.2"></path></svg></span>
+          <span class="icon-name">Hapus</span>
+          <code class="icon-slug">act-hapus</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M4.4 19.6 L4.9 15.8 L15.8 4.9 A2.4 2.4 0 0 1 19.2 8.2 L8.2 19.1 Z"></path>
+    <path class="ln" d="M14 6.7 L17.3 10"></path>
+    <path class="ln" d="M12.6 20.4 H20"></path></svg></span>
+          <span class="icon-name">Ubah</span>
+          <code class="icon-slug">act-ubah</code>
+        </li>
+        <li class="icon-cell">
+          <span class="glyph"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:26px"><path class="ln" d="M4.6 13.8 V18.6 A2 2 0 0 0 6.6 20.6 H17.4 A2 2 0 0 0 19.4 18.6 V13.8"></path>
+    <path class="ln" d="M12 3.2 V14.4"></path>
+    <path class="ln" d="M7.8 7.4 L12 3.2 L16.2 7.4"></path></svg></span>
+          <span class="icon-name">Ekspor</span>
+          <code class="icon-slug">act-ekspor</code>
+        </li>
+
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="badge">
+    <div class="section-head">
+      <span class="eyebrow">Tier</span>
+      <h2 class="section-title" id="badge">Badge Free &amp; Pro</h2>
+      <p class="section-sub">Pro memakai crest premium yang sudah ada, jadi tier terasa satu keluarga dengan mark.</p>
+    </div>
+    <div class="panel">
+      <div class="badge-stage">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/badge-free.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Badge tier Free arta" width="200" height="64">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/badge-pro.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Badge tier Pro arta dengan crest premium" width="200" height="64">
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="komponen">
+    <div class="section-head">
+      <span class="eyebrow">Komponen</span>
+      <h2 class="section-title" id="komponen">Kartu hero &amp; baris transaksi</h2>
+      <p class="section-sub">Kartu hero memuat saldo besar; baris transaksi memakai ikon kategori yang sama dengan galeri di atas.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-grid">
+        <div>
+          <div class="hero-card">
+            <span class="hero-eyebrow">Sisa uang · semua dompet</span>
+            <span class="hero-amount">Rp 1.842.500</span>
+            <span class="hero-sub">Kekayaan bersih Rp 3.120.000</span>
+          </div>
+          <div class="chip-rail">
+            <span class="wallet-chip is-active"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><rect class="ln" x="3" y="6" width="18" height="13" rx="2.8"></rect>
+    <path class="ln" d="M15.4 12.5 H20.4 V16.1 H15.4 A1.8 1.8 0 0 1 15.4 12.5 Z"></path>
+    <path class="ln" d="M6.6 6 V4.2 A1.4 1.4 0 0 1 8.6 2.9 L17.8 4.7 A1.4 1.4 0 0 1 18.9 6"></path></svg><span class="chip-name">GoPay</span><span class="chip-amount">Rp 412.000</span></span>
+            <span class="wallet-chip"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:18px"><rect class="ln" x="3" y="6" width="18" height="13" rx="2.8"></rect>
+    <path class="ln" d="M15.4 12.5 H20.4 V16.1 H15.4 A1.8 1.8 0 0 1 15.4 12.5 Z"></path>
+    <path class="ln" d="M6.6 6 V4.2 A1.4 1.4 0 0 1 8.6 2.9 L17.8 4.7 A1.4 1.4 0 0 1 18.9 6"></path></svg><span class="chip-name">Cash</span><span class="chip-amount">Rp 95.000</span></span>
+          </div>
+        </div>
+        <div>
+          <span class="panel-label">Transaksi terbaru</span>
+          <div class="od-stack" style="--od-gap:10px">
+            <div class="card card-row">
+              <span class="tx-icon"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:20px"><path class="ln" d="M8.2 2.8 V10.4 M5.2 2.8 V7.2 A3 3 0 0 0 8.2 10.2 A3 3 0 0 0 11.2 7.2 V2.8"></path>
+    <path class="ln" d="M8.2 10.4 V21.2"></path>
+    <path class="ln" d="M16.4 2.8 C14.4 2.8 13.4 5.4 13.4 8.6 C13.4 10.8 14.2 12 15.6 12.2 V21.2"></path></svg></span>
+              <span class="od-stack" style="--od-gap:2px">
+                <span class="tx-title">Makan siang</span>
+                <span class="tx-meta">Makan · GoPay · Hari ini</span>
+              </span>
+              <span class="tx-amount">−Rp 28.000</span>
+            </div>
+            <div class="card card-row">
+              <span class="tx-icon"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:20px"><rect class="ln" x="2.8" y="12.6" width="18.4" height="6.6" rx="1.6"></rect>
+    <path class="ln" d="M10.4 12.6 V19.2"></path>
+    <path class="ln" d="M16.8 12.6 V19.2"></path>
+    <path class="ln" d="M15.2 9 V7.2 A2.2 2.2 0 0 0 13 5"></path>
+    <path class="ln" d="M18.6 9 V7.2 A2.2 2.2 0 0 0 16.4 5"></path></svg></span>
+              <span class="od-stack" style="--od-gap:2px">
+                <span class="tx-title">Rokok</span>
+                <span class="tx-meta">Rokok · Cash · Kemarin</span>
+              </span>
+              <span class="tx-amount">−Rp 25.000</span>
+            </div>
+            <div class="card card-row">
+              <span class="tx-icon"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:20px"><path class="ln" d="M3.4 15.6 V12.2 L5.8 7.6 A1.8 1.8 0 0 1 7.4 6.6 H16.6 A1.8 1.8 0 0 1 18.2 7.6 L20.6 12.2 V15.6 A1.2 1.2 0 0 1 19.4 16.8 H4.6 A1.2 1.2 0 0 1 3.4 15.6 Z"></path>
+    <path class="ln" d="M3.4 12.2 H20.6"></path>
+    <path class="ln" d="M7.2 16.8 V19.4"></path>
+    <path class="ln" d="M16.8 16.8 V19.4"></path></svg></span>
+              <span class="od-stack" style="--od-gap:2px">
+                <span class="tx-title">Parkir kampus</span>
+                <span class="tx-meta">Transport · Cash · Kemarin</span>
+              </span>
+              <span class="tx-amount">−Rp 2.000</span>
+            </div>
+            <div class="card card-row">
+              <span class="tx-icon"><svg class="od-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="--od-icon-size:20px"><rect class="ln" x="2.8" y="6.2" width="18.4" height="11.6" rx="2.4"></rect>
+    <path class="ln" d="M2.8 9.6 H21.2"></path>
+    <circle class="ln" cx="12" cy="14" r="2.4"></circle>
+    <path class="ln" d="M6 12.8 V15.4 M18 12.8 V15.4"></path></svg></span>
+              <span class="od-stack" style="--od-gap:2px">
+                <span class="tx-title">Uang bulanan</span>
+                <span class="tx-meta">Ortu · BCA · 3 Nov</span>
+              </span>
+              <span class="tx-amount is-in">+Rp 750.000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="empty">
+    <div class="section-head">
+      <span class="eyebrow">Empty state · 3</span>
+      <h2 class="section-title" id="empty">Keadaan kosong</h2>
+      <p class="section-sub">Geometris dan tenang — bukan ilustrasi kartun. Tiap empty state menjelaskan apa yang kosong dan langkah berikutnya.</p>
+    </div>
+    <div class="empty-stage">
+      <div class="empty-card">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/empty-transaksi.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Ilustrasi belum ada transaksi" width="320" height="260">
+        <p>Belum ada transaksi bulan ini. Tahan tombol mic untuk mencatat yang pertama.</p>
+      </div>
+      <div class="empty-card">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/empty-hutang.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Ilustrasi belum ada hutang" width="320" height="260">
+        <p>Tidak ada hutang tercatat. Tambahkan paylater atau cicilan kalau ada.</p>
+      </div>
+      <div class="empty-card">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/empty-laporan.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Ilustrasi belum ada laporan" width="320" height="260">
+        <p>Laporan bulanan muncul di tanggal 1. Fitur ini bagian dari Pro.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="aset">
+    <div class="section-head">
+      <span class="eyebrow">Aset</span>
+      <h2 class="section-title" id="aset">Ikon aplikasi, favicon &amp; splash</h2>
+      <p class="section-sub">Layer adaptive icon Android siap dipasang di <code>app.json</code>, favicon untuk halaman web, dan splash mark beranimasi koin jatuh ke celah.</p>
+    </div>
+    <div class="asset-stage">
+      <div class="asset-card asset-icon">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/logo-app-icon.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Ikon aplikasi arta" width="512" height="512">
+        <span><code>logo-app-icon.svg</code><br>Play Store 512×512</span>
+      </div>
+      <div class="asset-card asset-icon">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/assets/ic-launcher-foreground.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Layer depan adaptive icon arta" width="108" height="108">
+        <span><code>assets/ic-launcher-foreground.svg</code><br>foreground 108×108</span>
+      </div>
+      <div class="asset-card asset-icon">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/assets/ic-launcher-background.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Layer belakang adaptive icon arta" width="108" height="108">
+        <span><code>assets/ic-launcher-background.svg</code><br>background 108×108</span>
+      </div>
+      <div class="asset-card asset-fav">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/favicon.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Favicon arta" width="64" height="64">
+        <span><code>favicon.svg</code><br>64×64</span>
+      </div>
+      <div class="asset-card asset-splash">
+        <img src="/api/projects/805a5e65-1643-488e-9e21-bf1b72a9b359/raw/splash-mark.svg?workspaceId=r7qy7zwnqeglr58l29wu211o&amp;workspaceMemberId=ggwl5sqwhyn1fz58vaqtfgr9" alt="Splash mark arta dengan koin mint" width="512" height="512">
+        <span><code>splash-mark.svg</code><br>animasi koin</span>
+      </div>
+    </div>
+  </section>
+
+  <p class="footnote">Semua warna, ukuran, dan ketebalan stroke terkumpul di token CSS di kepala halaman ini; tiap berkas SVG menyimpan tokennya sendiri di blok <code>&lt;style&gt;</code> supaya tetap mandiri saat dipakai di Expo. Ikon memakai <code>currentColor</code>, jadi otomatis mengikuti warna teks di mode Terang maupun Gelap.</p>
+
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btnLight = document.getElementById('modeLight');
+  var btnDark = document.getElementById('modeDark');
+  if (!btnLight || !btnDark) return;
+
+  function apply(mode) {
+    root.setAttribute('data-theme', mode);
+    btnLight.setAttribute('aria-pressed', String(mode === 'light'));
+    btnDark.setAttribute('aria-pressed', String(mode === 'dark'));
+    try { localStorage.setItem('arta-kit-theme', mode); } catch (e) {}
+  }
+
+  var saved = 'light';
+  try { saved = localStorage.getItem('arta-kit-theme') || 'light'; } catch (e) {}
+  apply(saved);
+
+  btnLight.addEventListener('click', function () { apply('light'); });
+  btnDark.addEventListener('click', function () { apply('dark'); });
+})();
+</script>
+
+<script data-od-preview-content-size-bridge>(function(){
+  if (window.__odPreviewContentSizeBridge) return;
+  window.__odPreviewContentSizeBridge = true;
+  var pending = false;
+  var lastRequest = null;
+  var documentEpoch = "";
+  function measure(){
+    var root = document.documentElement;
+    var body = document.body || root;
+    if (!root) return null;
+    var scrollValues = [
+      root.scrollWidth,
+      body && body.scrollWidth,
+    ];
+    var clientValues = [
+      root.clientWidth,
+      body && body.clientWidth
+    ];
+    var scrollWidth = 0;
+    var clientWidth = 0;
+    for (var i = 0; i < scrollValues.length; i += 1) {
+      var nextScroll = Number(scrollValues[i] || 0);
+      if (Number.isFinite(nextScroll) && nextScroll > scrollWidth) scrollWidth = nextScroll;
+    }
+    for (var j = 0; j < clientValues.length; j += 1) {
+      var nextClient = Number(clientValues[j] || 0);
+      if (Number.isFinite(nextClient) && nextClient > clientWidth) clientWidth = nextClient;
+    }
+    return {
+      scrollWidth: scrollWidth > 0 ? Math.ceil(scrollWidth) : null,
+      clientWidth: clientWidth > 0 ? Math.ceil(clientWidth) : null
+    };
+  }
+  function post(){
+    if (!lastRequest) return;
+    var size = measure();
+    try {
+      window.parent.postMessage({
+        type: 'od:preview-content-size',
+        measurementId: lastRequest.measurementId,
+        generation: lastRequest.generation,
+        documentEpoch: documentEpoch,
+        scrollWidth: size && size.scrollWidth,
+        clientWidth: size && size.clientWidth
+      }, '*');
+    } catch (_) {}
+  }
+  function schedule(){
+    if (pending) return;
+    pending = true;
+    window.requestAnimationFrame(function(){
+      pending = false;
+      post();
+    });
+  }
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:preview-content-size-request') return;
+    if (typeof data.measurementId !== 'string' || typeof data.generation !== 'string') return;
+    lastRequest = {
+      measurementId: data.measurementId,
+      generation: data.generation
+    };
+    schedule();
+  });
+  window.addEventListener('resize', schedule);
+  if (typeof ResizeObserver !== 'undefined') {
+    try {
+      var observer = new ResizeObserver(schedule);
+      observer.observe(document.documentElement);
+      if (document.body) observer.observe(document.body);
+    } catch (_) {}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', schedule);
+  } else {
+    setTimeout(schedule, 0);
+  }
+  setTimeout(schedule, 80);
+  setTimeout(schedule, 260);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(schedule).catch(function(){});
+  }
+})();</script><script data-od-snapshot-bridge>(function(){
+  var SNAPSHOT_STYLE_PROPS = [
+    'display','position','box-sizing','width','height','min-width','max-width','min-height','max-height',
+    'margin','margin-top','margin-right','margin-bottom','margin-left',
+    'padding','padding-top','padding-right','padding-bottom','padding-left',
+    'border','border-top','border-right','border-bottom','border-left','border-radius',
+    'font','font-family','font-size','font-weight','font-style','line-height','letter-spacing',
+    'color','background-color','opacity','transform','transform-origin','overflow','overflow-x','overflow-y',
+    'white-space','text-align','vertical-align','object-fit','object-position',
+    'flex','flex-direction','flex-wrap','flex-grow','flex-shrink','flex-basis',
+    'grid','grid-template-columns','grid-template-rows','grid-column','grid-row',
+    'gap','row-gap','column-gap','align-items','align-content','align-self',
+    'justify-items','justify-content','justify-self','inset','top','right','bottom','left',
+    'z-index','box-shadow','text-shadow'
+  ];
+  function copyComputedStyle(source, target){
+    if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
+    var computed = window.getComputedStyle(source);
+    var style = target.getAttribute('style') || '';
+    for (var i = 0; i < SNAPSHOT_STYLE_PROPS.length; i++){
+      var prop = SNAPSHOT_STYLE_PROPS[i];
+      var value = computed.getPropertyValue(prop);
+      if (value) style += prop + ':' + value + ';';
+    }
+    target.setAttribute('style', style);
+  }
+  function syncElementState(source, target){
+    var tag = source.tagName ? source.tagName.toLowerCase() : '';
+    if (tag === 'img' && source.currentSrc) target.setAttribute('src', source.currentSrc);
+    if (tag === 'input' || tag === 'textarea') target.setAttribute('value', source.value || '');
+    if (tag === 'canvas') {
+      try {
+        var img = document.createElement('img');
+        img.setAttribute('src', source.toDataURL('image/png'));
+        img.setAttribute('style', target.getAttribute('style') || '');
+        target.parentNode && target.parentNode.replaceChild(img, target);
+      } catch (_) {}
+    }
+  }
+  function inlineSnapshotStyles(originalRoot, cloneRoot){
+    copyComputedStyle(originalRoot, cloneRoot);
+    syncElementState(originalRoot, cloneRoot);
+    var originals = originalRoot.querySelectorAll('*');
+    var clones = cloneRoot.querySelectorAll('*');
+    var count = Math.min(originals.length, clones.length, 3500);
+    for (var i = 0; i < count; i++){
+      copyComputedStyle(originals[i], clones[i]);
+      syncElementState(originals[i], clones[i]);
+    }
+  }
+  // Must run AFTER pruneHiddenSnapshotNodes: prune pairs originalRoot/cloneRoot
+  // querySelectorAll('*') lists by index, so removing clone nodes (scripts,
+  // links) before it shifts every later clone under the wrong original and the
+  // misdirected removals can delete the visible content (or the body itself),
+  // yielding a uniform "empty-render" frame.
+  function stripSnapshotResources(cloneRoot){
+    var scripts = cloneRoot.querySelectorAll('script');
+    for (var s = scripts.length - 1; s >= 0; s--) scripts[s].remove();
+    var links = cloneRoot.querySelectorAll('link[rel~="stylesheet"], link[rel~="preload"], link[rel~="preconnect"]');
+    for (var l = links.length - 1; l >= 0; l--) links[l].remove();
+    var styles = cloneRoot.querySelectorAll('style');
+    for (var st = 0; st < styles.length; st++) {
+      styles[st].textContent = (styles[st].textContent || '')
+        .replace(/@import[^;]+;/gi, '')
+        .replace(/@font-face\s*\{[^}]*\}/gi, '');
+    }
+    // HTML tolerates attribute names XML rejects (@click, :href, {shorthand}).
+    // One such attribute anywhere makes the whole foreignObject SVG unparseable,
+    // so drop any attribute whose name is not a valid XML Name.
+    var XML_NAME = /^[A-Za-z_][A-Za-z0-9_.-]*(?::[A-Za-z_][A-Za-z0-9_.-]*)?$/;
+    var all = cloneRoot.querySelectorAll('*');
+    for (var e = 0; e < all.length; e++) {
+      var attrs = all[e].attributes;
+      for (var a = attrs.length - 1; a >= 0; a--) {
+        if (!XML_NAME.test(attrs[a].name)) all[e].removeAttribute(attrs[a].name);
+      }
+    }
+  }
+  // innerHTML uses the HTML serializer, which emits void elements (<br>, <img>)
+  // without self-closing slashes — invalid XML, so the foreignObject SVG image
+  // fails to parse (img.onerror → 'snapshot image failed'). XMLSerializer emits
+  // well-formed XHTML instead.
+  function serializeSnapshotXhtml(node){
+    try {
+      var serializer = new XMLSerializer();
+      var out = '';
+      for (var i = 0; i < node.childNodes.length; i++) out += serializer.serializeToString(node.childNodes[i]);
+      return out;
+    } catch (_) { return node.innerHTML || ''; }
+  }
+  function pruneHiddenSnapshotNodes(originalRoot, cloneRoot){
+    var originals = originalRoot.querySelectorAll('*');
+    var clones = cloneRoot.querySelectorAll('*');
+    var count = Math.min(originals.length, clones.length);
+    var removals = [];
+    for (var i = 0; i < count; i++){
+      var original = originals[i];
+      var clone = clones[i];
+      if (!original || !clone || !clone.parentNode) continue;
+      var computed = window.getComputedStyle(original);
+      if (computed && (computed.display === 'none' || computed.visibility === 'hidden')) {
+        removals.push(clone);
+      }
+    }
+    for (var r = removals.length - 1; r >= 0; r--){
+      if (removals[r].parentNode) removals[r].parentNode.removeChild(removals[r]);
+    }
+  }
+  function waitForImages(){
+    var imgs = Array.prototype.slice.call(document.images || []);
+    return Promise.all(imgs.map(function(img){
+      if (img.complete) return Promise.resolve();
+      return new Promise(function(resolve){
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
+    }));
+  }
+  function scrollOffset(){
+    var doc = document.documentElement;
+    var body = document.body;
+    return {
+      x: Math.max(window.scrollX || 0, doc ? doc.scrollLeft || 0 : 0, body ? body.scrollLeft || 0 : 0),
+      y: Math.max(window.scrollY || 0, doc ? doc.scrollTop || 0 : 0, body ? body.scrollTop || 0 : 0)
+    };
+  }
+  function escapeAttribute(value){
+    return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+  function snapshotBackgroundColor(){
+    try {
+      var probe = window.getComputedStyle(document.body || document.documentElement);
+      var bg = probe && probe.backgroundColor || '';
+      if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') return '#ffffff';
+      return bg;
+    } catch (_) { return '#ffffff'; }
+  }
+  // After painting, sample the canvas: a uniform (single-color) bitmap means
+  // the foreignObject rasterizer painted nothing — Chromium frequently refuses
+  // to paint <foreignObject> HTML loaded via <img>. Treating that as an honest
+  // 'empty-render' error (instead of shipping the background-only frame) lets
+  // the host fall back / surface a real failure rather than a silent black PNG.
+  function canvasLooksBlank(ctx, cw, ch){
+    try {
+      var data = ctx.getImageData(0, 0, cw, ch).data;
+      var step = Math.max(4, Math.floor((cw * ch) / 4096)) * 4;
+      var first = null, samples = 0;
+      for (var i = 0; i + 3 < data.length; i += step){
+        samples++;
+        if (!first){ first = [data[i], data[i+1], data[i+2], data[i+3]]; continue; }
+        if (Math.abs(data[i]-first[0]) > 6 || Math.abs(data[i+1]-first[1]) > 6 ||
+            Math.abs(data[i+2]-first[2]) > 6 || Math.abs(data[i+3]-first[3]) > 6) return false;
+      }
+      return samples > 8;
+    } catch (_) { return false; }
+  }
+  // Rasterize the current view (or the whole document, when opts.full) via an
+  // SVG <foreignObject>. Returns a Promise so it can be reused by both the
+  // od:snapshot message handler AND the export-capture bridge (image export /
+  // PDF) — the foreignObject path is fast and never blocks on external
+  // image network loads the way a DOM-cloning rasterizer does.
+  function captureSnapshot(opts){
+    opts = opts || {};
+    return new Promise(function(resolve, reject){
+      var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+      var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+      var dpr = window.devicePixelRatio || 1;
+      var bgColor = snapshotBackgroundColor();
+      var docW = Math.max(w, document.documentElement.scrollWidth || 0, document.body ? document.body.scrollWidth : 0);
+      var docH = Math.max(h, document.documentElement.scrollHeight || 0, document.body ? document.body.scrollHeight : 0);
+      var full = !!opts.full;
+      var capW = full ? docW : w;
+      var capH = full ? docH : h;
+      var clone = document.documentElement.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      inlineSnapshotStyles(document.documentElement, clone);
+      pruneHiddenSnapshotNodes(document.documentElement, clone);
+      stripSnapshotResources(clone);
+      var scroll = full ? { x: 0, y: 0 } : scrollOffset();
+      var cloneBody = clone.querySelector('body');
+      var rootStyle = clone.getAttribute('style') || '';
+      var bodyStyle = cloneBody ? cloneBody.getAttribute('style') || '' : '';
+      var bodyContent = serializeSnapshotXhtml(cloneBody || clone);
+      var wrapperStyle = rootStyle + bodyStyle +
+        'margin:0;position:relative;left:' + (-scroll.x) + 'px;top:' + (-scroll.y) + 'px;' +
+        'width:' + docW + 'px;height:' + docH + 'px;overflow:visible;';
+      var html = '<div xmlns="http://www.w3.org/1999/xhtml" style="' + escapeAttribute(wrapperStyle) + '">' + bodyContent + '</div>';
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + capW + '" height="' + capH + '" viewBox="0 0 ' + capW + ' ' + capH + '">' +
+        '<foreignObject x="0" y="0" width="' + docW + '" height="' + docH + '">' +
+        html +
+        '</foreignObject></svg>';
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.floor(capW * dpr));
+          canvas.height = Math.max(1, Math.floor(capH * dpr));
+          var ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('no 2d context');
+          ctx.scale(dpr, dpr);
+          // Opaque base so a transparent (un-painted) raster never flattens to
+          // pure black in clipboards / PNG viewers.
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, capW, capH);
+          ctx.drawImage(img, 0, 0, capW, capH);
+          if (canvasLooksBlank(ctx, canvas.width, canvas.height)) {
+            reject(new Error('empty-render'));
+            return;
+          }
+          resolve({ dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height });
+        } catch (err) {
+          reject(err instanceof Error ? err : new Error(String(err && err.message || err)));
+        }
+      };
+      img.onerror = function(){ reject(new Error('snapshot image failed')); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  }
+  // Exposed so the export-capture bridge (same document) can reuse this renderer.
+  window.__odCaptureSnapshot = function(opts){
+    return waitForImages().then(function(){ return captureSnapshot(opts || {}); });
+  };
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:snapshot' || !data.id) return;
+    window.__odCaptureSnapshot({ full: !!data.full }).then(function(res){
+      window.parent.postMessage({ type: 'od:snapshot:result', id: String(data.id), dataUrl: res.dataUrl, w: res.w, h: res.h }, '*');
+    }, function(err){
+      window.parent.postMessage({ type: 'od:snapshot:result', id: String(data.id), error: String(err && err.message || err) }, '*');
+    });
+  });
+})();</script><script data-od-export-capture-bridge>(function(){
+  function raf(){ return new Promise(function(r){ requestAnimationFrame(function(){ r(); }); }); }
+  function settle(){
+    var fonts = (document.fonts && document.fonts.ready) ? document.fonts.ready.catch(function(){}) : Promise.resolve();
+    var imgs = Promise.all(Array.prototype.slice.call(document.images||[]).map(function(img){
+      if (img.complete) return Promise.resolve();
+      return new Promise(function(r){ img.addEventListener('load', r, {once:true}); img.addEventListener('error', r, {once:true}); });
+    }));
+    return Promise.all([fonts, imgs]).then(raf).then(raf);
+  }
+  function deckState(){
+    try { if (typeof window.__odDeckSlideState === 'function') return window.__odDeckSlideState(); } catch(_){}
+    return { active: 0, count: 1 };
+  }
+  function navTo(index, delay){
+    return new Promise(function(resolve){
+      try { window.postMessage({ type:'od:slide', action:'go', index: index }, '*'); } catch(_){}
+      var tries = 0;
+      function check(){
+        tries++;
+        if (deckState().active === index || tries > 14) { resolve(); return; }
+        setTimeout(check, 80);
+      }
+      setTimeout(check, Math.max(60, delay||0));
+    });
+  }
+  function captureImage(deck){
+    // Reuse the shared SVG-foreignObject renderer (injectSnapshotBridge). For a
+    // deck the active slide fills the viewport, so a viewport capture IS the
+    // slide; a non-deck page captures the full document.
+    if (typeof window.__odCaptureSnapshot !== 'function') {
+      return Promise.reject(new Error('snapshot renderer unavailable'));
+    }
+    return window.__odCaptureSnapshot({ full: !deck });
+  }
+  function notes(){
+    var el = document.getElementById('speaker-notes');
+    if (el) {
+      var t = el.textContent || '';
+      try { var j = JSON.parse(t); if (Array.isArray(j)) return j; } catch(_){}
+      var plain = t.replace(/\s+/g,' ').trim();
+      if (plain) return plain;
+    }
+    var list = [];
+    // Match every .slide in document order — per-slide notes must line up
+    // 1:1 with the slide list regardless of the deck's container nesting.
+    var slideNodes = document.querySelectorAll('.slide');
+    for (var i = 0; i < slideNodes.length; i++) {
+      var noteEl = slideNodes[i].querySelector('.notes');
+      list.push(noteEl ? (noteEl.textContent || '').replace(/\s+/g, ' ').trim() : '');
+    }
+    return list.length ? list : '';
+  }
+  function send(msg){ try { window.parent.postMessage(msg, '*'); } catch(_){} }
+  function run(req){
+    var id = req.id;
+    var deck = !!req.deck;
+    var single = !!req.single;
+    var delay = req.delay || 350;
+    Promise.resolve().then(function(){
+      var st = deckState();
+      var total = (!single && deck && st.count > 1) ? st.count : 1;
+      var notesAll = notes();
+      function noteFor(i){ return Array.isArray(notesAll) ? (notesAll[i]||'') : (i===0 ? notesAll : ''); }
+      var idx = 0;
+      function step(){
+        if (idx >= total){ send({ type:'od:export-capture:done', id:id, total: total }); return; }
+        var i = idx;
+        var navP = (!single && deck && total > 1) ? navTo(i, delay) : Promise.resolve();
+        navP.then(settle).then(function(){
+          try {
+            captureImage(deck).then(function(img){
+              send({ type:'od:export-capture:slide', id:id, index:i, total:total, dataUrl: img.dataUrl, w: img.w, h: img.h, notes: noteFor(i) });
+              idx++; setTimeout(step, 0);
+            }).catch(function(err){ send({ type:'od:export-capture:error', id:id, error: String(err && err.message || err) }); });
+          } catch(err){ send({ type:'od:export-capture:error', id:id, error: String(err && err.message || err) }); }
+        });
+      }
+      step();
+    }).catch(function(err){
+      send({ type:'od:export-capture:error', id:id, error: String(err && err.message || err) });
+    });
+  }
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:export-capture' || !data.id) return;
+    run(data);
+  });
+})();</script><template data-od-srcdoc-transport-body-complete=""></template></body></html>
