@@ -87,12 +87,12 @@ function base64(bytes: Uint8Array): string {
 }
 
 // Format yang dikenal input_audio Gemini: wav, mp3, aac, ogg, flac, aiff.
-// m4a (AAC dalam MP4) dipetakan ke aac; webm/3gp/caf tidak didukung dan ditolak.
+// m4a/mp4/webm/3gp/caf tidak didukung dan ditolak; jangan melabeli kontainer MP4 sebagai aac.
 function formatAudioChat(mime: string): string | null {
   const m = mime.toLowerCase();
   if (m.includes('wav')) return 'wav';
   if (m.includes('mpeg') || m.includes('mp3')) return 'mp3';
-  if (m.includes('aac') || m.includes('m4a') || m.includes('mp4')) return 'aac';
+  if (m.includes('aac')) return 'aac';
   if (m.includes('ogg')) return 'ogg';
   if (m.includes('flac')) return 'flac';
   if (m.includes('aiff')) return 'aiff';

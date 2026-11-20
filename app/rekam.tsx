@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
+  AudioQuality,
   getRecordingPermissionsAsync,
+  IOSOutputFormat,
   RecordingPresets,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
@@ -20,7 +22,24 @@ import { useTheme } from '@/theme/ThemeProvider';
 const BATAS_MS = 60_000;
 const MINIMAL_MS = 500;
 const MAKS_TEKS = 500;
-const OPSI_REKAM = { ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true };
+// Format rekaman harus dikenal penyedia AI (Gemini: wav, mp3, aac, ogg, flac, aiff; m4a/MP4 tidak).
+// Android: AAC ADTS (.aac). iOS: WAV PCM. Mono 16 kHz cukup untuk suara dan menjaga ukuran kecil.
+const OPSI_REKAM = {
+  ...RecordingPresets.HIGH_QUALITY,
+  extension: Platform.OS === 'ios' ? '.wav' : '.aac',
+  sampleRate: 16000,
+  numberOfChannels: 1,
+  bitRate: 64000,
+  android: { outputFormat: 'aac_adts' as const, audioEncoder: 'aac' as const },
+  ios: {
+    outputFormat: IOSOutputFormat.LINEARPCM,
+    audioQuality: AudioQuality.HIGH,
+    linearPCMBitDepth: 16,
+    linearPCMIsBigEndian: false,
+    linearPCMIsFloat: false,
+  },
+  isMeteringEnabled: true,
+};
 
 const PESAN_PENDEK = 'Tahan lebih lama untuk merekam';
 const PESAN_IZIN = 'Izin mikrofon ditolak. Buka Pengaturan untuk mengizinkan, atau pakai "Ketik saja".';

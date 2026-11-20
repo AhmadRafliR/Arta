@@ -24,6 +24,8 @@ const mockSetMode = jest.fn((_mode: unknown) => Promise.resolve());
 jest.mock('expo-audio', () => ({
   useAudioRecorder: () => mockRecorder,
   RecordingPresets: { HIGH_QUALITY: { extension: '.m4a' } },
+  IOSOutputFormat: { LINEARPCM: 'lpcm' },
+  AudioQuality: { HIGH: 96 },
   getRecordingPermissionsAsync: () => mockGetIzin(),
   requestRecordingPermissionsAsync: () => mockMintaIzin(),
   setAudioModeAsync: (m: unknown) => mockSetMode(m),
