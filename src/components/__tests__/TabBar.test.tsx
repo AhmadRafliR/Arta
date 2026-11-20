@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { ComponentProps } from 'react';
+import { Dimensions, StyleSheet } from 'react-native';
 import { TabBar } from '../TabBar';
 import { NavPulauProvider, useNavPulau } from '@/nav/NavPulauProvider';
 
@@ -95,5 +96,21 @@ describe('TabBar', () => {
 
     await act(async () => api.laporGulir('index', 0));
     expect(screen.getByTestId('tab-bar-penuh')).toBeTruthy();
+  });
+
+  it('slot label cukup tinggi saat fontScale 1.3 (tidak terpotong)', async () => {
+    const asli = Dimensions.get.bind(Dimensions);
+    const spy = jest
+      .spyOn(Dimensions, 'get')
+      .mockImplementation((k: string) => ({ ...asli(k as 'window'), fontScale: 1.3 }));
+    try {
+      await tampilkan();
+      const label = screen.getByText('Beranda');
+      expect(label.props.maxFontSizeMultiplier).toBe(1.3);
+      const slot = StyleSheet.flatten(label.parent!.props.style);
+      expect(slot.height).toBeGreaterThanOrEqual(18);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

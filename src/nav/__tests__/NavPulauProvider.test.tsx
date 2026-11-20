@@ -104,4 +104,28 @@ describe('useGulirPulau', () => {
     await fireEvent.scroll(scroll, { nativeEvent: { contentOffset: { y: 300 } } });
     expect(status()).toBe('pulau');
   });
+
+  it('layar yang hanya memakai useGulirPulau tidak render ulang saat status berubah', async () => {
+    let renders = 0;
+    function LayarHitung() {
+      renders++;
+      return (
+        <ScrollView testID="gulir2" {...useGulirPulau('index')}>
+          <Text className="font-sans">isi</Text>
+        </ScrollView>
+      );
+    }
+    await render(
+      <NavPulauProvider>
+        <Pengamat />
+        <LayarHitung />
+      </NavPulauProvider>,
+    );
+    const awal = renders;
+    await fireEvent.scroll(screen.getByTestId('gulir2'), { nativeEvent: { contentOffset: { y: 300 } } });
+    expect(status()).toBe('pulau');
+    await fireEvent.scroll(screen.getByTestId('gulir2'), { nativeEvent: { contentOffset: { y: 0 } } });
+    expect(status()).toBe('penuh');
+    expect(renders).toBe(awal);
+  });
 });

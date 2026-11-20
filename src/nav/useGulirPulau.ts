@@ -1,14 +1,14 @@
 import { useCallback } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { useNavPulau } from './NavPulauProvider';
+import { useNavAksi } from './NavPulauProvider';
 
 // Pasang ke ScrollView layar tab: `{...useGulirPulau('index')}`.
 export function useGulirPulau(rute: string): {
   onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   scrollEventThrottle: 16;
 } {
-  const { aktifkan, laporGulir } = useNavPulau();
+  const { aktifkan, laporGulir } = useNavAksi();
   useFocusEffect(
     useCallback(() => {
       aktifkan(rute);

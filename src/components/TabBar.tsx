@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ComponentProps } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   interpolate,
@@ -14,7 +14,7 @@ import { useRouter, Tabs } from 'expo-router';
 import { Ikon } from '@/components/ikon/Ikon';
 import type { NamaIkon } from '@/components/ikon/data';
 import { TINGGI_NAV } from '@/nav/pulau';
-import { useNavPulau } from '@/nav/NavPulauProvider';
+import { useStatusNav } from '@/nav/NavPulauProvider';
 import { useTheme } from '@/theme/ThemeProvider';
 import { MicButton } from './MicButton';
 
@@ -34,6 +34,9 @@ const DURASI = 340;
 const DURASI_LABEL = 120;
 const TINGGI_PULAU = 64;
 const TINGGI_LABEL = 14;
+// Skala font sistem dibatasi (maxFontSizeMultiplier); slot label mengikuti skala itu plus sedikit ruang untuk metrik Nunito.
+const SKALA_MAKS = 1.3;
+const RUANG_LABEL = 2;
 const MIC_PENUH = 56;
 const MIC_PULAU = 48;
 // Radius yang tampak untuk kapsul setinggi 64 + garis 2px; di ujung animasi dipasang 999.
@@ -56,9 +59,11 @@ function ItemTab({
   onPress: () => void;
 }) {
   const { t } = useTheme();
+  const { fontScale } = useWindowDimensions();
+  const tinggiLabel = Math.ceil(TINGGI_LABEL * Math.min(fontScale, SKALA_MAKS)) + RUANG_LABEL;
   const gayaLabel = useAnimatedStyle(() => ({
     opacity: opasitasLabel.value,
-    height: interpolate(p.value, [0, 1], [TINGGI_LABEL, 0]),
+    height: interpolate(p.value, [0, 1], [tinggiLabel, 0]),
     marginTop: interpolate(p.value, [0, 1], [4, 0]),
   }));
   const warna = aktif ? t.fg : t.mid;
@@ -74,8 +79,9 @@ function ItemTab({
       <Animated.View style={[{ overflow: 'hidden' }, gayaLabel]}>
         <Text
           numberOfLines={1}
+          maxFontSizeMultiplier={SKALA_MAKS}
           className="text-[11px] font-sans"
-          style={{ color: warna, fontWeight: aktif ? '700' : '400', lineHeight: TINGGI_LABEL }}
+          style={{ color: warna, fontWeight: aktif ? '700' : '400', lineHeight: TINGGI_LABEL, includeFontPadding: false }}
         >
           {label}
         </Text>
@@ -92,7 +98,7 @@ function ItemTab({
 export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const router = useRouter();
   const { t, mode } = useTheme();
-  const { status } = useNavPulau();
+  const status = useStatusNav();
   const kurangiGerak = useReducedMotion();
 
   // Saat mount nilai awal langsung sesuai status (layar bisa dipulihkan di tengah gulir).

@@ -1,14 +1,16 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { AMBANG_MASUK, statusBerikut, type StatusNav } from './pulau';
 
-type NavPulau = {
-  status: StatusNav;
+type NavAksi = {
   aktifkan: (rute: string) => void;
   laporGulir: (rute: string, y: number) => void;
 };
+type NavPulau = NavAksi & { status: StatusNav };
 
+// Dua konteks: aksi stabil (layar tab, tak render ulang saat status berubah) dan status (TabBar).
 // Tanpa Provider (mis. layar dirender sendiri di tes): selalu penuh, laporan diabaikan.
-const NavPulauContext = createContext<NavPulau>({ status: 'penuh', aktifkan: () => {}, laporGulir: () => {} });
+const AksiContext = createContext<NavAksi>({ aktifkan: () => {}, laporGulir: () => {} });
+const StatusContext = createContext<StatusNav>('penuh');
 
 export function NavPulauProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<StatusNav>('penuh');
@@ -41,10 +43,27 @@ export function NavPulauProvider({ children }: { children: React.ReactNode }) {
     [ubah],
   );
 
-  const nilai = useMemo(() => ({ status, aktifkan, laporGulir }), [status, aktifkan, laporGulir]);
-  return <NavPulauContext.Provider value={nilai}>{children}</NavPulauContext.Provider>;
+  const aksi = useMemo(() => ({ aktifkan, laporGulir }), [aktifkan, laporGulir]);
+  return (
+    <AksiContext.Provider value={aksi}>
+      <StatusContext.Provider value={status}>{children}</StatusContext.Provider>
+    </AksiContext.Provider>
+  );
 }
 
+/** Hanya aksi (stabil): untuk layar tab. */
+export function useNavAksi(): NavAksi {
+  return useContext(AksiContext);
+}
+
+/** Hanya status: untuk TabBar. */
+export function useStatusNav(): StatusNav {
+  return useContext(StatusContext);
+}
+
+/** Status + aksi. Render ulang saat status berubah; layar tab pakai useGulirPulau. */
 export function useNavPulau(): NavPulau {
-  return useContext(NavPulauContext);
+  const aksi = useContext(AksiContext);
+  const status = useContext(StatusContext);
+  return useMemo(() => ({ status, ...aksi }), [status, aksi]);
 }

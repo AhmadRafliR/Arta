@@ -14,7 +14,7 @@ import { monthSummary } from '@/domain/summary';
 import { sapaan } from '@/lib/greeting';
 import { hariIni, jamDi } from '@/lib/tanggal';
 import { useGulirPulau } from '@/nav/useGulirPulau';
-import { TINGGI_NAV } from '@/nav/pulau';
+import { spacerNav } from '@/nav/pulau';
 
 export default function Beranda() {
   const router = useRouter();
@@ -22,7 +22,8 @@ export default function Beranda() {
   const gulir = useGulirPulau('index');
   const { profile } = useAuth();
   const zona = profile?.zona_waktu || undefined;
-  const bulan = hariIni(zona).slice(0, 7);
+  const hariIniStr = hariIni(zona);
+  const bulan = hariIniStr.slice(0, 7);
 
   const wallets = useWallets();
   const semuaTx = useAllTransactions();
@@ -47,7 +48,7 @@ export default function Beranda() {
     <ScrollView
       className="flex-1 bg-bg"
       contentContainerClassName="gap-3 px-4"
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: TINGGI_NAV + insets.bottom + 16 }}
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: spacerNav(insets.bottom) }}
       {...gulir}
     >
       <View>
@@ -97,7 +98,7 @@ export default function Beranda() {
           ) : bulanGalat ? (
             <Text className="py-3 text-fg font-sans">{bulanGalat.pesan}</Text>
           ) : (
-            terbaru.map((tx) => <TxRow key={tx.id} tx={tx} namaDompet={namaDompet} hariIni={hariIni(zona)} />)
+            terbaru.map((tx) => <TxRow key={tx.id} tx={tx} namaDompet={namaDompet} hariIni={hariIniStr} />)
           )}
         </View>
       )}

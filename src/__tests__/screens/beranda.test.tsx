@@ -83,7 +83,7 @@ describe('Beranda', () => {
     await render(<Beranda />);
     expect(screen.getAllByText('Tidak ada koneksi. Coba lagi.').length).toBeGreaterThan(0);
     expect(screen.queryByText('Rp0')).toBeNull();
-    expect(screen.queryByText('Belum ada transaksi bulan ini.')).toBeNull();
+    expect(screen.queryByText('Belum ada transaksi bulan ini. Tekan tombol mic untuk mencatat yang pertama.')).toBeNull();
   });
 
   it('bulan kosong: salinan keadaan kosong baru', async () => {

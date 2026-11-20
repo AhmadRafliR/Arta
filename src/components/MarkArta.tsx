@@ -2,13 +2,15 @@ import Svg, { Circle, Defs, G, LinearGradient, Rect, Stop } from 'react-native-s
 import { useTheme } from '@/theme/ThemeProvider';
 
 /** Mark arta (dari kit.html): badan gradien + aksen; gelap memakai badan terang. */
-export function MarkArta({ ukuran = 52 }: { ukuran?: number }) {
+/** dekoratif: sembunyikan dari pembaca layar (mis. kata "arta" sudah tampil di sebelahnya). */
+export function MarkArta({ ukuran = 52, dekoratif = false }: { ukuran?: number; dekoratif?: boolean }) {
   const { mode } = useTheme();
   const gelap = mode === 'gelap';
   const badan = gelap ? '#F2F7F8' : 'url(#brandGrad)';
   const aksen = gelap ? '#0B424F' : '#52C3BF';
   return (
-    <Svg width={ukuran} height={ukuran} viewBox="0 0 512 512" accessibilityLabel="arta" accessible>
+    <Svg width={ukuran} height={ukuran} viewBox="0 0 512 512" {...(dekoratif ? { accessible: false, importantForAccessibility: 'no-hide-descendants' as const } : { accessibilityLabel: 'arta', accessible: true })}
+    >
       <Defs>
         <LinearGradient id="brandGrad" x1="95" y1="106" x2="417" y2="406" gradientUnits="userSpaceOnUse">
           <Stop offset="0" stopColor="#0B424F" />

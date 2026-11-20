@@ -12,7 +12,7 @@ import { formatRupiah } from '@/domain/money';
 import { filterTx, kelompokHarian, type FilterTx } from '@/lib/filterTx';
 import { geserBulan, hariIni, labelBulan, NAMA_BULAN } from '@/lib/tanggal';
 import { useGulirPulau } from '@/nav/useGulirPulau';
-import { TINGGI_NAV } from '@/nav/pulau';
+import { spacerNav } from '@/nav/pulau';
 
 function labelHari(tanggal: string): string {
   const [, m, d] = tanggal.split('-').map(Number);
@@ -49,7 +49,7 @@ export default function Riwayat() {
     <ScrollView
       className="flex-1 bg-bg"
       contentContainerClassName="gap-3 px-4"
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: TINGGI_NAV + insets.bottom + 16 }}
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: spacerNav(insets.bottom) }}
       {...gulir}
     >
       <View className="flex-row items-center justify-between">
@@ -67,7 +67,14 @@ export default function Riwayat() {
       {semua === undefined ? (
         <Text className={`font-sans ${q.error ? 'text-fg' : 'text-mid'}`}>{q.error ? q.error.pesan : 'Memuat…'}</Text>
       ) : grup.length === 0 ? (
-        <KeadaanKosong ikon="cat-lainnya" pesan="Belum ada transaksi di bulan ini." />
+        <KeadaanKosong
+          ikon="cat-lainnya"
+          pesan={
+            semua.length > 0 && (filter.jenis || filter.kategori || filter.walletId)
+              ? 'Tidak ada transaksi yang cocok dengan filter.'
+              : 'Belum ada transaksi di bulan ini.'
+          }
+        />
       ) : (
         grup.map((g) => (
           <View key={g.tanggal}>

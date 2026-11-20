@@ -45,6 +45,10 @@ Centang `- [x]` jika lulus, catat temuan di bawah item bila gagal.
 - [ ] Keluar lalu masuk lagi → data tetap ada
 - [ ] Cek visual mode terang dan gelap di semua layar (Beranda, Riwayat, Hutang, Akun, Catat)
 - [ ] Tab bar menjadi kapsul melayang saat gulir ke bawah, dan kembali penuh saat di posisi atas
+- [ ] Label tab terbaca penuh (tidak terpotong) pada ukuran font sistem "Besar" dan "Terbesar"
+- [ ] Ketuk separuh atas mic yang menonjol (di atas tepi bar) di mode terang dan gelap → membuka Catat
+- [ ] Layar Masuk dengan keyboard terbuka di HP kecil: semua isian dan tombol bisa digulir dan dijangkau
+- [ ] Catatan (batasan yang diketahui): di Android 7–8.1 (API 24–27) teks semibold (600) tampil sebagai regular
 
 ## Catatan temuan
 

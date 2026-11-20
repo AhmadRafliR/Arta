@@ -8,6 +8,11 @@ export const AMBANG_MASUK = 24;
 export const AMBANG_KELUAR = 8;
 /** Tinggi bar penuh tanpa safe-area; juga dipakai sebagai spacer bawah layar. */
 export const TINGGI_NAV = 76;
+/** Ruang ekstra di bawah isi tab: menutup mic yang menonjol 30px di atas bar + napas. */
+export const SPACER_NAV_EXTRA = 32;
+
+/** Padding bawah isi layar tab agar tak tertutup tab bar. */
+export const spacerNav = (insetBawah: number) => TINGGI_NAV + insetBawah + SPACER_NAV_EXTRA;
 
 export function statusBerikut(sekarang: StatusNav, y: number): StatusNav {
   if (!Number.isFinite(y)) return sekarang;

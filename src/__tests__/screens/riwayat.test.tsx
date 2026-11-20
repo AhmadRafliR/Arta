@@ -91,6 +91,14 @@ describe('Riwayat', () => {
     expect(screen.getByText('Makan · cash')).toBeTruthy();
   });
 
+  it('filter aktif tanpa hasil: pesan filter, bukan pesan bulan kosong', async () => {
+    await render(<Riwayat />);
+    await fireEvent.press(screen.getByTestId('f-dompet-spay'));
+    await fireEvent.press(screen.getByTestId('f-kat-Makan')); // Makan hanya di cash
+    expect(screen.getByText('Tidak ada transaksi yang cocok dengan filter.')).toBeTruthy();
+    expect(screen.queryByText('Belum ada transaksi di bulan ini.')).toBeNull();
+  });
+
   it('ketuk baris membuka /transaksi/[id] dengan bulan', async () => {
     await render(<Riwayat />);
     await fireEvent.press(screen.getByText('Makan · cash'));

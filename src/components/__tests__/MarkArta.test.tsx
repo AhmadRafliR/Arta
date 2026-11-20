@@ -12,4 +12,10 @@ describe('MarkArta', () => {
     await render(<MarkArta />);
     expect(screen.getByLabelText('arta')).toBeTruthy();
   });
+
+  it('dekoratif: tanpa label arta', async () => {
+    mockMode = 'terang';
+    await render(<MarkArta dekoratif />);
+    expect(screen.queryByLabelText('arta')).toBeNull();
+  });
 });

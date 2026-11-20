@@ -24,7 +24,7 @@ Catatan dari review per-task dan review akhir yang **sengaja ditunda** ke rencan
 - Kategori kosong saat kategori belum termuat → tunggu atau wajibkan.
 - Dompet diarsipkan yang saldonya berubah lagi (karena edit transaksi lama) belum diberi tanda.
 - Edge case penyesuaian: jika penyesuaian sebelumnya ternyata tersimpan lalu pengguna memasukkan saldo awal lagi → "Saldo sudah sama" dan penyesuaian lama tetap (hapus baris id sendiri bila selisih null).
-- ~~Token warna "bahaya" untuk teks galat~~ (selesai); tombol "Coba lagi" pada galat; tombol Hapus di dalam scroll/keyboard; safe area bawah modal.
+- Token warna `danger`/`dangerInk` sudah ada, tetapi teks galat belum memakainya (masih `text-fg`); tombol "Coba lagi" pada galat; tombol Hapus di dalam scroll/keyboard; safe area bawah modal.
 - `formatRingkas` 999.950 → "1000rb"; `parseNominal` "1,5"/"25.50" tanpa akhiran dibaca ribuan.
 - Hapus dependensi template yang tidak dipakai, tambah konfigurasi ESLint, tindak lanjuti `npm audit`.
 - Ubah tema saat offline bisa kembali saat app dibuka lagi (profil menimpa).

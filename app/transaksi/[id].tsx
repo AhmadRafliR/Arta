@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Tombol } from '@/components/Tombol';
 import { TxForm } from '@/components/TxForm';
 import { toAppError, type AppError } from '@/data/errors';
 import { useDeleteTransaction, useTransaction } from '@/data/transactions';
@@ -55,15 +56,7 @@ export default function UbahTransaksi() {
           </View>
           <View className="px-5 pb-6">
             {galat ? <Text className="mb-2 text-fg font-sans">{galat}</Text> : null}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Hapus"
-              disabled={busy}
-              onPress={konfirmasiHapus}
-              className={`items-center rounded-xl border border-line py-3 ${busy ? 'opacity-50' : ''}`}
-            >
-              {busy ? <ActivityIndicator /> : <Text className="font-semibold text-fg font-sans">Hapus</Text>}
-            </Pressable>
+            <Tombol label="Hapus" busy={busy} disabled={busy} onPress={konfirmasiHapus} />
           </View>
         </>
       ) : (

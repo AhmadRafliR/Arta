@@ -13,7 +13,7 @@ import { useWallets } from '@/data/wallets';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { Pref } from '@/theme/tokens';
 import { useGulirPulau } from '@/nav/useGulirPulau';
-import { TINGGI_NAV } from '@/nav/pulau';
+import { spacerNav } from '@/nav/pulau';
 
 const TIPE: { v: TipeDompet; label: string }[] = [
   { v: 'harian', label: 'Harian' },
@@ -59,7 +59,7 @@ export default function Akun() {
     <ScrollView
       className="flex-1 bg-bg"
       contentContainerClassName="gap-4 px-5 pt-12"
-      contentContainerStyle={{ paddingBottom: TINGGI_NAV + insets.bottom + 16 }}
+      contentContainerStyle={{ paddingBottom: spacerNav(insets.bottom) }}
       {...gulir}
     >
       <Text className="text-2xl font-bold text-fg font-sans">Akun</Text>

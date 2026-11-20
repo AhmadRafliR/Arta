@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { MarkArta } from '@/components/MarkArta';
@@ -47,9 +47,14 @@ export default function Masuk() {
   }
 
   return (
-    <View className="flex-1 justify-center gap-4 bg-bg px-6">
+    <ScrollView
+      className="flex-1 bg-bg"
+      contentContainerClassName="gap-4 px-6"
+      contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+      keyboardShouldPersistTaps="handled"
+    >
       <View className="items-center gap-1 pb-4">
-        <MarkArta ukuran={52} />
+        <MarkArta ukuran={52} dekoratif />
         <Text className="text-[30px] font-semibold tracking-wide text-fg font-sans">arta</Text>
         <Text className="text-xs tracking-[0.22em] text-mid font-sans">OWN YOUR MONEY</Text>
       </View>
@@ -64,10 +69,12 @@ export default function Masuk() {
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
+        returnKeyType="send"
+        onSubmitEditing={() => void kirimKode()}
         className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
       />
       <Tombol label="Kirim kode" busy={busy} disabled={busy} onPress={() => void kirimKode()} />
       {error ? <Text className="text-fg font-sans">{error}</Text> : null}
-    </View>
+    </ScrollView>
   );
 }
