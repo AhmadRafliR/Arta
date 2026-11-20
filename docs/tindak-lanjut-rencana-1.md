@@ -29,3 +29,19 @@ Catatan dari review per-task dan review akhir yang **sengaja ditunda** ke rencan
 - Hapus dependensi template yang tidak dipakai, tambah konfigurasi ESLint, tindak lanjuti `npm audit`.
 - Ubah tema saat offline bisa kembali saat app dibuka lagi (profil menimpa).
 - Ilustrasi keadaan kosong, badge Free/Pro, ikon app, dan splash menunggu file SVG dari Rafli di `docs/design/arta/`.
+
+## Dari Rencana 2
+Ditunda dengan sengaja dari Rencana 2 (Catat pakai AI + kuota):
+- Koreksi hutang dan budget lewat suara (sekarang hanya koreksi saldo dompet; `hutang_baru`/`hutang_bayar` tampil "belum didukung" sampai Rencana 3).
+- Peringatan budget di layar "Cek dulu".
+- Paywall dan RevenueCat (tabel `entitlements` sudah ada, belum ada yang mengisinya selain manual).
+- Batas laju per menit pada Edge Function `parse` (sekarang hanya kuota bulanan).
+
+Catatan minor dari review, ditunda:
+- Task 1 (kuota): tes batas bulan bergantung pada waktu jalan tes; `pakai_kuota_ai` yang ditolak tetap membuat baris `ai_usage` dengan jumlah 0.
+- Task 3 (Edge Function `parse`):
+  - ekstensi audio `aac` dipetakan ke `m4a`;
+  - `deps.db(token)` ada di luar `try`, jadi galatnya jadi 500 polos tanpa header CORS;
+  - panggilan fetch ke OpenAI belum punya batas waktu (timeout);
+  - belum ada pemeriksaan `content-length` sebelum `req.json()`;
+  - batas teks dihitung dalam unit UTF-16, bukan karakter sebenarnya.
