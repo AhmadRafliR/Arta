@@ -10,8 +10,8 @@ jest.mock('@/theme/ThemeProvider', () => ({
 const semua = Object.keys(IKON) as NamaIkon[];
 
 describe('ikon arta', () => {
-  it('berisi tepat 28 ikon', () => {
-    expect(semua).toHaveLength(28);
+  it('berisi semua ikon arta (28 asli + ikon UI dari mockup)', () => {
+    expect(semua).toHaveLength(59);
     expect(semua).toEqual(
       expect.arrayContaining(['nav-beranda', 'cat-lainnya', 'act-ekspor']),
     );
