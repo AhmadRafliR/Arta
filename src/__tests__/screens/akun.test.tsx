@@ -15,7 +15,17 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock('@/data/wallets', () => ({ useWallets: () => ({ data: [] }) }));
-jest.mock('@/data/transactions', () => ({ useAllTransactions: () => ({ data: [] }) }));
+jest.mock('@/data/transactions', () => ({
+  useAllTransactions: () => ({ data: [] }),
+  useTransactions: () => ({ data: [] }),
+}));
+// Ringkasan kartu profil, rencana, dan kuota di Akun: hook data dimatikan (kosong).
+jest.mock('@/data/ai', () => ({
+  useKuotaAi: () => ({ data: { bulan: '2026-11', terpakai: 12, batas: 30, pro: false } }),
+  sisaKuota: (k: { terpakai: number; batas: number }) => Math.max(0, k.batas - k.terpakai),
+}));
+jest.mock('@/data/budgets', () => ({ useBudgets: () => ({ data: [] }) }));
+jest.mock('@/data/debts', () => ({ useDebts: () => ({ data: [] }) }));
 jest.mock('@/data/langganan', () => ({ useStatusLangganan: () => ({ data: mockStatus }) }));
 jest.mock('@/components/BadgeTier', () => {
   const { Text } = jest.requireActual('react-native');
@@ -45,7 +55,9 @@ beforeEach(() => {
 
 it('Free: badge free, ekspor bertanda Pro, pengingat terkunci', async () => {
   await render(<Akun />);
-  expect(screen.getByText('badge-free')).toBeTruthy();
+  // Badge tier tampil di kartu profil dan kartu langganan.
+  expect(screen.getAllByText('badge-free').length).toBe(2);
+  expect(screen.getByText('Catat AI bulan ini: sisa 18 kuota · reset 1 Des 2026')).toBeTruthy();
   expect(screen.getByText('Free: catat AI 30× per bulan')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Ekspor data · Pro' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'pengingat-false' })).toBeTruthy();
@@ -58,7 +70,7 @@ it('Free: badge free, ekspor bertanda Pro, pengingat terkunci', async () => {
 it('Pro uji coba: badge pro dan tanggal berakhir', async () => {
   mockStatus = { pro: true, periode: 'trial', berlakuSampai: '2026-12-04T00:00:00Z', akanDiperpanjang: true };
   await render(<Akun />);
-  expect(screen.getByText('badge-pro')).toBeTruthy();
+  expect(screen.getAllByText('badge-pro').length).toBe(2);
   expect(screen.getByText('Uji coba Pro sampai 4 Des 2026')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'pengingat-true' })).toBeTruthy();
 });

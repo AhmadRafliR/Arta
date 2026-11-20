@@ -47,6 +47,7 @@ jest.mock('@/data/wallets', () => ({
 }));
 jest.mock('@/data/transactions', () => ({
   useAllTransactions: () => ({ data: mockTxs }),
+  useTransactions: () => ({ data: [] }),
   useSaveTransactions: () => ({ mutateAsync: mockSave }),
   useUpdateTransaction: () => ({ mutateAsync: mockUpdateTx }),
   newTxId: jest.fn(() => 'tx-fixed'),
@@ -55,6 +56,13 @@ jest.mock('@/data/transactions', () => ({
 jest.mock('@/data/langganan', () => ({
   useStatusLangganan: () => ({ data: { pro: false } }),
 }));
+// Ringkasan kartu profil, rencana, dan kuota di Akun: hook data dimatikan (kosong).
+jest.mock('@/data/ai', () => ({
+  useKuotaAi: () => ({ data: { bulan: '2026-11', terpakai: 12, batas: 30, pro: false } }),
+  sisaKuota: (k: { terpakai: number; batas: number }) => Math.max(0, k.batas - k.terpakai),
+}));
+jest.mock('@/data/budgets', () => ({ useBudgets: () => ({ data: [] }) }));
+jest.mock('@/data/debts', () => ({ useDebts: () => ({ data: [] }) }));
 jest.mock('@/components/PengaturanPengingat', () => ({ PengaturanPengingat: () => null }));
 jest.mock('@/components/BadgeTier', () => ({ BadgeTier: () => null }));
 jest.mock('@/auth/AuthProvider', () => ({

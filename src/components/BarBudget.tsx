@@ -14,7 +14,8 @@ export function teksStatusBudget(p: PemakaianBudget): string {
   return `Aman, ${p.persen}% terpakai`;
 }
 
-// Baris progres budget. Status selalu berupa ikon + teks, warna hanya pelengkap.
+// Baris progres budget (mockup akun: baris budget di sheet): nama + persen, bar tipis, lalu status
+// (ikon + teks, warna hanya pelengkap) dan nilai terpakai/batas.
 export function BarBudget({ p, onPress }: Props) {
   const { t } = useTheme();
   const warnaBar = p.status === 'lewat' ? t.danger : p.status === 'waspada' ? t.warn : t.acc;
@@ -24,21 +25,35 @@ export function BarBudget({ p, onPress }: Props) {
     p.status === 'lewat' ? 'font-semibold' : p.status === 'waspada' ? 'font-semibold' : 'text-fg2';
   const warnaTeks = p.status === 'lewat' ? t.dangerInk : p.status === 'waspada' ? t.warnInk : undefined;
   const isi = (
-    <View className="gap-2">
+    <View className="gap-1.5">
       <View className="flex-row items-center justify-between gap-3">
-        <Text className="flex-shrink text-sm font-bold text-fg font-sans">{kapital(p.kategori)}</Text>
-        <Text className="text-xs text-fg2 font-sans">{nilai}</Text>
+        <Text className="flex-shrink font-sans text-[13.5px] font-semibold text-fg" numberOfLines={1}>
+          {kapital(p.kategori)}
+        </Text>
+        <Text
+          style={{ fontVariant: ['tabular-nums'], ...(warnaTeks ? { color: warnaTeks } : null) }}
+          className={`font-sans text-[12.5px] font-semibold ${warnaTeks ? '' : 'text-fg'}`}
+        >
+          {`${p.persen}%`}
+        </Text>
       </View>
-      <View className="h-2 overflow-hidden rounded-full bg-line">
+      <View className="h-[5px] overflow-hidden rounded-full bg-card2">
         <View
           testID="bar-isi"
-          style={{ width: `${Math.min(p.persen, 100)}%`, backgroundColor: warnaBar, height: '100%' }}
+          style={{ width: `${Math.min(p.persen, 100)}%`, backgroundColor: warnaBar, height: '100%', borderRadius: 999 }}
         />
       </View>
       <View className="flex-row items-center gap-1.5">
-        <Ikon nama={`status-budget-${p.status}`} ukuran={16} warna={warnaTeks ?? t.mid} />
-        <Text className={`text-xs font-sans ${kelasStatus}`} style={warnaTeks ? { color: warnaTeks } : undefined}>
+        <Ikon nama={`status-budget-${p.status}`} ukuran={14} warna={warnaTeks ?? t.mid} />
+        <Text
+          className={`min-w-0 flex-1 font-sans text-[11.5px] ${kelasStatus}`}
+          style={warnaTeks ? { color: warnaTeks } : undefined}
+          numberOfLines={1}
+        >
           {teksStatus}
+        </Text>
+        <Text style={{ fontVariant: ['tabular-nums'] }} className="font-sans text-[11px] text-mid">
+          {nilai}
         </Text>
       </View>
     </View>

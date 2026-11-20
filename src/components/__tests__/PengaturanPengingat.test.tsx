@@ -41,7 +41,8 @@ beforeEach(() => {
 describe('PengaturanPengingat', () => {
   it('non-Pro: baris terkunci membuka premium, tanpa kontrol', async () => {
     const { onBukaPremium } = await tampil(false);
-    await fireEvent.press(await screen.findByText('Pengingat jatuh tempo · Pro'));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Pengingat jatuh tempo, fitur Pro' }));
+    expect(screen.getByLabelText('Paket Pro')).toBeTruthy();
     expect(onBukaPremium).toHaveBeenCalledTimes(1);
     expect(screen.queryByText('H-3')).toBeNull();
     expect(screen.queryByLabelText('Pengingat jatuh tempo')).toBeNull();

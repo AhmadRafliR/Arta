@@ -1,8 +1,10 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarBudget } from '@/components/BarBudget';
+import { BarJudul } from '@/components/BarJudul';
 import { KeadaanKosong } from '@/components/KeadaanKosong';
+import { KepalaSheet } from '@/components/SheetBawah';
 import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
 import { useBudgets } from '@/data/budgets';
@@ -29,17 +31,10 @@ export default function BudgetIndex() {
   return (
     <ScrollView
       className="flex-1 bg-bg"
-      contentContainerClassName="gap-4 px-5"
-      contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }}
+      contentContainerClassName="gap-3 px-[18px]"
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }}
     >
-      <View className="flex-row items-center justify-between">
-        <Text className="text-lg font-bold text-fg font-sans">Budget</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Kembali" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid font-sans">Kembali</Text>
-        </Pressable>
-      </View>
-
-      <Text className="text-xs text-mid font-sans">{labelBulan(bulan)}</Text>
+      <BarJudul judul="Budget" onKembali={tutup} />
 
       {galat ? (
         <Text className="text-fg font-sans">{galat.pesan}</Text>
@@ -51,16 +46,23 @@ export default function BudgetIndex() {
           pesan="Belum ada budget. Pasang batas bulanan per kategori supaya pengeluaran tetap terkendali."
         />
       ) : (
-        <>
-          <Text className="text-base font-bold text-fg font-sans">
-            {`Terpakai ${formatRupiah(totalTerpakai)} dari ${formatRupiah(totalBatas)}`}
-          </Text>
-          <View className="gap-4 rounded-2xl border border-line bg-card p-4">
-            {daftar.map((p) => (
-              <BarBudget key={p.id} p={p} onPress={() => router.push(`/budget/ubah?id=${p.id}`)} />
+        // Kartu budget bulan ini (mockup akun: budgetView): kepala + daftar bergaris per kategori.
+        <View className="gap-3 rounded-[20px] border border-line bg-card px-3.5 pb-3.5 pt-3.5">
+          <KepalaSheet
+            ikon="ui-budget"
+            judul={`Budget ${labelBulan(bulan)}`}
+            sub={`Terpakai ${formatRupiah(totalTerpakai)} dari ${formatRupiah(totalBatas)}`}
+            kanan={totalBatas > 0 ? `${Math.round((totalTerpakai * 100) / totalBatas)}%` : undefined}
+          />
+          <View className="overflow-hidden rounded-[14px] border border-line">
+            {daftar.map((p, i) => (
+              <View key={p.id} className={`px-3 py-2.5 ${i > 0 ? 'border-t border-line' : ''}`}>
+                <BarBudget p={p} onPress={() => router.push(`/budget/ubah?id=${p.id}`)} />
+              </View>
             ))}
           </View>
-        </>
+          <Text className="font-sans text-[11.5px] leading-[17px] text-fg2">Ketuk kategori untuk mengubah atau menghapus batasnya.</Text>
+        </View>
       )}
 
       <Tombol primary label="Tambah budget" onPress={() => router.push('/budget/ubah')} />

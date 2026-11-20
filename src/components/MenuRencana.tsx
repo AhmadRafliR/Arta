@@ -1,38 +1,88 @@
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BadgeTier } from '@/components/BadgeTier';
-import { Ikon } from '@/components/ikon/Ikon';
+import { BarisMenuAkun, JudulSeksiAkun, KartuGrupAkun, type NadaProgres } from '@/components/BarisAkun';
 import type { NamaIkon } from '@/components/ikon/data';
-import { useTheme } from '@/theme/ThemeProvider';
+import { formatRingkas } from '@/domain/money';
 
-const MENU: { label: string; ikon: NamaIkon; rute: string; pro?: boolean }[] = [
-  { label: 'Budget', ikon: 'status-budget-aman', rute: '/budget' },
-  { label: 'Dana darurat', ikon: 'wallet-darurat', rute: '/dana-darurat' },
-  { label: 'Investasi', ikon: 'wallet-investasi', rute: '/investasi' },
-  { label: 'Laporan email', ikon: 'act-ekspor', rute: '/laporan', pro: true },
-];
+/** Ringkasan opsional per baris; dihitung layar Akun dari hook data. Tanpa ringkasan, baris tetap tampil. */
+export type RingkasanRencana = {
+  budget?: { persen: number; sub: string; nada: NadaProgres } | null;
+  darurat?: { total: number; target: number | null; persen: number | null } | null;
+  investasi?: { jumlah: number; total: number } | null;
+};
+
+const rp = (n: number) => `Rp${formatRingkas(n)}`;
+
+type ItemMenu = {
+  label: string;
+  ikon: NamaIkon;
+  rute: string;
+  pro?: boolean;
+  sub?: string | null;
+  subWaspada?: boolean;
+  progres?: { persen: number; nada?: NadaProgres } | null;
+  nilai?: string | null;
+};
+
+function susunMenu(r: RingkasanRencana): ItemMenu[] {
+  const { budget, darurat, investasi } = r;
+  return [
+    {
+      label: 'Budget',
+      ikon: 'ui-budget',
+      rute: '/budget',
+      sub: budget ? budget.sub : 'Batas bulanan per kategori',
+      subWaspada: budget?.nada === 'lewat',
+      progres: budget ? { persen: budget.persen, nada: budget.nada } : null,
+      nilai: budget ? `${budget.persen}%` : null,
+    },
+    {
+      label: 'Dana darurat',
+      ikon: 'ui-shield',
+      rute: '/dana-darurat',
+      sub: darurat
+        ? darurat.target !== null
+          ? `${rp(darurat.total)} dari ${rp(darurat.target)}`
+          : `${rp(darurat.total)} terkumpul`
+        : 'Bantalan untuk kejadian tak terduga',
+      progres: darurat && darurat.persen !== null ? { persen: darurat.persen } : null,
+      nilai: darurat && darurat.persen !== null ? `${darurat.persen}%` : null,
+    },
+    {
+      label: 'Investasi',
+      ikon: 'wallet-investasi',
+      rute: '/investasi',
+      sub: investasi ? `${investasi.jumlah} aset terpantau` : 'Pantau nilai aset',
+      nilai: investasi ? rp(investasi.total) : null,
+    },
+    { label: 'Laporan email', ikon: 'ui-ekspor', rute: '/laporan', pro: true, sub: 'Bulanan, maks. 3 penerima' },
+  ];
+}
 
 /** Bagian "Rencana keuangan" di layar Akun: pintu masuk ke budget, dana darurat, investasi, dan laporan. */
-export function MenuRencana() {
+export function MenuRencana({ ringkasan = {} }: { ringkasan?: RingkasanRencana }) {
   const router = useRouter();
-  const { t } = useTheme();
   return (
-    <View>
-      <Text className="mb-1 text-xs font-semibold uppercase text-mid font-sans">Rencana keuangan</Text>
-      {MENU.map((m) => (
-        <Pressable
-          key={m.rute}
-          accessibilityRole="button"
-          accessibilityLabel={m.label}
-          onPress={() => router.push(m.rute as never)}
-          className="flex-row items-center gap-3 border-b border-line py-3"
-        >
-          <Ikon nama={m.ikon} ukuran={22} warna={t.fg2} />
-          <Text className="flex-1 text-fg font-sans">{m.label}</Text>
-          {m.pro ? <BadgeTier tier="pro" tinggi={20} /> : null}
-          <Text className="text-mid font-sans">›</Text>
-        </Pressable>
-      ))}
+    <View className="gap-3">
+      <JudulSeksiAkun>Rencana keuangan</JudulSeksiAkun>
+      <KartuGrupAkun>
+        {susunMenu(ringkasan).map((m, i) => (
+          <BarisMenuAkun
+            key={m.rute}
+            pertama={i === 0}
+            ikon={m.ikon}
+            judul={m.label}
+            sub={m.sub}
+            subWaspada={m.subWaspada}
+            progres={m.progres}
+            nilai={m.nilai}
+            kanan={m.pro ? <BadgeTier tier="pro" tinggi={20} /> : null}
+            accessibilityLabel={m.label}
+            onPress={() => router.push(m.rute as never)}
+          />
+        ))}
+      </KartuGrupAkun>
     </View>
   );
 }

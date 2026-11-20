@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AmountInput } from '@/components/AmountInput';
-import { Chip } from '@/components/Chip';
+import { BarisField } from '@/components/BarisField';
+import { Segmented } from '@/components/Segmented';
+import { KepalaSheet } from '@/components/SheetBawah';
+import { Ikon } from '@/components/ikon/Ikon';
 import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
 import type { TipeDompet } from '@/domain/types';
@@ -11,10 +14,11 @@ import { pesanDompet } from '@/data/pesan';
 import { useCreateWallet } from '@/data/wallets';
 import { useTheme } from '@/theme/ThemeProvider';
 
-const TIPE: { v: TipeDompet; label: string }[] = [
-  { v: 'harian', label: 'Harian' },
-  { v: 'darurat', label: 'Darurat' },
-  { v: 'investasi', label: 'Investasi' },
+// Label 'Darurat' dipertahankan (dipakai tes); mockup menulis 'Dana darurat'.
+const TIPE: { nilai: TipeDompet; label: string }[] = [
+  { nilai: 'harian', label: 'Harian' },
+  { nilai: 'darurat', label: 'Darurat' },
+  { nilai: 'investasi', label: 'Investasi' },
 ];
 
 export default function DompetBaru() {
@@ -24,7 +28,7 @@ export default function DompetBaru() {
   const create = useCreateWallet();
   const [nama, setNama] = useState('');
   const { tipe: tipeAwal } = useLocalSearchParams<{ tipe?: string }>();
-  const [tipe, setTipe] = useState<TipeDompet>(TIPE.find((x) => x.v === tipeAwal)?.v ?? 'harian');
+  const [tipe, setTipe] = useState<TipeDompet>(TIPE.find((x) => x.nilai === tipeAwal)?.nilai ?? 'harian');
   const [saldo, setSaldo] = useState<number | null>(0);
   const [target, setTarget] = useState<number | null>(0);
   const [busy, setBusy] = useState(false);
@@ -53,36 +57,62 @@ export default function DompetBaru() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-4 px-5 py-6">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-lg font-bold text-fg font-sans">Tambah dompet</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid font-sans">Batal</Text>
+    <ScrollView
+      className="flex-1 bg-bg"
+      contentContainerClassName="gap-3 px-[18px] py-5"
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* Kepala (mockup akun: addView): ikon tambah, judul, subjudul, tombol tutup bulat. */}
+      <View className="flex-row items-center gap-3">
+        <View className="min-w-0 flex-1">
+          <KepalaSheet ikon="ui-plus" judul="Tambah dompet" sub="Saldo awal dicatat sebagai titik mulai" />
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Batal"
+          onPress={tutup}
+          style={{ width: 38, height: 38 }}
+          className="items-center justify-center rounded-full border border-line bg-card"
+        >
+          <Ikon nama="ui-close" ukuran={18} warna={t.fg} />
         </Pressable>
       </View>
-      <TextInput
-        value={nama}
-        onChangeText={setNama}
-        accessibilityLabel="Nama dompet"
-        placeholder="Nama dompet"
-        placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
-      />
-      <View className="flex-row flex-wrap gap-2">
-        {TIPE.map((x) => (
-          <Chip key={x.v} label={x.label} selected={tipe === x.v} onPress={() => setTipe(x.v)} />
-        ))}
+
+      <Segmented pilihan={TIPE} nilai={tipe} onChange={setTipe} />
+
+      <View className="rounded-[14px] border border-line bg-card px-3 pt-2.5">
+        <BarisField ikon="wallet-harian" label="Nama dompet" pertama>
+          <TextInput
+            value={nama}
+            onChangeText={setNama}
+            accessibilityLabel="Nama dompet"
+            placeholder="Mis. GoPay, Cash, BCA"
+            placeholderTextColor={t.mid}
+            maxLength={24}
+            className="py-0.5 font-sans text-[14.5px] font-semibold text-fg"
+          />
+        </BarisField>
+        <BarisField ikon="status-jatuh-tempo" label="Tanggal saldo awal">
+          <Text className="font-sans text-[14.5px] font-semibold text-fg">{hariIni(profile?.zona_waktu)}</Text>
+        </BarisField>
       </View>
-      <Text className="text-mid font-sans">Saldo awal</Text>
-      <AmountInput value={null} allowZero onChange={setSaldo} testID="saldo-awal" />
+
+      <View className="gap-2">
+        <Text className="font-sans text-[11.5px] font-semibold text-mid">Saldo awal (Rp)</Text>
+        <AmountInput value={null} allowZero onChange={setSaldo} testID="saldo-awal" />
+      </View>
       {tipe === 'darurat' ? (
-        <>
-          <Text className="text-mid font-sans">Target (opsional)</Text>
+        <View className="gap-2">
+          <Text className="font-sans text-[11.5px] font-semibold text-mid">Target dana darurat (opsional)</Text>
           <AmountInput value={null} allowZero onChange={setTarget} testID="target" />
-        </>
+        </View>
       ) : null}
       <Tombol label="Simpan" primary busy={busy} disabled={!valid || busy} onPress={() => void simpan()} />
-      {pesan ? <Text className="text-fg font-sans">{pesan}</Text> : null}
+      {pesan ? (
+        <Text accessibilityLiveRegion="polite" style={{ color: t.dangerInk }} className="font-sans text-[12.5px]">
+          {pesan}
+        </Text>
+      ) : null}
     </ScrollView>
   );
 }

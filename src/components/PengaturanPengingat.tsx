@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { Linking, Pressable, Switch, Text, View } from 'react-native';
 import { useTheme } from '@/theme/ThemeProvider';
-import { Chip } from './Chip';
+import { BadgeTier } from './BadgeTier';
+import { BarisMenuAkun, KartuGrupAkun } from './BarisAkun';
+import { Ikon } from './ikon/Ikon';
+import { LabelSub } from './KartuSeksi';
+import { Segmented } from './Segmented';
 import { daftarkanPush } from '@/notifikasi/push';
 import {
   PENGINGAT_DEFAULT,
@@ -33,16 +37,25 @@ export function PengaturanPengingat({ pro, onBukaPremium }: Props) {
   const p: Pengaturan = data ?? PENGINGAT_DEFAULT;
 
   if (!pro) {
+    // Terkunci (mockup: .plan-row + badge Pro + gembok) -> buka layar premium.
     return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Pengingat jatuh tempo, fitur Pro"
-        onPress={onBukaPremium}
-        className="flex-row items-center justify-between rounded-2xl border border-line bg-card px-4 py-4"
-      >
-        <Text className="font-sans text-base font-semibold text-fg">Pengingat jatuh tempo · Pro</Text>
-        <Text className="font-sans text-sm text-mid">Buka</Text>
-      </Pressable>
+      <KartuGrupAkun>
+        <BarisMenuAkun
+          pertama
+          ikon="ui-alert"
+          judul="Pengingat jatuh tempo"
+          sub="Push notification untuk tagihan hutang."
+          accessibilityLabel="Pengingat jatuh tempo, fitur Pro"
+          onPress={onBukaPremium}
+          chevron={false}
+          kanan={
+            <>
+              <BadgeTier tier="pro" tinggi={20} />
+              <Ikon nama="ui-lock" ukuran={15} warna={t.mid} />
+            </>
+          }
+        />
+      </KartuGrupAkun>
     );
   }
 
@@ -69,59 +82,60 @@ export function PengaturanPengingat({ pro, onBukaPremium }: Props) {
   };
 
   return (
-    <View className="rounded-2xl border border-line bg-card px-4 py-4">
-      <View className="flex-row items-center justify-between">
-        <Text className="font-sans text-base font-semibold text-fg">Pengingat jatuh tempo</Text>
-        <Switch
-          accessibilityLabel="Pengingat jatuh tempo"
-          value={p.aktif}
-          disabled={sibuk}
-          onValueChange={ubahAktif}
-          trackColor={{ false: t.line, true: t.acc }}
-        />
-      </View>
+    <KartuGrupAkun>
+      <BarisMenuAkun
+        pertama
+        ikon="ui-bell"
+        judul="Pengingat jatuh tempo"
+        sub="Push notification untuk tagihan hutang."
+        chevron={false}
+        kanan={
+          <Switch
+            accessibilityLabel="Pengingat jatuh tempo"
+            value={p.aktif}
+            disabled={sibuk}
+            onValueChange={ubahAktif}
+            trackColor={{ false: t.line, true: t.acc }}
+          />
+        }
+      />
 
       {ditolak ? (
-        <View className="mt-3">
-          <Text className="font-sans text-sm text-mid">{PESAN_IZIN_DITOLAK}</Text>
+        <View className="border-t border-line px-3.5 py-3">
+          <Text className="font-sans text-[12.5px] text-fg2">{PESAN_IZIN_DITOLAK}</Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Buka Pengaturan"
             onPress={() => Linking.openSettings().catch(() => {})}
-            className="mt-2 self-start rounded-full border border-line px-4 py-2"
+            className="mt-2 flex-row items-center gap-1.5 self-start rounded-full border border-line px-4 py-2"
           >
+            <Ikon nama="ui-gear" ukuran={16} warna={t.fg} />
             <Text className="font-sans text-sm font-semibold text-fg">Buka Pengaturan</Text>
           </Pressable>
         </View>
       ) : null}
-      {alasan ? <Text className="mt-3 font-sans text-sm text-mid">{alasan}</Text> : null}
-
-      {p.aktif ? (
-        <View>
-          <Text className="mt-4 font-sans text-sm text-mid">Ingatkan saya</Text>
-          <View className="mt-2 flex-row flex-wrap gap-2">
-            {HARI.map((h) => (
-              <Chip
-                key={h.nilai}
-                label={h.label}
-                selected={p.hari_sebelum === h.nilai}
-                onPress={() => simpan.mutate({ ...p, hari_sebelum: h.nilai })}
-              />
-            ))}
-          </View>
-          <Text className="mt-4 font-sans text-sm text-mid">Jam kirim</Text>
-          <View className="mt-2 flex-row flex-wrap gap-2">
-            {JAM.map((j) => (
-              <Chip
-                key={j}
-                label={`${dua(j)}.00`}
-                selected={p.jam === j}
-                onPress={() => simpan.mutate({ ...p, jam: j })}
-              />
-            ))}
-          </View>
+      {alasan ? (
+        <View className="border-t border-line px-3.5 py-3">
+          <Text className="font-sans text-[12.5px] text-fg2">{alasan}</Text>
         </View>
       ) : null}
-    </View>
+
+      {p.aktif ? (
+        <View className="border-t border-line px-3.5 pb-3.5">
+          <LabelSub>Ingatkan saya</LabelSub>
+          <Segmented
+            pilihan={HARI.map((h) => ({ nilai: String(h.nilai), label: h.label }))}
+            nilai={String(p.hari_sebelum)}
+            onChange={(v) => simpan.mutate({ ...p, hari_sebelum: Number(v) as HariSebelum })}
+          />
+          <LabelSub>Jam kirim</LabelSub>
+          <Segmented
+            pilihan={JAM.map((j) => ({ nilai: String(j), label: `${dua(j)}.00` }))}
+            nilai={String(p.jam)}
+            onChange={(v) => simpan.mutate({ ...p, jam: Number(v) })}
+          />
+        </View>
+      ) : null}
+    </KartuGrupAkun>
   );
 }
