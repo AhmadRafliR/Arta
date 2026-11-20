@@ -12,11 +12,11 @@ Disetujui 2026-11-20. Pengguna menyerahkan keputusan teknis ke Claude, dan lima 
 | 1 Tabel hutang, jadwal, view | selesai (SQL belum dijalankan di DB) | `62df27b` |
 | 2 RPC v3 + hitung ulang | selesai (SQL belum dijalankan di DB) | `98cf023` |
 | 3 Domain | selesai | `eba4096` |
-| 4 Lapisan data | selesai | `169089d` |
-| 5 Tab Hutang + detail | belum (berikutnya; pakai juga `useRiwayatPokok` dari `c5c7233` untuk `ringkasHutang`) | – |
-| 6 Form baru/bayar/sesuaikan | belum | – |
-| 7 Beranda + TxRow | belum (pakai `useRiwayatPokok`) | – |
-| 8 Panduan uji | belum | – |
+| 4 Lapisan data | selesai | `169089d`, `c5c7233` (`useRiwayatPokok`) |
+| 5 Tab Hutang + detail | selesai | `b3cdafe` |
+| 6 Form baru/bayar/sesuaikan | selesai | `002a78b` |
+| 7 Beranda + TxRow | selesai | `5196962` |
+| 8 Panduan uji | selesai | `61a4776` |
 | 9 Draf AI hutang | diblokir (menunggu Rencana 2 di `main`) | – |
 
 ### Keputusan saat implementasi (Claude)
@@ -29,7 +29,13 @@ Disetujui 2026-11-20. Pengguna menyerahkan keputusan teknis ke Claude, dan lima 
 - **Respons RPC v3.** `save_transactions` v3 membaca ulang baris setelah trigger, jadi `porsi_*` di respons sudah hasil hitungan server.
 - **`ringkasHutang`.** Fungsi ini menerima `riwayatPokok` per hutang sebagai parameter ketiga opsional, untuk perkiraan hutang berbunga tanpa jadwal. `labelBulan` diekspor ulang dari `@/lib/tanggal`.
 - **Sebelum `db push`.** `select count(*) from transactions where jenis in ('hutang_baru','hutang_bayar')` harus 0; kalau tidak, check baru gagal.
-- **Lint:** `npx expo lint` masih punya 3 error di file lama yang tidak diubah Rencana 3 (`src/auth/AuthProvider.tsx:57`, `src/components/__tests__/TabBar.test.tsx:39`, `src/nav/__tests__/NavPulauProvider.test.tsx:14`); perbaiki sebelum dinyatakan selesai.
+- **Lint.** File Rencana 3 bersih (`npx eslint --no-ignore <file>`). `npx expo lint` di worktree ini melewatkan semua file karena path-nya mengandung `.claude`. Tiga error lama (`AuthProvider.tsx:57`, `TabBar.test.tsx:39`, `NavPulauProvider.test.tsx:14`) dibereskan di Rencana 2, jadi sengaja tidak disentuh di sini.
+- **UI (gelombang B).**
+  - "Tidak masuk dompet" menyembunyikan isian dana masuk. `nominal` item `hutang_baru` diisi total cicilan atau pokok awal.
+  - Ganti tipe di form tambah mereset isian khusus tipe.
+  - Sesuaikan sisa tidak menerima 0; pelunasan dilakukan lewat Bayar.
+  - Detail menampilkan `Bunga RpX · Pokok RpY` di bawah `TxRow` (tidak di dalam `TxRow`).
+  - Kartu hutang Beranda hanya tampil bila ada hutang aktif dengan sisa > 0.
 - **Jest di worktree ini.** `testPathIgnorePatterns` `<rootDir>/tests/integration/` tidak cocok di path Windows worktree ini (`\r` di `\rencana-3…`). Untuk verifikasi, pakai `npx jest --testPathIgnorePatterns=integration`. `package.json` sengaja tidak diubah supaya tidak bentrok dengan Rencana 2.
 
 ## Ringkasan
