@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { lepasPush } from '@/notifikasi/push';
 import type { Pref } from '@/theme/tokens';
 
 export type Profile = {
@@ -91,6 +92,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   const signOut = useCallback(async () => {
+    // Lepas token push perangkat dulu (selagi masih punya sesi), agar pengingat akun ini
+    // tidak lagi muncul di HP yang nanti dipakai akun lain (Rencana 5, K14).
+    await lepasPush();
     await supabase.auth.signOut();
   }, []);
 

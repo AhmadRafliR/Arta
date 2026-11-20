@@ -50,6 +50,12 @@ jest.mock('@/data/transactions', () => ({
   useUpdateTransaction: () => ({ mutateAsync: mockUpdateTx }),
   newTxId: jest.fn(() => 'tx-fixed'),
 }));
+// Rencana 5: bagian langganan/pengingat di Akun tidak relevan untuk tes dompet.
+jest.mock('@/data/langganan', () => ({
+  useStatusLangganan: () => ({ data: { pro: false } }),
+}));
+jest.mock('@/components/PengaturanPengingat', () => ({ PengaturanPengingat: () => null }));
+jest.mock('@/components/BadgeTier', () => ({ BadgeTier: () => null }));
 jest.mock('@/auth/AuthProvider', () => ({
   useAuth: () => ({ profile: { nama: 'Rafli', zona_waktu: 'Asia/Jakarta' }, signOut: mockSignOut }),
 }));
