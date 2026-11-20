@@ -47,8 +47,11 @@ jest.mock('@/theme/ThemeProvider', () => ({
   useTheme: () => ({ mode: 'terang', t: { accFg: '#000', mid: '#888', acc: '#0f0', fg: '#000', fg2: '#333', warnInk: '#a60' } }),
 }));
 
+// Label "Hari ini" bergantung tanggal sekarang, jadi jangan memakai tanggal tetap.
+const HARI_INI = jest.requireActual('@/lib/tanggal').hariIni('Asia/Jakarta') as string;
+
 const draf = (over: Partial<DrafTx> & { id: string }): DrafTx => ({
-  tanggal: '2026-11-20',
+  tanggal: HARI_INI,
   jenis: 'pengeluaran',
   kategori: 'lainnya',
   nominal: 1000,
@@ -114,7 +117,7 @@ describe('Cek dulu', () => {
     expect(items).toHaveLength(2);
     expect(items[0]).toEqual({
       id: 'd1',
-      tanggal: '2026-11-20',
+      tanggal: HARI_INI,
       jenis: 'pengeluaran',
       kategori: 'rokok',
       nominal: 25000,
