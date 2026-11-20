@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { useEffect } from 'react';
 import { ScrollView, Text } from 'react-native';
 import { NavPulauProvider, useNavPulau } from '../NavPulauProvider';
 import { useGulirPulau } from '../useGulirPulau';
@@ -11,8 +12,11 @@ jest.mock('expo-router', () => {
 
 let api: ReturnType<typeof useNavPulau>;
 function Pengamat() {
-  api = useNavPulau();
-  return <Text className="font-sans" testID="status">{api.status}</Text>;
+  const v = useNavPulau();
+  useEffect(() => {
+    api = v;
+  });
+  return <Text className="font-sans" testID="status">{v.status}</Text>;
 }
 
 const status = () => screen.getByTestId('status').props.children;

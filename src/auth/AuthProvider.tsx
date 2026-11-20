@@ -52,16 +52,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const userId = session?.user.id ?? null;
-  useEffect(() => {
-    if (!userId) {
-      setProfile(null);
-      setProfileError(false);
-      setProfileLoading(false);
-      return;
-    }
-    let alive = true;
-    setProfileLoading(true);
+  // Reset status profil saat pengguna/refresh berganti, langsung saat render (bukan setState di effect).
+  const kunciProfil = `${userId ?? ''}:${refreshKey}`;
+  const [kunciSebelum, setKunciSebelum] = useState(kunciProfil);
+  if (kunciProfil !== kunciSebelum) {
+    setKunciSebelum(kunciProfil);
     setProfileError(false);
+    setProfileLoading(!!userId);
+    if (!userId) setProfile(null);
+  }
+
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
     supabase
       .from('profiles')
       .select('id, nama, zona_waktu, mode_tampilan, onboarding_selesai')
