@@ -13,9 +13,9 @@ Disetujui 2026-11-20. Pengguna menyerahkan keputusan teknis ke Claude, dan lima 
 | 2 RPC v3 + hitung ulang | selesai (SQL belum dijalankan di DB) | `98cf023` |
 | 3 Domain | selesai | `eba4096` |
 | 4 Lapisan data | selesai | `169089d` |
-| 5 Tab Hutang + detail | berjalan | – |
-| 6 Form baru/bayar/sesuaikan | berjalan | – |
-| 7 Beranda + TxRow | berjalan | – |
+| 5 Tab Hutang + detail | belum (berikutnya; pakai juga `useRiwayatPokok` dari `c5c7233` untuk `ringkasHutang`) | – |
+| 6 Form baru/bayar/sesuaikan | belum | – |
+| 7 Beranda + TxRow | belum (pakai `useRiwayatPokok`) | – |
 | 8 Panduan uji | belum | – |
 | 9 Draf AI hutang | diblokir (menunggu Rencana 2 di `main`) | – |
 
@@ -29,6 +29,7 @@ Disetujui 2026-11-20. Pengguna menyerahkan keputusan teknis ke Claude, dan lima 
 - **Respons RPC v3.** `save_transactions` v3 membaca ulang baris setelah trigger, jadi `porsi_*` di respons sudah hasil hitungan server.
 - **`ringkasHutang`.** Fungsi ini menerima `riwayatPokok` per hutang sebagai parameter ketiga opsional, untuk perkiraan hutang berbunga tanpa jadwal. `labelBulan` diekspor ulang dari `@/lib/tanggal`.
 - **Sebelum `db push`.** `select count(*) from transactions where jenis in ('hutang_baru','hutang_bayar')` harus 0; kalau tidak, check baru gagal.
+- **Lint:** `npx expo lint` masih punya 3 error di file lama yang tidak diubah Rencana 3 (`src/auth/AuthProvider.tsx:57`, `src/components/__tests__/TabBar.test.tsx:39`, `src/nav/__tests__/NavPulauProvider.test.tsx:14`); perbaiki sebelum dinyatakan selesai.
 - **Jest di worktree ini.** `testPathIgnorePatterns` `<rootDir>/tests/integration/` tidak cocok di path Windows worktree ini (`\r` di `\rencana-3…`). Untuk verifikasi, pakai `npx jest --testPathIgnorePatterns=integration`. `package.json` sengaja tidak diubah supaya tidak bentrok dengan Rencana 2.
 
 ## Ringkasan
