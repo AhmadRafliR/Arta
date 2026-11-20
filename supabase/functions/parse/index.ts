@@ -109,11 +109,19 @@ function ekstensi(mime: string): string {
   return 'm4a';
 }
 
-// Hanya status HTTP yang dicatat; isi respons/permintaan bisa memuat teks pengguna.
+// Catat status HTTP dan pesan galat penyedia (dipotong 200 karakter). Pesan galat penyedia
+// berupa alasan penolakan, bukan isi permintaan; isi permintaan/teks pengguna tidak dicatat.
 async function cekRespons(res: Response, tahap: string): Promise<void> {
   if (res.ok) return;
-  await res.body?.cancel();
-  console.error(`parse: openai ${tahap} status ${res.status}`);
+  let alasan = '';
+  try {
+    const data = JSON.parse(await res.text());
+    const e = Array.isArray(data) ? data[0]?.error : data?.error;
+    alasan = typeof e?.message === 'string' ? e.message.slice(0, 200) : '';
+  } catch {
+    // abaikan: respons bukan JSON
+  }
+  console.error(`parse: openai ${tahap} status ${res.status}${alasan ? ` — ${alasan}` : ''}`);
   throw new Error(`openai ${tahap} ${res.status}`);
 }
 
