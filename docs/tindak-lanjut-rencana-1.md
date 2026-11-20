@@ -45,3 +45,12 @@ Catatan minor dari review, ditunda:
   - panggilan fetch ke OpenAI belum punya batas waktu (timeout);
   - belum ada pemeriksaan `content-length` sebelum `req.json()`;
   - batas teks dihitung dalam unit UTF-16, bukan karakter sebenarnya.
+- Task 5–6 (layar Rekam dan Cek dulu):
+  - pesan "Pilih dompet tujuan" bisa tidak muncul bila AI sudah memberi peringatan lain yang menyebut "dompet" (Simpan tetap nonaktif dengan alasan yang benar);
+  - mengganti jenis di editor lalu kembali ke jenis semula mengganti kategori asal dari AI menjadi `lainnya`;
+  - file rekaman di cache perangkat tidak dihapus setelah dikirim (server tidak menyimpannya).
+
+Keputusan yang diambil di Rencana 2:
+- Koreksi saldo ("saldo X sekarang N") memperhitungkan draf lain di hasil yang sama: saldo akhir dompet = N setelah semua disimpan.
+- Draf yang memakai dompet diarsip/tidak dikenal, atau transfer ke dompet yang sama, membuat Simpan nonaktif sampai dipilih ulang di editor.
+- ESLint (`eslint-config-expo`) dipasang; `.claude/` dan `supabase/functions/` dikecualikan dari lint, `.claude/` juga dari jest.
