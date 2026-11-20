@@ -2,7 +2,36 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** draf, menunggu persetujuan Rafli. Bagian "Keputusan yang perlu dikonfirmasi" harus dijawab dulu sebelum Task 1 dimulai.
+## Status
+
+Disetujui 2026-11-20. Pengguna menyerahkan keputusan teknis ke Claude, dan lima keputusan di bawah diterima apa adanya. Branch: `claude/rencana-3-172b0c` (worktree `.claude/worktrees/rencana-3-172b0c`). **Belum di-push, dan migrasi belum di-apply ke remote.** Rentang nomor migrasi Rencana 3: `20261120000008`–`20261120000019`.
+
+| Task | Status | Commit |
+|---|---|---|
+| Tipe bersama (`src/domain/types.ts`) | selesai | `9c62001` |
+| 1 Tabel hutang, jadwal, view | selesai (SQL belum dijalankan di DB) | `62df27b` |
+| 2 RPC v3 + hitung ulang | selesai (SQL belum dijalankan di DB) | `98cf023` |
+| 3 Domain | selesai | `eba4096` |
+| 4 Lapisan data | selesai | `169089d` |
+| 5 Tab Hutang + detail | berjalan | – |
+| 6 Form baru/bayar/sesuaikan | berjalan | – |
+| 7 Beranda + TxRow | berjalan | – |
+| 8 Panduan uji | belum | – |
+| 9 Draf AI hutang | diblokir (menunggu Rencana 2 di `main`) | – |
+
+### Keputusan saat implementasi (Claude)
+- **Bunga sesudah lunas.** Bunga tidak ditagih bila sisa pokok sebelum bayar ≤ 0, termasuk untuk metode flat. Akibatnya, pembayaran ke hutang yang sudah lunas tertolak sebagai lebih bayar. Aturan ini diterapkan di SQL (`hitung_ulang_hutang`) dan di domain (`bungaBulanIni`).
+- **Hak eksekusi `hitung_ulang_hutang`.** Fungsi ini tetap punya EXECUTE untuk `authenticated`, karena trigger `security invoker` berjalan sebagai pengguna. Panggilan langsung dari klien tetap ditolak lewat penjaga `pg_trigger_depth() < 1`.
+- **Trigger tambahan `debt_schedule_hitung_ulang_aiud`.** Mengubah atau menghapus tagihan, termasuk lewat `tambah_jadwal`, ikut menghitung ulang status.
+- **Constraint tambahan:**
+  - `debts_pokok_cicilan`: untuk cicilan tetap, `pokok_awal = nominal_cicilan × tenor_bulan`, sehingga `pokok_awal` cicilan tidak bisa diubah;
+  - `transactions_penyesuaian_hutang`: penyesuaian hutang tanpa dompet dan `porsi_pokok = nominal`.
+- **Respons RPC v3.** `save_transactions` v3 membaca ulang baris setelah trigger, jadi `porsi_*` di respons sudah hasil hitungan server.
+- **`ringkasHutang`.** Fungsi ini menerima `riwayatPokok` per hutang sebagai parameter ketiga opsional, untuk perkiraan hutang berbunga tanpa jadwal. `labelBulan` diekspor ulang dari `@/lib/tanggal`.
+- **Sebelum `db push`.** `select count(*) from transactions where jenis in ('hutang_baru','hutang_bayar')` harus 0; kalau tidak, check baru gagal.
+- **Jest di worktree ini.** `testPathIgnorePatterns` `<rootDir>/tests/integration/` tidak cocok di path Windows worktree ini (`\r` di `\rencana-3…`). Untuk verifikasi, pakai `npx jest --testPathIgnorePatterns=integration`. `package.json` sengaja tidak diubah supaya tidak bentrok dengan Rencana 2.
+
+## Ringkasan
 
 **Goal:** Pengguna mencatat hutang dan paylater (cicilan tetap atau pinjaman berbunga), membayarnya dari dompet, dan melihat sisa pokok, jadwal tagihan, jatuh tempo berikutnya, serta perkiraan tanggal bebas hutang. Pembayaran hutang berbunga dipecah otomatis menjadi porsi bunga dan porsi pokok di server. Beranda menampilkan kartu hutang, dan kekayaan bersih dikurangi sisa hutang.
 
@@ -19,7 +48,7 @@
 
 **Spec:** `docs/spec.md` §1 (USP 2), §5.3 layar 1 dan 5, §5.4 (RPC atomik, tanpa job bunga bulanan), §5.5 (`debts`, `debt_schedule`, aturan bunga, sisa pokok dari transaksi), §5.7 (koreksi hutang berbunga = `penyesuaian` pada pokok), §5.9. Acuan visual: `docs/design/arta/kit.html` (`.debt-card`: nama pemberi, badge jatuh tempo `status-jatuh-tempo` warna `warnInk`, nominal sisa besar, sub "Sisa pokok · 4 dari 12 cicilan lunas"; keadaan kosong "Belum ada hutang tercatat. Tambahkan paylater atau cicilan kalau ada."; ikon `nav-hutang`, `status-lunas`).
 
-## Keputusan yang perlu dikonfirmasi (usulan Claude)
+## Keputusan produk (usulan Claude, disetujui 2026-11-20)
 
 1. **Hutang baru tanpa dompet.** `hutang_baru` boleh tanpa `wallet_id`. Contohnya paylater untuk belanja langsung atau kredit HP: uangnya tidak pernah masuk dompet, dan saldo dompet tidak berubah. Jika dompet dipilih (misalnya pinjaman tunai), `nominal` masuk ke dompet itu.
    - Akibatnya: barang yang dibeli dengan paylater **tidak** tercatat sebagai pengeluaran bulan itu. Pengeluarannya baru terasa saat cicilan dibayar (`hutang_bayar` mengurangi dompet).
