@@ -74,11 +74,13 @@ export default function Riwayat() {
               <Text className="text-xs font-bold text-mid font-sans">{labelHari(g.tanggal)}</Text>
               <Text className="text-xs text-mid font-sans">{formatRupiah(g.total)}</Text>
             </View>
-            {g.items.map((tx) => (
-              <Pressable key={tx.id} accessibilityRole="button" onPress={() => router.push(`/transaksi/${tx.id}?bulan=${bulan}`)}>
-                <TxRow tx={tx} namaDompet={namaDompet} />
-              </Pressable>
-            ))}
+            <View className="mt-1 rounded-2xl border border-line bg-card px-3 py-1">
+              {g.items.map((tx) => (
+                <Pressable key={tx.id} accessibilityRole="button" onPress={() => router.push(`/transaksi/${tx.id}?bulan=${bulan}`)}>
+                  <TxRow tx={tx} namaDompet={namaDompet} />
+                </Pressable>
+              ))}
+            </View>
           </View>
         ))
       )}

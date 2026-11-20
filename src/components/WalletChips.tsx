@@ -1,24 +1,33 @@
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { Ikon } from '@/components/ikon/Ikon';
+import { ikonDompet } from '@/components/ikon/peta';
 import { formatRingkas } from '@/domain/money';
+import type { TipeDompet } from '@/domain/types';
 import { useTheme } from '@/theme/ThemeProvider';
 
-export type DompetChip = { id: string; nama: string; saldo: number };
+export type DompetChip = { id: string; nama: string; saldo: number; tipe: TipeDompet };
 
 export function WalletChips({ dompet }: { dompet: DompetChip[] }) {
-  const { mode, t } = useTheme();
-  const bg = mode === 'terang' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.06)';
+  const { t } = useTheme();
+  if (dompet.length === 0) return null;
   return (
-    <View className="mt-3 flex-row gap-1.5">
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      testID="rel-dompet"
+      contentContainerClassName="gap-2"
+    >
       {dompet.map((d) => (
-        <View key={d.id} style={{ backgroundColor: bg }} className="flex-1 rounded-xl px-2 py-1.5">
-          <Text style={{ color: t.heroFg }} className="text-[10px] font-sans" numberOfLines={1}>
+        <View key={d.id} className="flex-row items-center gap-2 rounded-full border border-line bg-card px-3 py-2">
+          <Ikon nama={ikonDompet(d.tipe)} ukuran={18} warna={t.fg2} />
+          <Text className="max-w-[140px] text-[13px] font-semibold text-fg font-sans" numberOfLines={1}>
             {d.nama}
           </Text>
-          <Text style={{ color: t.heroFg }} className="text-xs font-bold font-sans">
+          <Text style={{ color: t.fg2 }} className="text-[13px] font-sans">
             {formatRingkas(d.saldo)}
           </Text>
         </View>
       ))}
-    </View>
+    </ScrollView>
   );
 }

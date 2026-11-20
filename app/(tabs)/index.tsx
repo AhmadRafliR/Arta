@@ -2,6 +2,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeroCard } from '@/components/HeroCard';
+import { WalletChips } from '@/components/WalletChips';
 import { TxRow } from '@/components/TxRow';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAllTransactions, useTransactions } from '@/data/transactions';
@@ -32,7 +33,7 @@ export default function Beranda() {
   const saldo = termuat ? walletBalances(dompet, semuaTx.data ?? []) : {};
   const chips = dompet
     .filter((w) => w.tipe === 'harian' && !w.diarsip)
-    .map((w) => ({ id: w.id, nama: w.nama, saldo: saldo[w.id] ?? 0 }));
+    .map((w) => ({ id: w.id, nama: w.nama, saldo: saldo[w.id] ?? 0, tipe: w.tipe }));
   const bulanBelumAda = bulanIni.data === undefined;
   const bulanGalat = bulanBelumAda ? bulanIni.error : null;
   const bulanMemuat = bulanBelumAda && !bulanGalat;
@@ -54,7 +55,10 @@ export default function Beranda() {
       </View>
 
       {termuat ? (
-        <HeroCard sisa={sisaUang(dompet, saldo)} kekayaan={kekayaanBersih(saldo, 0)} dompet={chips} />
+        <>
+          <HeroCard sisa={sisaUang(dompet, saldo)} kekayaan={kekayaanBersih(saldo, 0)} />
+          <WalletChips dompet={chips} />
+        </>
       ) : galat ? (
         <Text className="text-fg font-sans">{galat.pesan}</Text>
       ) : (
@@ -83,7 +87,7 @@ export default function Beranda() {
           <Text className="text-xs text-mid font-sans">Semua ›</Text>
         </Pressable>
       </View>
-      <View className="rounded-2xl border border-line bg-card px-3">
+      <View className="rounded-2xl border border-line bg-card px-3 py-1">
         {bulanMemuat ? (
           <Text className="py-3 text-mid font-sans">Memuat…</Text>
         ) : bulanGalat ? (
@@ -91,7 +95,7 @@ export default function Beranda() {
         ) : terbaru.length === 0 ? (
           <Text className="py-3 text-mid font-sans">Belum ada transaksi bulan ini.</Text>
         ) : (
-          terbaru.map((tx) => <TxRow key={tx.id} tx={tx} namaDompet={namaDompet} />)
+          terbaru.map((tx) => <TxRow key={tx.id} tx={tx} namaDompet={namaDompet} hariIni={hariIni(zona)} />)
         )}
       </View>
     </ScrollView>

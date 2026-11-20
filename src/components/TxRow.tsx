@@ -1,6 +1,10 @@
 import { Text, View } from 'react-native';
-import { formatRingkas } from '@/domain/money';
+import { Ikon } from '@/components/ikon/Ikon';
+import { ikonKategori } from '@/components/ikon/peta';
+import { formatRupiah } from '@/domain/money';
 import type { Tx } from '@/domain/types';
+import { labelTanggalRelatif } from '@/lib/labelTanggal';
+import { useTheme } from '@/theme/ThemeProvider';
 
 const LABEL: Record<Tx['jenis'], string> = {
   pemasukan: 'Pemasukan',
@@ -11,25 +15,37 @@ const LABEL: Record<Tx['jenis'], string> = {
   penyesuaian: 'Penyesuaian',
 };
 
-type Props = { tx: Tx; namaDompet: (id: string | null) => string | null };
+type Props = { tx: Tx; namaDompet: (id: string | null) => string | null; hariIni?: string };
 
-export function TxRow({ tx, namaDompet }: Props) {
+export function TxRow({ tx, namaDompet, hariIni }: Props) {
+  const { t } = useTheme();
   const asal = namaDompet(tx.wallet_id);
   const tujuan = namaDompet(tx.wallet_tujuan_id);
-  const judul = tx.kategori ?? LABEL[tx.jenis];
+  const kategori = tx.kategori ? tx.kategori.charAt(0).toUpperCase() + tx.kategori.slice(1) : null;
+  const judul = tx.catatan ?? kategori ?? LABEL[tx.jenis];
   const dompet = tx.jenis === 'transfer' && asal && tujuan ? `${asal} → ${tujuan}` : asal;
+  const meta = [kategori, dompet, hariIni ? labelTanggalRelatif(tx.tanggal, hariIni) : null]
+    .filter((x): x is string => !!x)
+    .join(' · ');
   const masuk = tx.jenis === 'pemasukan' || tx.jenis === 'hutang_baru';
   const keluar = tx.jenis === 'pengeluaran' || tx.jenis === 'hutang_bayar';
-  const jumlah = `${masuk ? '+' : keluar ? '-' : ''}${formatRingkas(tx.nominal)}`;
+  const jumlah = `${masuk ? '+' : keluar ? '-' : ''}${formatRupiah(tx.nominal)}`;
   return (
-    <View className="flex-row items-center gap-2 border-b border-line py-2">
-      <View className="h-6 w-6 items-center justify-center rounded-lg bg-line">
-        <Text className="text-xs font-bold text-fg font-sans">{judul.charAt(0).toUpperCase()}</Text>
+    <View className="flex-row items-center gap-3 py-2.5">
+      <View className="h-10 w-10 items-center justify-center rounded-xl bg-card2">
+        <Ikon nama={ikonKategori(tx.kategori)} ukuran={22} warna={t.fg2} />
       </View>
-      <Text className="flex-1 text-xs text-fg font-sans" numberOfLines={1}>
-        {dompet ? `${judul} · ${dompet}` : judul}
-      </Text>
-      <Text className={`font-sans text-xs font-bold ${masuk ? 'text-accink' : 'text-fg'}`}>{jumlah}</Text>
+      <View className="flex-1">
+        <Text className="text-[15px] font-semibold text-fg font-sans" numberOfLines={1}>
+          {judul}
+        </Text>
+        {meta ? (
+          <Text className="text-[12.5px] text-fg2 font-sans" numberOfLines={1}>
+            {meta}
+          </Text>
+        ) : null}
+      </View>
+      <Text className={`font-sans text-[15px] font-semibold ${masuk ? 'text-accink' : 'text-fg'}`}>{jumlah}</Text>
     </View>
   );
 }

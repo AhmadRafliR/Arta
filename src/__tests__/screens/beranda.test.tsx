@@ -60,9 +60,9 @@ describe('Beranda', () => {
     expect(screen.getByText('Bulan ini')).toBeTruthy();
     expect(screen.getByText('Rp1.500.000')).toBeTruthy(); // masuk
     expect(screen.getByText('Rp25.000')).toBeTruthy(); // keluar
-    expect(screen.getByText('Gaji · GoPay')).toBeTruthy();
-    expect(screen.getByText('+1,5jt')).toBeTruthy();
-    expect(screen.getByText('-25rb')).toBeTruthy();
+    expect(screen.getByText(/^Gaji · GoPay/)).toBeTruthy();
+    expect(screen.getByText('+Rp1.500.000')).toBeTruthy();
+    expect(screen.getByText('-Rp25.000')).toBeTruthy();
   });
 
   it('Semua › menuju Riwayat', async () => {

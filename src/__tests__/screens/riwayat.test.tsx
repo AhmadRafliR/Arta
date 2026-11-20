@@ -49,7 +49,7 @@ describe('Riwayat', () => {
     expect(screen.getByText('19 Nov')).toBeTruthy();
     expect(screen.getByText('Rp70.000')).toBeTruthy(); // 100000 - 30000
     expect(screen.getByText('18 Nov')).toBeTruthy();
-    expect(screen.getByText('-Rp8.000')).toBeTruthy(); // transfer tidak dihitung
+    expect(screen.getAllByText('-Rp8.000')).toHaveLength(2); // transfer tidak dihitung
   });
 
   it('geser bulan memakai bulan baru', async () => {
@@ -66,7 +66,7 @@ describe('Riwayat', () => {
     await render(<Riwayat />);
     await fireEvent.press(screen.getByTestId('f-dompet-spay'));
     expect(screen.queryByText('Gaji · cash')).toBeNull();
-    expect(screen.getByText('Transfer · cash → spay')).toBeTruthy();
+    expect(screen.getByText('cash → spay')).toBeTruthy();
     expect(screen.getByText('Jajan · spay')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('f-jenis-transfer'));
     expect(screen.queryByText('Jajan · spay')).toBeNull();
