@@ -271,7 +271,9 @@ export default function Akun() {
           className="flex-row items-center justify-center gap-2 rounded-[20px] border border-line px-4 py-3"
         >
           <Ikon nama="ui-plus" ukuran={18} warna={t.fg2} />
-          <Text className="font-sans text-sm font-semibold text-fg2">Tambah dompet</Text>
+          <Text numberOfLines={1} className="font-sans text-sm font-semibold text-fg2">
+            Tambah dompet
+          </Text>
         </Pressable>
       )}
 

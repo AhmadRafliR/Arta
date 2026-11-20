@@ -150,7 +150,7 @@ function PetakKategori({ nama, terpilih, onPress }: { nama: string; terpilih: bo
       accessibilityLabel={nama}
       accessibilityState={{ selected: terpilih }}
       onPress={onPress}
-      className="w-1/4 items-center gap-[7px] px-1"
+      className="flex-1 items-center gap-[7px] px-1"
     >
       <View
         style={{ aspectRatio: 1, borderWidth: 1.5 }}
@@ -386,10 +386,20 @@ function TxFormBody({ initial, submit, bawah }: BodyProps) {
         ) : (
           <KartuSeksi judul="Detail" tag={salinan.label}>
             {daftarKategori.length > 0 ? (
-              <View className="-mx-1 mt-3.5 flex-row flex-wrap gap-y-3">
-                {daftarKategori.map((k) => (
-                  <PetakKategori key={k.id} nama={k.nama} terpilih={kategori === k.nama} onPress={() => setKategori(k.nama)} />
-                ))}
+              // Baris isi 4 dengan flex-1 (tanpa lebar persen, yang menyusut di Android); sisa baris diisi kosong.
+              <View className="-mx-1 mt-3.5 gap-3">
+                {Array.from({ length: Math.ceil(daftarKategori.length / 4) }, (_, i) => daftarKategori.slice(i * 4, i * 4 + 4)).map(
+                  (baris, i) => (
+                    <View key={i} className="flex-row">
+                      {baris.map((k) => (
+                        <PetakKategori key={k.id} nama={k.nama} terpilih={kategori === k.nama} onPress={() => setKategori(k.nama)} />
+                      ))}
+                      {Array.from({ length: 4 - baris.length }, (_, j) => (
+                        <View key={`kosong-${j}`} className="flex-1 px-1" />
+                      ))}
+                    </View>
+                  ),
+                )}
               </View>
             ) : null}
             <LabelSub>Dompet</LabelSub>

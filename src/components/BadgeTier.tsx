@@ -32,6 +32,7 @@ export function BadgeTier({ tier, tinggi = 32 }: { tier: 'free' | 'pro'; tinggi?
         flexDirection: 'row',
         alignItems: 'center',
         alignSelf: 'flex-start',
+        flexShrink: 0, // jangan menyusut di baris sempit (teks "PRO" terpotong)
         overflow: 'hidden',
         paddingLeft: (pro ? 20 : 14) * s,
         paddingRight: 22 * s,
