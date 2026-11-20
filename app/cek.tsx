@@ -58,10 +58,19 @@ export default function Cek() {
     if (!h && !ditutup.current) router.replace('/');
   }, [h, router]);
 
-  const saldo = useMemo(
-    () => (wallets.data && semua.data ? walletBalances(wallets.data, semua.data) : null),
-    [wallets.data, semua.data],
-  );
+  // Patokan koreksi = saldo tersimpan + efek draf di hasil yang sama: "rokok 25rb gopay, saldo gopay
+  // sekarang 150rb" berarti saldo akhir 150rb (setelah rokok), bukan 125rb.
+  const drafDiHasil = h?.draf;
+  const saldo = useMemo(() => {
+    if (!wallets.data || !semua.data) return null;
+    const efekDraf = (drafDiHasil ?? []).map((d) => ({
+      jenis: d.jenis,
+      nominal: d.nominal,
+      wallet_id: d.wallet_id,
+      wallet_tujuan_id: d.jenis === 'transfer' ? d.wallet_tujuan_id : null,
+    }));
+    return walletBalances(wallets.data, [...semua.data, ...efekDraf]);
+  }, [wallets.data, semua.data, drafDiHasil]);
 
   if (!h) return null;
 

@@ -245,8 +245,24 @@ describe('Cek dulu', () => {
     expect(item.tanggal).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
+  it('koreksi memperhitungkan draf di hasil yang sama: saldo akhir = yang disebut', async () => {
+    // GoPay 200.000, rokok 25.000 -> 175.000; "saldo gopay sekarang 150rb" -> penyesuaian -25.000.
+    await buka(
+      hasil({
+        draf: [draf({ id: 'd1', kategori: 'rokok', nominal: 25000, wallet_id: 'w-gopay' })],
+        koreksi: [{ id: 'k1', wallet_id: 'w-gopay', saldo_baru: 150000 }],
+      }),
+    );
+    expect(screen.getByText('Rp175.000 → Rp150.000')).toBeTruthy();
+    await fireEvent.press(tombolSimpan(2));
+    await waitFor(() => expect(mockSave).toHaveBeenCalledTimes(1));
+    const items = mockSave.mock.calls[0][0] as { id: string; nominal: number }[];
+    expect(items.find((x) => x.id === 'k1')?.nominal).toBe(-25000);
+  });
+
   it('koreksi yang sudah sama: "Sudah sama" dan tidak ikut disimpan', async () => {
-    await buka(hasil({ koreksi: [{ id: 'k1', wallet_id: 'w-cash', saldo_baru: 50000 }] }));
+    // Cash 50.000 - parkir 2.000 = 48.000: sudah sama dengan yang disebut.
+    await buka(hasil({ koreksi: [{ id: 'k1', wallet_id: 'w-cash', saldo_baru: 48000 }] }));
     expect(screen.getByText('Sudah sama')).toBeTruthy();
     await fireEvent.press(tombolSimpan(2));
     await waitFor(() => expect(mockSave).toHaveBeenCalledTimes(1));
