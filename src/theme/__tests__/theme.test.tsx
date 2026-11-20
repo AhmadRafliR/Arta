@@ -17,6 +17,16 @@ describe('tokens', () => {
     expect(tokens.terang.heroTo).toBe('#1F6A76');
   });
 
+  it('token mockup (accSoft, dangerSoft, warnBg, segActive, am*, pl*, c1-c4) di kedua mode', () => {
+    expect(tokens.terang).toMatchObject({ accSoft: '#E1F5F4', dangerSoft: '#FBEAE6', warnBg: '#FDF1D8', segActive: '#FFFFFF', amIn: '#C9F5F2', c1: '#17726F', c4: '#C7B27A' });
+    expect(tokens.gelap).toMatchObject({ accSoft: 'rgba(198,244,50,0.13)', segActive: '#2A2A2E', amSub: '#47646B', plDownFg: '#A8321F', c1: '#C6F432' });
+    for (const m of ['terang', 'gelap'] as const) {
+      for (const k of ['accSoft', 'dangerSoft', 'warnBg', 'segActive', 'amSub', 'amIn', 'amLine', 'plUpBg', 'plUpFg', 'plDownBg', 'plDownFg', 'c1', 'c2', 'c3', 'c4'] as const) {
+        expect(tokens[m][k]).toBeTruthy();
+      }
+    }
+  });
+
   it('token kartu saldo dan ilustrasi ada di kedua mode', () => {
     const kunci = ['kartuFrom', 'kartuTo', 'kartuFg', 'kartuSub', 'kartuLine', 'aksiBg', 'aksiFg',
       'ilusTintFrom', 'ilusTintTo', 'ilusOnTint', 'ilusAksen', 'ilusGaris'] as const;

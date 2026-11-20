@@ -35,6 +35,26 @@ export type Tokens = {
   warnInk: string;
   danger: string;
   dangerInk: string;
+  /** Dari mockup arta (catat/riwayat/hutang/investasi/akun). */
+  accSoft: string;
+  dangerSoft: string;
+  warnBg: string;
+  /** Segmen terpilih pada kontrol segmented. */
+  segActive: string;
+  /** Teks pendamping, nominal masuk, dan garis pada kartu bergradien (kartu hero/ringkasan). */
+  amSub: string;
+  amIn: string;
+  amLine: string;
+  /** Lencana untung (naik) dan rugi (turun) di atas kartu bergradien. */
+  plUpBg: string;
+  plUpFg: string;
+  plDownBg: string;
+  plDownFg: string;
+  /** Palet seri grafik/alokasi aset. */
+  c1: string;
+  c2: string;
+  c3: string;
+  c4: string;
 };
 
 export const tokens: Record<Mode, Tokens> = {
@@ -69,6 +89,21 @@ export const tokens: Record<Mode, Tokens> = {
     warnInk: '#8A5A00',
     danger: '#D95C5C',
     dangerInk: '#A32B2B',
+    accSoft: '#E1F5F4',
+    dangerSoft: '#FBEAE6',
+    warnBg: '#FDF1D8',
+    segActive: '#FFFFFF',
+    amSub: 'rgba(255,255,255,0.86)',
+    amIn: '#C9F5F2',
+    amLine: 'rgba(255,255,255,0.3)',
+    plUpBg: '#C9F5F2',
+    plUpFg: '#0B424F',
+    plDownBg: 'rgba(255,255,255,0.16)',
+    plDownFg: '#FFD9D1',
+    c1: '#17726F',
+    c2: '#52C3BF',
+    c3: '#9BDCD7',
+    c4: '#C7B27A',
   },
   gelap: {
     bg: '#0B0B0C',
@@ -101,5 +136,20 @@ export const tokens: Record<Mode, Tokens> = {
     warnInk: '#E9C46A',
     danger: '#FF8A8A',
     dangerInk: '#FF8A8A',
+    accSoft: 'rgba(198,244,50,0.13)',
+    dangerSoft: 'rgba(255,158,147,0.14)',
+    warnBg: 'rgba(242,197,107,0.14)',
+    segActive: '#2A2A2E',
+    amSub: '#47646B',
+    amIn: '#17726F',
+    amLine: '#DDE7EA',
+    plUpBg: '#17726F',
+    plUpFg: '#FFFFFF',
+    plDownBg: '#FBEAE6',
+    plDownFg: '#A8321F',
+    c1: '#C6F432',
+    c2: '#8FB52A',
+    c3: '#55701B',
+    c4: '#D9C077',
   },
 };

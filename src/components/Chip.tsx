@@ -1,9 +1,13 @@
 import { Pressable, Text } from 'react-native';
+import { Ikon } from '@/components/ikon/Ikon';
+import type { NamaIkon } from '@/components/ikon/data';
+import { useTheme } from '@/theme/ThemeProvider';
 
-type Props = { label: string; selected: boolean; onPress: () => void; testID?: string };
+type Props = { label: string; selected: boolean; onPress: () => void; testID?: string; ikon?: NamaIkon };
 
-// Pilihan bergaya chip. Terpilih = warna terbalik (fg/bg), bukan aksen.
-export function Chip({ label, selected, onPress, testID }: Props) {
+// Pilihan bergaya chip (mockup arta: .chip / .fchip). Terpilih = latar aksen lembut + garis dan teks accInk.
+export function Chip({ label, selected, onPress, testID, ikon }: Props) {
+  const { t } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -11,9 +15,13 @@ export function Chip({ label, selected, onPress, testID }: Props) {
       accessibilityState={{ selected }}
       testID={testID}
       onPress={onPress}
-      className={`rounded-full border px-4 py-2 ${selected ? 'border-fg bg-fg' : 'border-line bg-card'}`}
+      style={{ minHeight: 38 }}
+      className={`flex-row items-center justify-center gap-1.5 rounded-full border px-3.5 py-2 ${
+        selected ? 'border-accink bg-accsoft' : 'border-line bg-card'
+      }`}
     >
-      <Text className={`font-sans text-sm font-semibold ${selected ? 'text-bg' : 'text-fg'}`}>{label}</Text>
+      {ikon ? <Ikon nama={ikon} ukuran={16} warna={selected ? t.accInk : t.fg2} /> : null}
+      <Text className={`font-sans text-[13px] font-semibold ${selected ? 'text-accink' : 'text-fg2'}`}>{label}</Text>
     </Pressable>
   );
 }

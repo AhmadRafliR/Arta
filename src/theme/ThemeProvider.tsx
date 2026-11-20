@@ -31,6 +31,10 @@ function toVars(t: Tokens) {
     '--color-warnink': t.warnInk,
     '--color-danger': t.danger,
     '--color-dangerink': t.dangerInk,
+    '--color-accsoft': t.accSoft,
+    '--color-dangersoft': t.dangerSoft,
+    '--color-warnbg': t.warnBg,
+    '--color-segactive': t.segActive,
   });
 }
 

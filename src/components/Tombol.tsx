@@ -1,11 +1,20 @@
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 
-type Props = { label: string; onPress: () => void; disabled?: boolean; primary?: boolean; busy?: boolean };
+type Props = {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+  /** Tombol sekunder bernada bahaya (hapus, keluar): garis dan teks danger. */
+  bahaya?: boolean;
+  busy?: boolean;
+};
 
-// Tombol penuh lebar (gaya .btn-primary). Aksen hanya untuk tombol utama (primary).
-export function Tombol({ label, onPress, disabled, primary, busy }: Props) {
+// Tombol penuh lebar (mockup arta: .btn-primary / .btn-sheet). Aksen hanya untuk tombol utama (primary).
+export function Tombol({ label, onPress, disabled, primary, bahaya, busy }: Props) {
   const { t } = useTheme();
+  const warnaTeks = primary ? t.accFg : bahaya ? t.dangerInk : t.fg;
   return (
     <Pressable
       accessibilityRole="button"
@@ -13,16 +22,15 @@ export function Tombol({ label, onPress, disabled, primary, busy }: Props) {
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={{ minHeight: 54 }}
-      className={`items-center justify-center rounded-2xl px-6 ${primary ? 'bg-acc' : 'border border-line'} ${disabled ? 'opacity-50' : ''}`}
+      style={{ minHeight: 52, borderRadius: 14 }}
+      className={`items-center justify-center px-6 ${
+        primary ? 'bg-acc' : bahaya ? 'border border-dangersoft bg-card' : 'border border-line bg-card'
+      } ${disabled ? 'opacity-50' : ''}`}
     >
       {busy ? (
-        <ActivityIndicator color={primary ? t.accFg : t.fg} />
+        <ActivityIndicator color={warnaTeks} />
       ) : (
-        <Text
-          style={primary ? { color: t.accFg, fontSize: 16 } : { fontSize: 16 }}
-          className={`font-sans ${primary ? 'font-bold' : 'font-semibold text-fg'}`}
-        >
+        <Text style={{ color: warnaTeks, fontSize: 16 }} className={`font-sans ${primary ? 'font-bold' : 'font-semibold'}`}>
           {label}
         </Text>
       )}
