@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from './AuthProvider';
 import { routeFor } from './routeFor';
 import { gateView, routeAllowed } from './gateView';
+import { MarkMuat } from '@/components/MarkMuat';
 import { Tombol } from '@/components/Tombol';
 
 // Mengarahkan ke grup rute sesuai keadaan masuk/onboarding. Children (Stack) tetap ter-mount
@@ -28,7 +29,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       {children}
       {view === 'loading' ? (
         <View style={StyleSheet.absoluteFill} className="items-center justify-center bg-bg">
-          <ActivityIndicator />
+          <MarkMuat />
         </View>
       ) : null}
       {view === 'error' ? (
