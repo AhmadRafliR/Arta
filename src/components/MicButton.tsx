@@ -24,7 +24,7 @@ export function MicButton({ onPress }: { onPress: () => void }) {
         shadowOffset: { width: 0, height: 4 },
       }}
     >
-      <Text style={{ color: t.accFg, fontSize: 22 }}>🎙</Text>
+      <Text className="font-sans" style={{ color: t.accFg, fontSize: 22 }}>🎙</Text>
     </Pressable>
   );
 }

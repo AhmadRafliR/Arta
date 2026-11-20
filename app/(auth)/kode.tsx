@@ -23,18 +23,18 @@ export default function Kode() {
 
   return (
     <View className="flex-1 justify-center gap-4 bg-bg px-6">
-      <Text className="text-2xl font-bold text-fg">Masukkan kode</Text>
-      <Text className="text-mid">Kami mengirim kode 6 digit ke {email}.</Text>
+      <Text className="text-2xl font-bold text-fg font-sans">Masukkan kode</Text>
+      <Text className="text-mid font-sans">Kami mengirim kode 6 digit ke {email}.</Text>
       <TextInput
         value={kode}
         onChangeText={(v) => setKode(v.replace(/\D/g, '').slice(0, 6))}
         placeholder="000000"
         keyboardType="number-pad"
         maxLength={6}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-center text-xl text-fg"
+        className="rounded-xl border border-line bg-card px-4 py-3 text-center text-xl text-fg font-sans"
       />
       <Tombol label="Verifikasi" primary busy={busy} disabled={busy} onPress={() => void verifikasi()} />
-      {error ? <Text className="text-fg">{error}</Text> : null}
+      {error ? <Text className="text-fg font-sans">{error}</Text> : null}
     </View>
   );
 }

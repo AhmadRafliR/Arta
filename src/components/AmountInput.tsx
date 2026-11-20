@@ -44,12 +44,12 @@ export function AmountInput({ value, onChange, allowZero = false, editable = tru
         autoCapitalize="none"
         testID={testID}
         editable={editable}
-        className={`rounded-xl border bg-card px-4 py-3 text-fg ${salah ? 'border-fg' : 'border-line'}`}
+        className={`font-sans rounded-xl border bg-card px-4 py-3 text-fg ${salah ? 'border-fg' : 'border-line'}`}
       />
       {salah ? (
-        <Text className="mt-1 text-xs text-fg">Nominal tidak valid</Text>
+        <Text className="mt-1 text-xs text-fg font-sans">Nominal tidak valid</Text>
       ) : nilai !== null && !kosong ? (
-        <Text className="mt-1 text-xs text-mid">{formatRupiah(nilai)}</Text>
+        <Text className="mt-1 text-xs text-mid font-sans">{formatRupiah(nilai)}</Text>
       ) : null}
     </View>
   );

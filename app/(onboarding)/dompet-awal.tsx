@@ -83,18 +83,18 @@ export default function DompetAwal() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-4 px-6 py-12">
-      <Text className="text-2xl font-bold text-fg">Selamat datang</Text>
-      <Text className="text-mid">Siapa nama panggilanmu?</Text>
+      <Text className="text-2xl font-bold text-fg font-sans">Selamat datang</Text>
+      <Text className="text-mid font-sans">Siapa nama panggilanmu?</Text>
       <TextInput
         value={nama}
         onChangeText={setNama}
         placeholder="Nama panggilan"
         placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg"
+        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
       />
 
-      <Text className="mt-2 text-lg font-semibold text-fg">Dompetmu</Text>
-      <Text className="text-mid">Isi saldo awal tiap dompet. Boleh Rp0.</Text>
+      <Text className="mt-2 text-lg font-semibold text-fg font-sans">Dompetmu</Text>
+      <Text className="text-mid font-sans">Isi saldo awal tiap dompet. Boleh Rp0.</Text>
 
       {rows.map((r) => (
         <View key={r.key} className="gap-2 rounded-2xl border border-line bg-card p-3">
@@ -105,10 +105,10 @@ export default function DompetAwal() {
               onChangeText={(v) => ubah(r.key, { nama: v })}
               placeholder="Nama dompet"
               placeholderTextColor={t.mid}
-              className="flex-1 rounded-xl border border-line px-4 py-2 text-fg"
+              className="flex-1 rounded-xl border border-line px-4 py-2 text-fg font-sans"
             />
             {r.dibuat ? (
-              <Text className="px-3 text-xs text-mid">sudah dibuat</Text>
+              <Text className="px-3 text-xs text-mid font-sans">sudah dibuat</Text>
             ) : (
               <Pressable
                 accessibilityRole="button"
@@ -116,7 +116,7 @@ export default function DompetAwal() {
                 onPress={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
                 className="px-3 py-2"
               >
-                <Text className="text-mid">Hapus</Text>
+                <Text className="text-mid font-sans">Hapus</Text>
               </Pressable>
             )}
           </View>
@@ -129,11 +129,11 @@ export default function DompetAwal() {
         onPress={() => setRows((rs) => [...rs, { key: nextKey.current++, nama: '', saldo: 0 }])}
         className="items-center rounded-xl border border-line py-3"
       >
-        <Text className="font-semibold text-fg">Tambah dompet</Text>
+        <Text className="font-semibold text-fg font-sans">Tambah dompet</Text>
       </Pressable>
 
-      {kembar ? <Text className="text-fg">Nama dompet tidak boleh sama.</Text> : null}
-      {error ? <Text className="text-fg">{error}</Text> : null}
+      {kembar ? <Text className="text-fg font-sans">Nama dompet tidak boleh sama.</Text> : null}
+      {error ? <Text className="text-fg font-sans">{error}</Text> : null}
 
       <Pressable
         accessibilityRole="button"
@@ -146,7 +146,7 @@ export default function DompetAwal() {
         {busy ? (
           <ActivityIndicator color={t.accFg} />
         ) : (
-          <Text style={{ color: t.accFg }} className="font-semibold">
+          <Text style={{ color: t.accFg }} className="font-semibold font-sans">
             Mulai
           </Text>
         )}

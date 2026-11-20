@@ -31,8 +31,8 @@ function Baris({ w, saldo, onPress }: { w: Wallet; saldo: number | undefined; on
       onPress={onPress}
       className="flex-row items-center justify-between border-b border-line py-3"
     >
-      <Text className="text-fg">{w.nama}</Text>
-      <Text className="text-fg">{saldo === undefined ? '…' : formatRupiah(saldo)}</Text>
+      <Text className="text-fg font-sans">{w.nama}</Text>
+      <Text className="text-fg font-sans">{saldo === undefined ? '…' : formatRupiah(saldo)}</Text>
     </Pressable>
   );
 }
@@ -52,14 +52,14 @@ export default function Akun() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-4 px-5 pb-8 pt-12">
-      <Text className="text-2xl font-bold text-fg">Akun</Text>
+      <Text className="text-2xl font-bold text-fg font-sans">Akun</Text>
 
       {TIPE.map(({ v, label }) => {
         const daftar = aktif.filter((w) => w.tipe === v);
         if (daftar.length === 0) return null;
         return (
           <View key={v}>
-            <Text className="mb-1 text-xs font-semibold uppercase text-mid">{label}</Text>
+            <Text className="mb-1 text-xs font-semibold uppercase text-mid font-sans">{label}</Text>
             {daftar.map((w) => (
               <Baris key={w.id} w={w} saldo={saldo?.[w.id]} onPress={() => buka(w.id)} />
             ))}
@@ -78,7 +78,7 @@ export default function Akun() {
             onPress={() => setArsipBuka((b) => !b)}
             className="py-2"
           >
-            <Text className="text-mid">{`Diarsipkan (${arsip.length}) ${arsipBuka ? '▾' : '▸'}`}</Text>
+            <Text className="text-mid font-sans">{`Diarsipkan (${arsip.length}) ${arsipBuka ? '▾' : '▸'}`}</Text>
           </Pressable>
           {arsipBuka
             ? arsip.map((w) => <Baris key={w.id} w={w} saldo={saldo?.[w.id]} onPress={() => buka(w.id)} />)
@@ -87,7 +87,7 @@ export default function Akun() {
       ) : null}
 
       <View>
-        <Text className="mb-2 text-xs font-semibold uppercase text-mid">Tampilan</Text>
+        <Text className="mb-2 text-xs font-semibold uppercase text-mid font-sans">Tampilan</Text>
         <View className="flex-row gap-2">
           {TEMA.map((x) => (
             <Chip key={x.v} label={x.label} selected={pref === x.v} onPress={() => setPref(x.v)} />

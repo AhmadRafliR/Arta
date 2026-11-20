@@ -15,13 +15,13 @@ export function HeroCard({ sisa, kekayaan, dompet }: Props) {
       end={{ x: 1, y: 1 }}
       style={{ borderRadius: 20, padding: 16 }}
     >
-      <Text style={{ color: t.heroFg, opacity: 0.65 }} className="text-[10px] tracking-widest">
+      <Text style={{ color: t.heroFg, opacity: 0.65 }} className="text-[10px] tracking-widest font-sans">
         SISA UANG · SEMUA DOMPET
       </Text>
-      <Text style={{ color: t.heroFg }} className="my-1 text-[28px] font-extrabold">
+      <Text style={{ color: t.heroFg }} className="my-1 text-[28px] font-extrabold font-sans">
         {formatRupiah(sisa)}
       </Text>
-      <Text style={{ color: t.heroFg, opacity: 0.65 }} className="text-[11px]">
+      <Text style={{ color: t.heroFg, opacity: 0.65 }} className="text-[11px] font-sans">
         {`Kekayaan bersih ${formatRupiah(kekayaan)}`}
       </Text>
       {dompet.length > 0 ? <WalletChips dompet={dompet} /> : null}

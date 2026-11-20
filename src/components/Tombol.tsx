@@ -17,7 +17,7 @@ export function Tombol({ label, onPress, disabled, primary, busy }: Props) {
       {busy ? (
         <ActivityIndicator color={primary ? t.accFg : t.fg} />
       ) : (
-        <Text style={primary ? { color: t.accFg } : undefined} className={`font-semibold ${primary ? '' : 'text-fg'}`}>
+        <Text style={primary ? { color: t.accFg } : undefined} className={`font-sans font-semibold ${primary ? '' : 'text-fg'}`}>
           {label}
         </Text>
       )}

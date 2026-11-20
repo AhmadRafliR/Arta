@@ -45,47 +45,47 @@ export default function Beranda() {
       contentContainerStyle={{ paddingTop: insets.top + 12 }}
     >
       <View>
-        <Text className="text-xs text-mid">{`${sapaan(jamDi(zona))},`}</Text>
-        <Text className="text-base font-bold text-fg">{profile?.nama ?? ''}</Text>
+        <Text className="text-xs text-mid font-sans">{`${sapaan(jamDi(zona))},`}</Text>
+        <Text className="text-base font-bold text-fg font-sans">{profile?.nama ?? ''}</Text>
       </View>
 
       {termuat ? (
         <HeroCard sisa={sisaUang(dompet, saldo)} kekayaan={kekayaanBersih(saldo, 0)} dompet={chips} />
       ) : galat ? (
-        <Text className="text-fg">{galat.pesan}</Text>
+        <Text className="text-fg font-sans">{galat.pesan}</Text>
       ) : (
-        <Text className="text-mid">Memuat…</Text>
+        <Text className="text-mid font-sans">Memuat…</Text>
       )}
 
-      <Text className="mt-1 text-xs font-bold text-fg">Bulan ini</Text>
+      <Text className="mt-1 text-xs font-bold text-fg font-sans">Bulan ini</Text>
       {bulanGalat ? (
-        <Text className="text-fg">{bulanGalat.pesan}</Text>
+        <Text className="text-fg font-sans">{bulanGalat.pesan}</Text>
       ) : (
         <View className="flex-row gap-6 rounded-2xl border border-line bg-card p-3">
           <View>
-            <Text className="text-[11px] text-mid">Masuk</Text>
-            <Text className="text-base font-bold text-accink">{bulanMemuat ? '…' : formatRupiah(ringkasan.masuk)}</Text>
+            <Text className="text-[11px] text-mid font-sans">Masuk</Text>
+            <Text className="text-base font-bold text-accink font-sans">{bulanMemuat ? '…' : formatRupiah(ringkasan.masuk)}</Text>
           </View>
           <View>
-            <Text className="text-[11px] text-mid">Keluar</Text>
-            <Text className="text-base font-bold text-fg">{bulanMemuat ? '…' : formatRupiah(ringkasan.keluar)}</Text>
+            <Text className="text-[11px] text-mid font-sans">Keluar</Text>
+            <Text className="text-base font-bold text-fg font-sans">{bulanMemuat ? '…' : formatRupiah(ringkasan.keluar)}</Text>
           </View>
         </View>
       )}
 
       <View className="mt-1 flex-row items-center justify-between">
-        <Text className="text-xs font-bold text-fg">Terbaru</Text>
+        <Text className="text-xs font-bold text-fg font-sans">Terbaru</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Semua transaksi" onPress={() => router.navigate('/riwayat')}>
-          <Text className="text-xs text-mid">Semua ›</Text>
+          <Text className="text-xs text-mid font-sans">Semua ›</Text>
         </Pressable>
       </View>
       <View className="rounded-2xl border border-line bg-card px-3">
         {bulanMemuat ? (
-          <Text className="py-3 text-mid">Memuat…</Text>
+          <Text className="py-3 text-mid font-sans">Memuat…</Text>
         ) : bulanGalat ? (
-          <Text className="py-3 text-fg">{bulanGalat.pesan}</Text>
+          <Text className="py-3 text-fg font-sans">{bulanGalat.pesan}</Text>
         ) : terbaru.length === 0 ? (
-          <Text className="py-3 text-mid">Belum ada transaksi bulan ini.</Text>
+          <Text className="py-3 text-mid font-sans">Belum ada transaksi bulan ini.</Text>
         ) : (
           terbaru.map((tx) => <TxRow key={tx.id} tx={tx} namaDompet={namaDompet} />)
         )}

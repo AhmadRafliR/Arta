@@ -45,26 +45,26 @@ export default function Riwayat() {
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-3 px-4 pb-6" contentContainerStyle={{ paddingTop: insets.top + 12 }}>
       <View className="flex-row items-center justify-between">
         <Pressable accessibilityRole="button" accessibilityLabel="Bulan sebelumnya" onPress={() => gantiBulan(-1)} className="px-3 py-1">
-          <Text className="text-lg text-fg">‹</Text>
+          <Text className="text-lg text-fg font-sans">‹</Text>
         </Pressable>
-        <Text className="text-base font-bold text-fg">{labelBulan(bulan)}</Text>
+        <Text className="text-base font-bold text-fg font-sans">{labelBulan(bulan)}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Bulan berikutnya" onPress={() => gantiBulan(1)} className="px-3 py-1">
-          <Text className="text-lg text-fg">›</Text>
+          <Text className="text-lg text-fg font-sans">›</Text>
         </Pressable>
       </View>
 
       <RiwayatFilter filter={filter} onChange={setFilter} kategori={kategori} dompet={dompet.map((w) => ({ id: w.id, nama: w.nama }))} />
 
       {semua === undefined ? (
-        <Text className={q.error ? 'text-fg' : 'text-mid'}>{q.error ? q.error.pesan : 'Memuat…'}</Text>
+        <Text className={`font-sans ${q.error ? 'text-fg' : 'text-mid'}`}>{q.error ? q.error.pesan : 'Memuat…'}</Text>
       ) : grup.length === 0 ? (
-        <Text className="text-mid">Belum ada transaksi.</Text>
+        <Text className="text-mid font-sans">Belum ada transaksi.</Text>
       ) : (
         grup.map((g) => (
           <View key={g.tanggal}>
             <View className="flex-row items-center justify-between pt-1">
-              <Text className="text-xs font-bold text-mid">{labelHari(g.tanggal)}</Text>
-              <Text className="text-xs text-mid">{formatRupiah(g.total)}</Text>
+              <Text className="text-xs font-bold text-mid font-sans">{labelHari(g.tanggal)}</Text>
+              <Text className="text-xs text-mid font-sans">{formatRupiah(g.total)}</Text>
             </View>
             {g.items.map((tx) => (
               <Pressable key={tx.id} accessibilityRole="button" onPress={() => router.push(`/transaksi/${tx.id}?bulan=${bulan}`)}>

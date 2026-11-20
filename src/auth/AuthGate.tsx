@@ -34,14 +34,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       ) : null}
       {view === 'error' ? (
         <View style={StyleSheet.absoluteFill} className="items-center justify-center gap-4 bg-bg px-6">
-          <Text className="text-xl font-bold text-fg">Gagal memuat profil</Text>
+          <Text className="text-xl font-bold text-fg font-sans">Gagal memuat profil</Text>
           <Pressable onPress={refreshProfile} className="items-center rounded-xl bg-acc px-6 py-3">
-            <Text style={{ color: t.accFg }} className="font-semibold">
+            <Text style={{ color: t.accFg }} className="font-semibold font-sans">
               Coba lagi
             </Text>
           </Pressable>
           <Pressable onPress={() => void signOut()} className="items-center rounded-xl border border-line bg-card px-6 py-3">
-            <Text className="font-semibold text-fg">Keluar</Text>
+            <Text className="font-semibold text-fg font-sans">Keluar</Text>
           </Pressable>
         </View>
       ) : null}

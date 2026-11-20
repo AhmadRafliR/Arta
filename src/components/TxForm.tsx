@@ -27,7 +27,7 @@ function pesanGalat(e: unknown): string {
 }
 
 function Label({ children }: { children: string }) {
-  return <Text className="mt-2 text-xs font-semibold text-mid">{children}</Text>;
+  return <Text className="mt-2 text-xs font-semibold text-mid font-sans">{children}</Text>;
 }
 
 type BodyProps = {
@@ -109,7 +109,7 @@ function TxFormBody({ initial, submit }: BodyProps) {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-2 px-5 py-4" keyboardShouldPersistTaps="handled">
-      {terkunci ? <Text className="text-xs text-mid">{`${initial.jenis.replace('_', ' ')} · hanya tanggal dan catatan yang dapat diubah`}</Text> : null}
+      {terkunci ? <Text className="text-xs text-mid font-sans">{`${initial.jenis.replace('_', ' ')} · hanya tanggal dan catatan yang dapat diubah`}</Text> : null}
       <View className="flex-row flex-wrap gap-2">
         {(terkunci ? [] : JENIS).map((j) => (
           <Chip key={j.nilai} testID={`jenis-${j.nilai}`} label={j.label} selected={jenis === j.nilai} onPress={() => ubahJenis(j.nilai)} />
@@ -118,7 +118,7 @@ function TxFormBody({ initial, submit }: BodyProps) {
 
       <Label>Nominal</Label>
       {terkunci ? (
-        <TextInput testID="nominal" editable={false} value={formatRupiah(initial.nominal)} className="rounded-xl border border-line bg-card px-4 py-3 text-mid" />
+        <TextInput testID="nominal" editable={false} value={formatRupiah(initial.nominal)} className="rounded-xl border border-line bg-card px-4 py-3 text-mid font-sans" />
       ) : (
         <AmountInput value={ubah ? initial.nominal : null} onChange={setNominal} testID="nominal" />
       )}
@@ -137,12 +137,12 @@ function TxFormBody({ initial, submit }: BodyProps) {
       {terkunci ? (
         <>
           <Label>Dompet</Label>
-          <Text className="text-mid">{(wallets.data ?? []).find((w) => w.id === initial.wallet_id)?.nama ?? '-'}</Text>
+          <Text className="text-mid font-sans">{(wallets.data ?? []).find((w) => w.id === initial.wallet_id)?.nama ?? '-'}</Text>
         </>
       ) : (
         <Label>{transfer ? 'Dari dompet' : 'Dompet'}</Label>
       )}
-      {aktif.length === 0 && !terkunci ? <Text className="text-mid">Belum ada dompet aktif.</Text> : null}
+      {aktif.length === 0 && !terkunci ? <Text className="text-mid font-sans">Belum ada dompet aktif.</Text> : null}
       <View className="flex-row flex-wrap gap-2">
         {(terkunci ? [] : aktif).map((w) => (
           <Chip key={w.id} testID={`src-${w.id}`} label={w.nama} selected={asalId === w.id} onPress={() => setAsalPilih(w.id)} />
@@ -167,9 +167,9 @@ function TxFormBody({ initial, submit }: BodyProps) {
         onChangeText={setTanggal}
         autoCapitalize="none"
         placeholderTextColor={t.mid}
-        className={`rounded-xl border bg-card px-4 py-3 text-fg ${tanggalValid(tanggal) ? 'border-line' : 'border-fg'}`}
+        className={`font-sans rounded-xl border bg-card px-4 py-3 text-fg ${tanggalValid(tanggal) ? 'border-line' : 'border-fg'}`}
       />
-      {tanggalValid(tanggal) ? null : <Text className="text-xs text-fg">Tanggal tidak valid</Text>}
+      {tanggalValid(tanggal) ? null : <Text className="text-xs text-fg font-sans">Tanggal tidak valid</Text>}
 
       <Label>Catatan (opsional)</Label>
       <TextInput
@@ -178,10 +178,10 @@ function TxFormBody({ initial, submit }: BodyProps) {
         onChangeText={setCatatan}
         placeholder="Catatan"
         placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg"
+        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
       />
 
-      {error ? <Text className="mt-2 text-fg">{error}</Text> : null}
+      {error ? <Text className="mt-2 text-fg font-sans">{error}</Text> : null}
 
       <Pressable
         accessibilityRole="button"
@@ -194,7 +194,7 @@ function TxFormBody({ initial, submit }: BodyProps) {
         {busy ? (
           <ActivityIndicator color={t.accFg} />
         ) : (
-          <Text style={{ color: t.accFg }} className="font-semibold">
+          <Text style={{ color: t.accFg }} className="font-semibold font-sans">
             Simpan
           </Text>
         )}

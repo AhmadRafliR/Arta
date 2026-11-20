@@ -12,9 +12,9 @@ export default function Catat() {
   return (
     <View className="flex-1 bg-bg">
       <View className="flex-row items-center justify-between px-5 pb-1 pt-4">
-        <Text className="text-lg font-bold text-fg">Catat transaksi</Text>
+        <Text className="text-lg font-bold text-fg font-sans">Catat transaksi</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid">Batal</Text>
+          <Text className="text-mid font-sans">Batal</Text>
         </Pressable>
       </View>
       <TxForm txId={txId} onSaved={tutup} />

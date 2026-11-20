@@ -11,10 +11,10 @@ export function WalletChips({ dompet }: { dompet: DompetChip[] }) {
     <View className="mt-3 flex-row gap-1.5">
       {dompet.map((d) => (
         <View key={d.id} style={{ backgroundColor: bg }} className="flex-1 rounded-xl px-2 py-1.5">
-          <Text style={{ color: t.heroFg }} className="text-[10px]" numberOfLines={1}>
+          <Text style={{ color: t.heroFg }} className="text-[10px] font-sans" numberOfLines={1}>
             {d.nama}
           </Text>
-          <Text style={{ color: t.heroFg }} className="text-xs font-bold">
+          <Text style={{ color: t.heroFg }} className="text-xs font-bold font-sans">
             {formatRingkas(d.saldo)}
           </Text>
         </View>

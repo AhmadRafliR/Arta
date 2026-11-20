@@ -4,6 +4,7 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      fontFamily: { sans: ['NunitoSans'] },
       colors: {
         bg: 'var(--color-bg)',
         card: 'var(--color-card)',

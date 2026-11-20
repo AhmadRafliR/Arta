@@ -43,9 +43,9 @@ export default function UbahTransaksi() {
   return (
     <View className="flex-1 bg-bg">
       <View className="flex-row items-center justify-between px-5 pb-1 pt-4">
-        <Text className="text-lg font-bold text-fg">Ubah transaksi</Text>
+        <Text className="text-lg font-bold text-fg font-sans">Ubah transaksi</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid">Batal</Text>
+          <Text className="text-mid font-sans">Batal</Text>
         </Pressable>
       </View>
       {tx.data ? (
@@ -54,7 +54,7 @@ export default function UbahTransaksi() {
             <TxForm key={tx.data.id} mode="ubah" initial={tx.data} onSaved={tutup} />
           </View>
           <View className="px-5 pb-6">
-            {galat ? <Text className="mb-2 text-fg">{galat}</Text> : null}
+            {galat ? <Text className="mb-2 text-fg font-sans">{galat}</Text> : null}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Hapus"
@@ -62,12 +62,12 @@ export default function UbahTransaksi() {
               onPress={konfirmasiHapus}
               className={`items-center rounded-xl border border-line py-3 ${busy ? 'opacity-50' : ''}`}
             >
-              {busy ? <ActivityIndicator /> : <Text className="font-semibold text-fg">Hapus</Text>}
+              {busy ? <ActivityIndicator /> : <Text className="font-semibold text-fg font-sans">Hapus</Text>}
             </Pressable>
           </View>
         </>
       ) : (
-        <Text className={`px-5 py-4 ${tx.error ? 'text-fg' : 'text-mid'}`}>
+        <Text className={`font-sans px-5 py-4 ${tx.error ? 'text-fg' : 'text-mid'}`}>
           {tx.error ? pesanGalat(tx.error) : 'Memuat…'}
         </Text>
       )}

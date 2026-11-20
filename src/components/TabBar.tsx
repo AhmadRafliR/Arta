@@ -26,7 +26,7 @@ export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarPr
           if (!aktif && !e.defaultPrevented) navigateToTab(r.key);
         }}
       >
-        <Text style={{ color: aktif ? t.fg : t.mid, fontWeight: aktif ? '700' : '400' }} className="text-[11px]">
+        <Text style={{ color: aktif ? t.fg : t.mid, fontWeight: aktif ? '700' : '400' }} className="text-[11px] font-sans">
           {LABEL[r.name] ?? r.name}
         </Text>
       </Pressable>

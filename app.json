@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "keuangan-app",
+    "name": "arta",
     "slug": "keuangan-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -22,6 +22,36 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-font",
+        {
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "NunitoSans",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/NunitoSans_400Regular.ttf",
+                    "weight": 400
+                  },
+                  {
+                    "path": "./assets/fonts/NunitoSans_600SemiBold.ttf",
+                    "weight": 600
+                  },
+                  {
+                    "path": "./assets/fonts/NunitoSans_700Bold.ttf",
+                    "weight": 700
+                  },
+                  {
+                    "path": "./assets/fonts/NunitoSans_800ExtraBold.ttf",
+                    "weight": 800
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {

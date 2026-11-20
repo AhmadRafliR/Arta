@@ -54,9 +54,9 @@ export default function DompetBaru() {
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-4 px-5 py-6">
       <View className="flex-row items-center justify-between">
-        <Text className="text-lg font-bold text-fg">Tambah dompet</Text>
+        <Text className="text-lg font-bold text-fg font-sans">Tambah dompet</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid">Batal</Text>
+          <Text className="text-mid font-sans">Batal</Text>
         </Pressable>
       </View>
       <TextInput
@@ -65,23 +65,23 @@ export default function DompetBaru() {
         accessibilityLabel="Nama dompet"
         placeholder="Nama dompet"
         placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg"
+        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
       />
       <View className="flex-row flex-wrap gap-2">
         {TIPE.map((x) => (
           <Chip key={x.v} label={x.label} selected={tipe === x.v} onPress={() => setTipe(x.v)} />
         ))}
       </View>
-      <Text className="text-mid">Saldo awal</Text>
+      <Text className="text-mid font-sans">Saldo awal</Text>
       <AmountInput value={null} allowZero onChange={setSaldo} testID="saldo-awal" />
       {tipe === 'darurat' ? (
         <>
-          <Text className="text-mid">Target (opsional)</Text>
+          <Text className="text-mid font-sans">Target (opsional)</Text>
           <AmountInput value={null} allowZero onChange={setTarget} testID="target" />
         </>
       ) : null}
       <Tombol label="Simpan" primary busy={busy} disabled={!valid || busy} onPress={() => void simpan()} />
-      {pesan ? <Text className="text-fg">{pesan}</Text> : null}
+      {pesan ? <Text className="text-fg font-sans">{pesan}</Text> : null}
     </ScrollView>
   );
 }

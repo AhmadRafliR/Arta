@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { MarkArta } from '@/components/MarkArta';
 import { Tombol } from '@/components/Tombol';
 import { pesanAuth } from '@/auth/pesanAuth';
 import { supabase } from '@/lib/supabase';
@@ -47,7 +48,12 @@ export default function Masuk() {
 
   return (
     <View className="flex-1 justify-center gap-4 bg-bg px-6">
-      <Text className="text-2xl font-bold text-fg">Masuk</Text>
+      <View className="items-center gap-1 pb-4">
+        <MarkArta ukuran={52} />
+        <Text className="text-[30px] font-semibold tracking-wide text-fg font-sans">arta</Text>
+        <Text className="text-xs tracking-[0.22em] text-mid font-sans">OWN YOUR MONEY</Text>
+      </View>
+      <Text className="text-2xl font-bold text-fg font-sans">Masuk</Text>
       {GOOGLE_WEB_CLIENT_ID ? (
         <Tombol label="Masuk dengan Google" primary disabled={busy} onPress={() => void masukGoogle()} />
       ) : null}
@@ -58,10 +64,10 @@ export default function Masuk() {
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg"
+        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
       />
       <Tombol label="Kirim kode" busy={busy} disabled={busy} onPress={() => void kirimKode()} />
-      {error ? <Text className="text-fg">{error}</Text> : null}
+      {error ? <Text className="text-fg font-sans">{error}</Text> : null}
     </View>
   );
 }

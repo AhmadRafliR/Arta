@@ -24,12 +24,12 @@ export function TxRow({ tx, namaDompet }: Props) {
   return (
     <View className="flex-row items-center gap-2 border-b border-line py-2">
       <View className="h-6 w-6 items-center justify-center rounded-lg bg-line">
-        <Text className="text-xs font-bold text-fg">{judul.charAt(0).toUpperCase()}</Text>
+        <Text className="text-xs font-bold text-fg font-sans">{judul.charAt(0).toUpperCase()}</Text>
       </View>
-      <Text className="flex-1 text-xs text-fg" numberOfLines={1}>
+      <Text className="flex-1 text-xs text-fg font-sans" numberOfLines={1}>
         {dompet ? `${judul} · ${dompet}` : judul}
       </Text>
-      <Text className={`text-xs font-bold ${masuk ? 'text-accink' : 'text-fg'}`}>{jumlah}</Text>
+      <Text className={`font-sans text-xs font-bold ${masuk ? 'text-accink' : 'text-fg'}`}>{jumlah}</Text>
     </View>
   );
 }

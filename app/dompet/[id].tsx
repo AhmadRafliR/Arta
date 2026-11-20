@@ -38,7 +38,7 @@ export default function DetailDompet() {
   if (!wallet) {
     return (
       <View className="flex-1 bg-bg px-5 pt-6">
-        <Text className="text-mid">{wallets.error ? pesanDompet(wallets.error) : 'Memuat…'}</Text>
+        <Text className="text-mid font-sans">{wallets.error ? pesanDompet(wallets.error) : 'Memuat…'}</Text>
       </View>
     );
   }
@@ -114,27 +114,27 @@ export default function DetailDompet() {
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-4 px-5 py-6">
       <View className="flex-row items-center justify-between">
-        <Text className="text-lg font-bold text-fg">{wallet.nama}</Text>
+        <Text className="text-lg font-bold text-fg font-sans">{wallet.nama}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Tutup" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid">Tutup</Text>
+          <Text className="text-mid font-sans">Tutup</Text>
         </Pressable>
       </View>
-      <Text className="text-2xl font-bold text-fg">{saldo === null ? '…' : formatRupiah(saldo)}</Text>
-      {wallet.diarsip ? <Text className="text-mid">Dompet ini diarsipkan.</Text> : null}
+      <Text className="text-2xl font-bold text-fg font-sans">{saldo === null ? '…' : formatRupiah(saldo)}</Text>
+      {wallet.diarsip ? <Text className="text-mid font-sans">Dompet ini diarsipkan.</Text> : null}
 
-      <Text className="font-semibold text-fg">Nama dompet</Text>
+      <Text className="font-semibold text-fg font-sans">Nama dompet</Text>
       <TextInput
         value={namaIsi}
         onChangeText={setNama}
         accessibilityLabel="Nama dompet"
         placeholder="Nama dompet"
         placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg"
+        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
       />
       <Tombol label="Simpan nama" onPress={() => void simpanNama()} disabled={busy || !namaOk} />
 
-      <Text className="mt-2 font-semibold text-fg">Sesuaikan saldo</Text>
-      <Text className="text-mid">Isi saldo sebenarnya saat ini.</Text>
+      <Text className="mt-2 font-semibold text-fg font-sans">Sesuaikan saldo</Text>
+      <Text className="text-mid font-sans">Isi saldo sebenarnya saat ini.</Text>
       <AmountInput value={null} allowZero onChange={setSaldoBaru} editable={!busy} testID="saldo-baru" />
       <Tombol
         label="Simpan penyesuaian"
@@ -151,7 +151,7 @@ export default function DetailDompet() {
           <Tombol label="Arsipkan" onPress={() => ubahArsip(true)} disabled={busy} />
         )}
       </View>
-      {pesan ? <Text className="text-fg">{pesan}</Text> : null}
+      {pesan ? <Text className="text-fg font-sans">{pesan}</Text> : null}
     </ScrollView>
   );
 }
