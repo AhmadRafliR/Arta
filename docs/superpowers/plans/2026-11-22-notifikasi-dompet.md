@@ -67,12 +67,12 @@ Null untuk: promo/voucher/cashback "s.d.", OTP/kode verifikasi, transaksi gagal/
 
 ## Status
 
-- [ ] A. Modul native
-- [ ] B. Parser + tes
-- [ ] C. Integrasi + layar + tes
-- [ ] Verifikasi: tsc, lint, jest, expo-doctor
-- [ ] Build APK dev baru (EAS) berhasil
-- [ ] Dokumentasi pengguna + panduan uji manual (`docs/notifikasi-dompet.md`, `docs/uji-manual-notifikasi-dompet.md`)
+- [x] A. Modul native
+- [x] B. Parser + tes (47 tes, contoh masih sintetis)
+- [x] C. Integrasi + layar + tes
+- [x] Verifikasi: tsc bersih, lint 0 error, jest 102 suite/941 tes, expo-doctor 20/20
+- [x] Build APK dev baru (EAS) berhasil: build `f87caca6`, service dan kelas native terverifikasi di APK
+- [x] Dokumentasi pengguna + panduan uji manual (`docs/notifikasi-dompet.md`, `docs/uji-manual-notifikasi-dompet.md`)
 - [ ] Uji di HP: izin aktif, notifikasi GoPay/ShopeePay masuk antrean, draf tersimpan
 
 Cara melanjutkan bila terputus: baca bagian Status ini dan `git log --oneline -15`.
