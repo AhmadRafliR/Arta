@@ -38,6 +38,13 @@ describe('TxRow', () => {
     expect(screen.getByText('GoPay → Cash')).toBeTruthy();
   });
 
+  it('transfer: ikon panah tukar', async () => {
+    const tx = { ...dasar, jenis: 'transfer' as const, wallet_tujuan_id: 'c' };
+    await render(<TxRow tx={tx} namaDompet={nama} />);
+    expect(screen.getByTestId('ikon-ui-tukar')).toBeTruthy();
+    expect(screen.getByText('Rp1.000')).toBeTruthy();
+  });
+
   it('judul panjang dipotong satu baris', async () => {
     const tx = { ...dasar, catatan: 'Catatan yang sangat panjang sekali sampai tidak muat' };
     await render(<TxRow tx={tx} namaDompet={nama} />);
