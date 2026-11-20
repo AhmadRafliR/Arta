@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { BarJudul } from '@/components/BarJudul';
 import { Tombol } from '@/components/Tombol';
 import { TxForm } from '@/components/TxForm';
 import { toAppError, type AppError } from '@/data/errors';
@@ -43,22 +44,22 @@ export default function UbahTransaksi() {
 
   return (
     <View className="flex-1 bg-bg">
-      <View className="flex-row items-center justify-between px-5 pb-1 pt-4">
-        <Text className="text-lg font-bold text-fg font-sans">Ubah transaksi</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid font-sans">Batal</Text>
-        </Pressable>
+      <View className="px-[18px] pt-4">
+        <BarJudul judul="Ubah transaksi" onKembali={tutup} />
       </View>
       {tx.data ? (
-        <>
-          <View className="flex-1">
-            <TxForm key={tx.data.id} mode="ubah" initial={tx.data} onSaved={tutup} />
-          </View>
-          <View className="px-5 pb-6">
-            {galat ? <Text className="mb-2 text-fg font-sans">{galat}</Text> : null}
-            <Tombol label="Hapus" busy={busy} disabled={busy} onPress={konfirmasiHapus} />
-          </View>
-        </>
+        <TxForm
+          key={tx.data.id}
+          mode="ubah"
+          initial={tx.data}
+          onSaved={tutup}
+          bawah={
+            <>
+              {galat ? <Text className="text-center font-sans text-[12.5px] text-dangerink">{galat}</Text> : null}
+              <Tombol label="Hapus" bahaya busy={busy} disabled={busy} onPress={konfirmasiHapus} />
+            </>
+          }
+        />
       ) : (
         <Text className={`font-sans px-5 py-4 ${tx.error ? 'text-fg' : 'text-mid'}`}>
           {tx.error ? pesanGalat(tx.error) : 'Memuat…'}

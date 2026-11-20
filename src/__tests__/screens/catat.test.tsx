@@ -39,7 +39,7 @@ jest.mock('@/theme/ThemeProvider', () => ({
   useTheme: () => ({ mode: 'terang', t: { accFg: '#000', mid: '#888', acc: '#0f0', fg: '#000' } }),
 }));
 
-const simpan = () => screen.getByRole('button', { name: 'Simpan' });
+const simpan = () => screen.getByRole('button', { name: /^Simpan/ });
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -147,5 +147,34 @@ describe('Catat manual', () => {
     expect(simpan().props.accessibilityState?.disabled).toBe(false);
     await fireEvent.changeText(screen.getByTestId('tanggal'), '2026-02-30');
     expect(simpan().props.accessibilityState?.disabled).toBe(true);
+  });
+  it('chip nominal cepat mengisi nominal; label simpan dan chip cepat mengikuti jenis', async () => {
+    await render(<Catat />);
+    expect(screen.getByText('Nominal pengeluaran')).toBeTruthy();
+    expect(screen.getByText('Isi nominal dulu.')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('cepat-25000'));
+    expect(screen.getByDisplayValue('25000')).toBeTruthy();
+    expect(screen.getByText('Pilih kategori dulu.')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('kat-Makan'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Simpan pengeluaran' }));
+    await waitFor(() => expect(mockBack).toHaveBeenCalled());
+    expect(mockSave.mock.calls[0][0][0]).toMatchObject({ nominal: 25000, kategori: 'Makan' });
+  });
+
+  it('pemasukan: label dan chip cepat berganti', async () => {
+    await render(<Catat />);
+    await fireEvent.press(screen.getByTestId('jenis-pemasukan'));
+    expect(screen.getByText('Nominal pemasukan')).toBeTruthy();
+    expect(screen.getByTestId('cepat-1000000')).toBeTruthy();
+    expect(screen.getByTestId('kat-Gaji')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Simpan pemasukan' })).toBeTruthy();
+  });
+
+  it('tombol "Hari ini" mengembalikan tanggal ke hari ini', async () => {
+    await render(<Catat />);
+    const awal = screen.getByTestId('tanggal').props.value;
+    await fireEvent.changeText(screen.getByTestId('tanggal'), '2026-01-01');
+    await fireEvent.press(screen.getByRole('button', { name: 'Hari ini' }));
+    expect(screen.getByTestId('tanggal').props.value).toBe(awal);
   });
 });

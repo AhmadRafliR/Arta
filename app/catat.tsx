@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { BarJudul } from '@/components/BarJudul';
 import { TxForm } from '@/components/TxForm';
 import { newTxId } from '@/data/transactions';
 
@@ -11,11 +12,8 @@ export default function Catat() {
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/'));
   return (
     <View className="flex-1 bg-bg">
-      <View className="flex-row items-center justify-between px-5 pb-1 pt-4">
-        <Text className="text-lg font-bold text-fg font-sans">Catat transaksi</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid font-sans">Batal</Text>
-        </Pressable>
+      <View className="px-[18px] pt-4">
+        <BarJudul judul="Catat" onKembali={tutup} />
       </View>
       <TxForm txId={txId} onSaved={tutup} />
     </View>

@@ -20,9 +20,13 @@ export function PeringatanBudget({ kategori, nominal, tanggal, abaikanTxId }: Pr
       {hasil.map((h) => {
         const warna = h.status === 'lewat' ? t.dangerInk : t.warnInk;
         return (
-          <View key={`${h.kategori}-${h.status}`} className="flex-row items-center gap-2 rounded-xl border border-line bg-card px-3 py-2">
+          // Gaya mockup arta: pil lembut bernada status (dangerSoft untuk lewat, warnBg untuk waspada).
+          <View
+            key={`${h.kategori}-${h.status}`}
+            className={`flex-row items-center gap-2.5 rounded-[14px] px-3.5 py-2.5 ${h.status === 'lewat' ? 'bg-dangersoft' : 'bg-warnbg'}`}
+          >
             <Ikon nama={`status-budget-${h.status}`} ukuran={18} warna={warna} />
-            <Text className="flex-1 text-xs font-semibold font-sans" style={{ color: warna }}>
+            <Text className="flex-1 text-[12.5px] font-semibold font-sans" style={{ color: warna }}>
               {h.pesan}
             </Text>
           </View>

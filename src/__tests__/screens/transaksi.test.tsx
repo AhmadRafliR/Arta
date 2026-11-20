@@ -56,7 +56,7 @@ const tx = (over: object = {}) => ({
   catatan: 'siang',
   ...over,
 });
-const simpan = () => screen.getByRole('button', { name: 'Simpan' });
+const simpan = () => screen.getByRole('button', { name: /^Simpan/ });
 
 beforeEach(() => {
   jest.clearAllMocks();
