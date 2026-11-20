@@ -61,7 +61,30 @@ jest.mock('@/auth/AuthProvider', () => ({
   useAuth: () => ({ profile: { nama: 'Rafli', zona_waktu: 'Asia/Jakarta' } }),
 }));
 jest.mock('@/theme/ThemeProvider', () => ({
-  useTheme: () => ({ t: { acc: '#0f0', accInk: '#070', accFg: '#000', dangerInk: '#a00', mid: '#888', fg: '#000' } }),
+  useTheme: () => ({
+    t: {
+      acc: '#0f0',
+      accInk: '#070',
+      accFg: '#000',
+      dangerInk: '#a00',
+      mid: '#888',
+      fg: '#000',
+      fg2: '#333',
+      heroFrom: '#014',
+      heroTo: '#027',
+      heroFg: '#fff',
+      amSub: '#ddd',
+      amLine: '#999',
+      plUpBg: '#cff',
+      plUpFg: '#014',
+      plDownBg: '#fee',
+      plDownFg: '#a00',
+      c1: '#070',
+      c2: '#0a0',
+      c3: '#0c0',
+      c4: '#cb7',
+    },
+  }),
 }));
 
 const btn = (name: string) => screen.getByRole('button', { name });
@@ -79,33 +102,54 @@ describe('Investasi', () => {
     await render(<Investasi />);
     expect(screen.getAllByText('Rp290.000').length).toBeGreaterThan(0);
     expect(screen.getByText('Modal Rp260.000')).toBeTruthy();
-    expect(screen.getAllByText('+Rp30.000 (+11,5%)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('+Rp30.000 · +11,5%').length).toBeGreaterThan(0);
+    expect(screen.getByText('1 aset')).toBeTruthy();
+    // Update terakhir = tanggal penyesuaian terakhir.
+    expect(screen.getByText('1 Okt 2026')).toBeTruthy();
+    expect(screen.getByTestId('alokasi-aset')).toBeTruthy();
   });
 
   it('rugi memakai tanda minus', async () => {
     mockTxs = [TF, ADJ(-10_000)];
     await render(<Investasi />);
-    expect(screen.getAllByText('-Rp10.000 (-3,8%)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('-Rp10.000 · -3,8%').length).toBeGreaterThan(0);
   });
 
-  it('tombol Beli, Jual, Update nilai, Tambah aset', async () => {
+  it('kartu membuka rincian; tombol Beli, Jual, Update nilai, Ubah, Tambah aset', async () => {
     await render(<Investasi />);
+    const buka = () => fireEvent.press(btn('Rincian Reksa Dana'));
+    await buka();
+    expect(screen.getByTestId('sheet-aset')).toBeTruthy();
+    expect(screen.getByText('Untung / rugi')).toBeTruthy();
     await fireEvent.press(btn('Beli'));
     expect(mockPush).toHaveBeenLastCalledWith('/pindah-dana?ke=i1&mode=beli');
+    await buka();
     await fireEvent.press(btn('Jual'));
     expect(mockPush).toHaveBeenLastCalledWith('/pindah-dana?dari=i1&mode=jual');
+    await buka();
     await fireEvent.press(btn('Update nilai'));
     expect(mockPush).toHaveBeenLastCalledWith('/investasi/nilai?id=i1');
+    await buka();
+    await fireEvent.press(btn('Ubah'));
+    expect(mockPush).toHaveBeenLastCalledWith('/dompet/i1');
     await fireEvent.press(btn('Tambah aset'));
     expect(mockPush).toHaveBeenLastCalledWith('/dompet/baru?tipe=investasi');
+  });
+
+  it('tombol Kembali menutup layar', async () => {
+    await render(<Investasi />);
+    await fireEvent.press(btn('Kembali'));
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('kosong: pesan dan tombol tambah aset', async () => {
     mockWallets = [W('h1', 'GoPay')];
     await render(<Investasi />);
+    expect(screen.getByText('Belum ada investasi')).toBeTruthy();
     expect(
-      screen.getByText('Belum ada investasi. Tambahkan aset seperti reksa dana, saham, atau emas.'),
+      screen.getByText('Tambahkan aset seperti reksa dana, saham, atau emas supaya nilainya terpantau.'),
     ).toBeTruthy();
+    expect(screen.queryByTestId('alokasi-aset')).toBeNull();
     await fireEvent.press(btn('Tambah aset'));
     expect(mockPush).toHaveBeenCalledWith('/dompet/baru?tipe=investasi');
   });
@@ -117,6 +161,8 @@ describe('Update nilai investasi', () => {
     await render(<Nilai />);
     await fireEvent.changeText(screen.getByTestId('nilai-baru'), '410000');
     expect(screen.getByText('Untung jadi +Rp150.000')).toBeTruthy();
+    expect(screen.getByText('+Rp150.000')).toBeTruthy(); // selisih
+    expect(screen.getByText('+57,7%')).toBeTruthy(); // perubahan dari 260.000
     await fireEvent.press(btn('Simpan'));
     await waitFor(() => expect(mockSave).toHaveBeenCalledTimes(1));
     expect(mockSave.mock.calls[0][0][0]).toMatchObject({
