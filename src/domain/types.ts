@@ -20,6 +20,42 @@ export type Wallet = {
   diarsip: boolean;
 };
 
+export type TipeHutang = 'cicilan_tetap' | 'berbunga';
+
+export type MetodeBunga = 'flat' | 'efektif';
+
+/** Satu baris view `v_hutang` (angka sudah dikonversi ke number). */
+export type Hutang = {
+  id: string;
+  pemberi: string;
+  tipe: TipeHutang;
+  tanggal_mulai: string; // 'YYYY-MM-DD'
+  pokok_awal: number;
+  nominal_cicilan: number | null;
+  tenor_bulan: number | null;
+  bunga_persen_bulanan: number | null;
+  metode: MetodeBunga | null;
+  diarsip: boolean;
+  sisa_pokok: number;
+  total_bunga: number;
+  total_bayar: number;
+  jumlah_tagihan: number;
+  tagihan_lunas: number;
+  jatuh_tempo_berikutnya: string | null;
+  nominal_berikutnya: number | null;
+  jatuh_tempo_terakhir: string | null;
+  bayar_terakhir: string | null;
+};
+
+export type Tagihan = {
+  id: string;
+  debt_id: string;
+  jatuh_tempo: string; // 'YYYY-MM-DD'
+  nominal: number;
+  status: 'belum' | 'lunas';
+  transaction_id: string | null;
+};
+
 export type Tx = {
   id: string;
   tanggal: string; // 'YYYY-MM-DD'
