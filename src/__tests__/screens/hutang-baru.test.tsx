@@ -152,4 +152,21 @@ describe('Hutang baru', () => {
     await render(<HutangBaru />);
     expect(nonaktif()).toBe(true);
   });
+
+  it('menjelaskan kolom yang belum beres, dan pesannya hilang saat lengkap', async () => {
+    await render(<HutangBaru />);
+    expect(
+      screen.getByText(
+        'Belum bisa disimpan. Lengkapi: nama pemberi; nominal cicilan per bulan; sisa tenor (1–60 bulan).',
+      ),
+    ).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('pemberi'), 'Kredivo');
+    expect(
+      screen.getByText('Belum bisa disimpan. Lengkapi: nominal cicilan per bulan; sisa tenor (1–60 bulan).'),
+    ).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('nominal-cicilan'), '100000');
+    await fireEvent.changeText(screen.getByTestId('tenor'), '12');
+    expect(screen.queryByText(/Belum bisa disimpan/)).toBeNull();
+    expect(nonaktif()).toBe(false);
+  });
 });

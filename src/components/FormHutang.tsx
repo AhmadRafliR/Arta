@@ -110,6 +110,22 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
       : pokokAwal !== null && pokokAwal > 0 && bunga !== null && (!berjalan || (sisaPokok !== null && !sisaLebih)));
   const nonaktif = busy || !valid;
 
+  // Alasan Simpan nonaktif, berurutan seperti kolom di layar. Sisa pokok > pokok awal sudah punya petunjuk sendiri.
+  const kekurangan: string[] = [];
+  if (pemberi.trim().length === 0) kekurangan.push('nama pemberi');
+  if (cicilan) {
+    if (nominalCicilan === null || nominalCicilan <= 0) kekurangan.push('nominal cicilan per bulan');
+    if (!tenorOk) kekurangan.push('sisa tenor (1–60 bulan)');
+    if (!tanggalValid(jatuhTempo)) kekurangan.push('jatuh tempo berikutnya (format YYYY-MM-DD)');
+  } else {
+    if (pokokAwal === null || pokokAwal <= 0) kekurangan.push('pokok awal');
+    if (bunga === null) kekurangan.push('bunga per bulan (0–100%)');
+    if (berjalan && sisaPokok === null) kekurangan.push('sisa pokok sekarang');
+  }
+  if (!tanggalValid(tanggal)) kekurangan.push('tanggal mulai (format YYYY-MM-DD)');
+  if (dompet === undefined) kekurangan.push('dompet tujuan uang, atau pilih "Tidak masuk dompet"');
+  else if (danaDisentuh && (danaNilai === null || danaNilai <= 0)) kekurangan.push('jumlah uang yang masuk (lebih dari 0)');
+
   function ubahTipe(baru: TipeHutang) {
     if (baru === tipe) return;
     setTipe(baru);
@@ -340,6 +356,9 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
 
       {hitung ? <KotakHitung item={hitung} /> : null}
       {error ? <Petunjuk>{error}</Petunjuk> : null}
+      {!valid && !busy && kekurangan.length > 0 ? (
+        <Petunjuk>{`Belum bisa disimpan. Lengkapi: ${kekurangan.join('; ')}.`}</Petunjuk>
+      ) : null}
 
       <View className="mt-1">
         <BarisAksi>
