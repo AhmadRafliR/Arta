@@ -30,4 +30,16 @@ describe('layar masuk', () => {
     await fireEvent(email, 'submitEditing');
     expect(supabase.auth.signInWithOtp).toHaveBeenCalledWith({ email: 'a@b.co' });
   });
+
+  it('kirim dua kali cepat (keyboard + tombol) hanya mengirim satu kode', async () => {
+    const otp = supabase.auth.signInWithOtp as jest.Mock;
+    otp.mockReset();
+    otp.mockReturnValue(new Promise(() => {})); // permintaan masih berjalan
+    await render(<Masuk />);
+    const email = screen.getByPlaceholderText('Email');
+    await fireEvent.changeText(email, 'a@b.co');
+    await fireEvent(email, 'submitEditing');
+    await fireEvent(email, 'submitEditing');
+    expect(otp).toHaveBeenCalledTimes(1);
+  });
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -14,14 +14,25 @@ export default function Masuk() {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Ref, bukan state: dua tekan "kirim" dalam satu tick masih melihat busy lama.
+  const sedangKirim = useRef(false);
 
   async function kirimKode() {
+    if (busy || sedangKirim.current) return;
     const e = email.trim();
     if (!e) return setError('Isi email dulu.');
+    sedangKirim.current = true;
     setBusy(true);
     setError(null);
-    const { error: err } = await supabase.auth.signInWithOtp({ email: e });
-    setBusy(false);
+    let err: unknown = null;
+    try {
+      ({ error: err } = await supabase.auth.signInWithOtp({ email: e }));
+    } catch (x) {
+      err = x; // galat jaringan yang dilempar → pesan offline lewat pesanAuth
+    } finally {
+      sedangKirim.current = false;
+      setBusy(false);
+    }
     if (err) return setError(pesanAuth(err, 'Gagal mengirim kode. Coba lagi.'));
     router.push({ pathname: '/(auth)/kode', params: { email: e } });
   }
