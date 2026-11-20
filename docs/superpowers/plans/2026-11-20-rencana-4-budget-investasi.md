@@ -299,11 +299,11 @@ _Diperbarui setiap task selesai. Saat melanjutkan sesi: baca bagian ini dan `git
 - [x] Task 2 — domain murni (`0122ff0`)
 - [x] Task 3 — lapisan data app (`3bae456`; galat server → `kind: 'lain'` + pesan server)
 - [x] Task 4 — inti laporan murni (`c90df43`)
-- [ ] Task 5 — edge function
-- [ ] Task 6 — UI budget
-- [ ] Task 7 — UI dana darurat & investasi
-- [ ] Task 8 — UI laporan & menu Akun
-- [ ] Task 9 — panduan uji
+- [x] Task 5 — edge function (`e70e715`; lihat catatan HTML di `docs/uji-manual-rencana-4.md`)
+- [x] Task 6 — UI budget (`44936b9`)
+- [x] Task 7 — UI dana darurat & investasi (`668e7bf`)
+- [x] Task 8 — UI laporan & menu Akun (`3c7739b`)
+- [x] Task 9 — panduan uji (`docs/uji-manual-rencana-4.md`)
 
 **Catatan sesi 2026-11-20 (terhenti karena batas pemakaian):**
 - Selesai: dokumen rencana ini (commit `docs: rencana 4 …`). Belum ada kode.
@@ -311,6 +311,8 @@ _Diperbarui setiap task selesai. Saat melanjutkan sesi: baca bagian ini dan `git
 - Baseline lint/tsc/jest belum dicek. Galat tsc lama yang diketahui (milik Rencana 2, belum di-commit di checkout lain) tidak ada di branch ini.
 - `supabase/functions/_shared/handler.ts` sudah mengekspor `GalatSesi`, `CORS`, `tanggalDiZona` (bisa dipakai Task 5).
 
-**Langkah berikutnya:** Gelombang B (Task 5–8) sedang berjalan paralel, lalu Task 9.
+**Semua task Rencana 4 selesai.** Cek akhir: `npx tsc --noEmit` lolos; `npx jest --testPathIgnorePatterns /node_modules/ tests/integration` 67 suite / 521 tes lolos; file Rencana 4 bersih ESLint (dicek dari checkout utama, lihat panduan uji). Tes integrasi DB dan Edge Function sungguhan menunggu `db push` + deploy oleh Rafli.
+
+**Langkah berikutnya (di luar Rencana 4):** pasang peringatan budget di "Cek dulu" setelah Rencana 2 di-merge; selesaikan halaman verifikasi email (custom domain / halaman statis) bersama Rencana 5; ganti `useKuotaAi().data.pro` dengan hook status langganan Rencana 5.
 
 **Catatan baseline:** `npx jest` di worktree ini ikut menjalankan `tests/integration/*` (gagal tanpa `.env.test`; sudah begitu sebelum rencana 4). Proyek belum punya konfigurasi ESLint, sehingga `npx expo lint` belum memeriksa apa pun (dibereskan Rencana 2).
