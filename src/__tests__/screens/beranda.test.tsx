@@ -8,6 +8,8 @@ let mockBudgets: { data: unknown[] | undefined; error?: unknown } = { data: [] }
 let mockBulan: { isLoading: boolean; error: unknown; data: unknown[] | undefined } | null = null;
 let mockHutang: { data?: unknown[]; error?: unknown } = { data: [] };
 let mockHanyaHarian = false;
+let mockJumlahNotif = 0;
+const mockBukaCek = jest.fn();
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ navigate: mockNavigate, push: jest.fn() }), useFocusEffect: jest.fn() }));
 jest.mock('react-native-safe-area-context', () => ({
@@ -21,6 +23,9 @@ jest.mock('@/theme/ThemeProvider', () => ({
     mode: 'terang',
     t: { heroFrom: '#0B424F', heroTo: '#1F6A76', heroFg: '#FFFFFF', warnInk: '#8A5A00', fg2: '#555', mid: '#777' },
   }),
+}));
+jest.mock('@/notifikasi-dompet/useNotifikasiDompet', () => ({
+  useNotifikasiDompet: () => ({ jumlah: mockJumlahNotif, draf: [], bukaUntukCek: mockBukaCek }),
 }));
 jest.mock('@/data/budgets', () => ({ useBudgets: () => mockBudgets }));
 jest.mock('@/data/wallets', () => {
@@ -60,6 +65,8 @@ beforeEach(() => {
   mockBulan = null;
   mockHutang = { data: [] };
   mockHanyaHarian = false;
+  mockJumlahNotif = 0;
+  mockBukaCek.mockClear();
   mockNavigate.mockClear();
   mockBudgets = { data: [] };
 });
@@ -82,6 +89,17 @@ describe('Beranda', () => {
     expect(screen.getByText(/^Gaji · GoPay/)).toBeTruthy();
     expect(screen.getByText('+Rp1.500.000')).toBeTruthy();
     expect(screen.getByText('-Rp25.000')).toBeTruthy();
+  });
+
+  it('kartu notifikasi dompet: tersembunyi bila 0, tampil dan membuka cek bila ada', async () => {
+    const { unmount } = await render(<Beranda />);
+    expect(screen.queryByText(/siap dicek/)).toBeNull();
+    await unmount();
+    mockJumlahNotif = 3;
+    await render(<Beranda />);
+    expect(screen.getByText('3 transaksi dari notifikasi siap dicek')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: '3 transaksi dari notifikasi siap dicek' }));
+    expect(mockBukaCek).toHaveBeenCalledTimes(1);
   });
 
   it('Semua › menuju Riwayat', async () => {

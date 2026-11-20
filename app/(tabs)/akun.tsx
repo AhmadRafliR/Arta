@@ -356,6 +356,12 @@ export default function Akun() {
       <KartuGrupAkun>
         <BarisMenuAkun
           pertama
+          ikon="ui-bell"
+          judul="Catat otomatis dari notifikasi"
+          sub="GoPay dan ShopeePay, Android"
+          onPress={() => router.push('/notifikasi-dompet')}
+        />
+        <BarisMenuAkun
           ikon="ui-ekspor"
           judul="Ekspor data"
           accessibilityLabel={pro ? 'Ekspor data' : 'Ekspor data · Pro'}

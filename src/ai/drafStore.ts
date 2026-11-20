@@ -3,6 +3,8 @@ import type { DrafTx, HasilAi } from './tipe';
 
 // Penyimpanan satu hasil AI di memori, untuk mengoper dari layar rekam ke layar cek tanpa parameter URL.
 let state: HasilAi | null = null;
+// Dipanggil sekali setelah layar cek berhasil menyimpan (mis. untuk membersihkan antrean notifikasi dompet).
+let saatSimpan: (() => void) | null = null;
 const pendengar = new Set<() => void>();
 
 function tetapkan(baru: HasilAi | null) {
@@ -17,8 +19,20 @@ function langgan(cb: () => void) {
   };
 }
 
-export function setDraf(h: HasilAi) {
+export function setDraf(h: HasilAi, onSimpan?: () => void) {
+  saatSimpan = onSimpan ?? null;
   tetapkan(h);
+}
+
+/** Dipanggil layar cek setelah penyimpanan berhasil; menjalankan penanda dari setDraf (sekali). */
+export function beritahuSimpan() {
+  const cb = saatSimpan;
+  saatSimpan = null;
+  try {
+    cb?.();
+  } catch {
+    // Pembersihan sampingan tidak boleh menggagalkan alur simpan.
+  }
 }
 
 export function useDraf(): HasilAi | null {
@@ -51,5 +65,6 @@ export function hapusKoreksi(id: string) {
 }
 
 export function kosongkan() {
+  saatSimpan = null;
   tetapkan(null);
 }

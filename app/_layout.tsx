@@ -79,6 +79,7 @@ export default function RootLayout() {
                 <Stack.Screen name="premium" options={{ presentation: "modal" }} />
                 <Stack.Screen name="ekspor" options={{ presentation: "modal" }} />
                 <Stack.Screen name="hapus-akun" options={{ presentation: "modal" }} />
+                <Stack.Screen name="notifikasi-dompet" options={{ presentation: "modal" }} />
               </Stack>
             </AuthGate>
           </ThemeShell>

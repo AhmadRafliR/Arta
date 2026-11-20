@@ -7,7 +7,7 @@ import { EditorDraf, type PatchDraf } from '@/components/EditorDraf';
 import { Ikon } from '@/components/ikon/Ikon';
 import { ikonDompet } from '@/components/ikon/peta';
 import { Tombol } from '@/components/Tombol';
-import { hapusDraf, hapusKoreksi, kosongkan, ubahDraf, useDraf } from '@/ai/drafStore';
+import { beritahuSimpan, hapusDraf, hapusKoreksi, kosongkan, ubahDraf, useDraf } from '@/ai/drafStore';
 import type { DrafKoreksi } from '@/ai/tipe';
 import { useAuth } from '@/auth/AuthProvider';
 import { toAppError, type AppError } from '@/data/errors';
@@ -144,6 +144,7 @@ export default function Cek() {
     try {
       await save.mutateAsync(items);
       ditutup.current = true;
+      beritahuSimpan();
       kosongkan();
       tutup();
     } catch (e) {

@@ -132,6 +132,19 @@ describe('Cek dulu', () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
+  it('penanda simpan dari setDraf dipanggil setelah simpan berhasil, tidak saat gagal', async () => {
+    const saatSimpan = jest.fn();
+    mockSave.mockRejectedValueOnce({ kind: 'offline', pesan: PESAN_OFFLINE });
+    setDraf(hasil(), saatSimpan);
+    await render(<Cek />);
+    await fireEvent.press(tombolSimpan(2));
+    await screen.findByText(PESAN_OFFLINE);
+    expect(saatSimpan).not.toHaveBeenCalled();
+    await fireEvent.press(tombolSimpan(2));
+    await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
+    expect(saatSimpan).toHaveBeenCalledTimes(1);
+  });
+
   it('tekan Simpan dua kali cepat tetap satu panggilan', async () => {
     let selesai: (v: unknown) => void = () => {};
     mockSave.mockImplementation(() => new Promise((r) => (selesai = r)));

@@ -7,6 +7,7 @@ import { TxRow } from '@/components/TxRow';
 import { KartuHutangBeranda } from '@/components/KartuHutangBeranda';
 import { KeadaanKosong } from '@/components/KeadaanKosong';
 import { KartuBudgetKritis } from '@/components/KartuBudgetKritis';
+import { KartuNotifDompet } from '@/components/KartuNotifDompet';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAllTransactions, useTransactions } from '@/data/transactions';
 import { useDebts, useRiwayatPokok } from '@/data/debts';
@@ -75,6 +76,8 @@ export default function Beranda() {
       ) : (
         <Text className="text-mid font-sans">Memuat…</Text>
       )}
+
+      <KartuNotifDompet />
 
       <Text className="mt-1 text-xs font-bold text-fg font-sans">Bulan ini</Text>
       {bulanGalat ? (

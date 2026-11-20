@@ -86,6 +86,12 @@ it('menu data & privasi membuka rute yang benar', async () => {
   expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(expect.stringContaining('kebijakan-privasi'));
 });
 
+it('baris Catat otomatis dari notifikasi membuka layar notifikasi dompet', async () => {
+  await render(<Akun />);
+  await fireEvent.press(screen.getByRole('button', { name: 'Catat otomatis dari notifikasi' }));
+  expect(mockPush).toHaveBeenCalledWith('/notifikasi-dompet');
+});
+
 it('Keluar memanggil signOut', async () => {
   await render(<Akun />);
   await fireEvent.press(screen.getByRole('button', { name: 'Keluar' }));
