@@ -62,8 +62,8 @@ export function BarisDraf({ draf: d, namaDompet, hariIni, onPress, onHapus }: Pr
           <Text className="text-[12.5px] text-fg2 font-sans" numberOfLines={1}>
             {meta}
           </Text>
-          {peringatan.map((p) => (
-            <View key={p} className="mt-0.5 flex-row items-center gap-1">
+          {peringatan.map((p, i) => (
+            <View key={`${i}-${p}`} className="mt-0.5 flex-row items-center gap-1">
               <Ikon nama="status-budget-waspada" ukuran={13} warna={t.warnInk} />
               <Text className="flex-1 text-[12px] text-warnink font-sans">{p}</Text>
             </View>

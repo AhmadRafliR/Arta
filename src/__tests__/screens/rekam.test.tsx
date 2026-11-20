@@ -124,6 +124,16 @@ describe('Layar rekam', () => {
     expect(mockSetDraf).toHaveBeenCalledWith(hasil());
   });
 
+  it('layar ditutup saat merekam: perekam dihentikan, mode audio dikembalikan, tidak mengirim', async () => {
+    const r = await render(<Rekam />);
+    await fireEvent(tombolRekam(), 'pressIn');
+    await waitFor(() => expect(mockRecorder.record).toHaveBeenCalledTimes(1));
+    await r.unmount();
+    expect(mockRecorder.stop).toHaveBeenCalledTimes(1);
+    expect(mockSetMode).toHaveBeenLastCalledWith(expect.objectContaining({ allowsRecording: false }));
+    expect(mockKirim).not.toHaveBeenCalled();
+  });
+
   it('rekaman 0,3 detik ditolak tanpa mengirim', async () => {
     mockRecorder.getStatus.mockReturnValue({ durationMillis: 300 });
     await render(<Rekam />);

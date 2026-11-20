@@ -92,8 +92,16 @@ export default function Cek() {
   });
   const koreksiBernilai = koreksi.filter((k) => k.selisih !== null);
   const n = h.draf.length + koreksiBernilai.length;
-  const kurangDompet = h.draf.some((d) => !d.wallet_id || (d.jenis === 'transfer' && !d.wallet_tujuan_id));
-  const memuatSaldo = h.koreksi.length > 0 && saldo === null;
+  // Dompet harus milik pengguna dan tidak diarsip; transfer wajib tujuan lain.
+  const dompetOk = (id: string | null) => !!id && aktif.some((w) => w.id === id);
+  const kurangDompet =
+    !!wallets.data &&
+    h.draf.some(
+      (d) =>
+        !dompetOk(d.wallet_id) ||
+        (d.jenis === 'transfer' && (!dompetOk(d.wallet_tujuan_id) || d.wallet_tujuan_id === d.wallet_id)),
+    );
+  const memuatSaldo = (h.koreksi.length > 0 && saldo === null) || !wallets.data;
   const nonaktif = busy || n === 0 || kurangDompet || memuatSaldo;
   const alasan = kurangDompet ? ALASAN_DOMPET : memuatSaldo ? 'Memuat saldo dompet…' : null;
   const sedangDiubah = editId ? h.draf.find((d) => d.id === editId) : undefined;

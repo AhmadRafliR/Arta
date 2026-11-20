@@ -217,6 +217,19 @@ describe('Cek dulu', () => {
     expect(screen.getByText('Pilih dompet untuk semua transaksi dulu.')).toBeTruthy();
   });
 
+  it('dompet diarsip -> Simpan nonaktif', async () => {
+    await buka(hasil({ draf: [draf({ id: 'd1', wallet_id: 'w-lama' })] }));
+    expect(tombolSimpan(1).props.accessibilityState.disabled).toBe(true);
+    expect(screen.getByText('Pilih dompet untuk semua transaksi dulu.')).toBeTruthy();
+  });
+
+  it('transfer ke dompet yang sama -> Simpan nonaktif', async () => {
+    await buka(
+      hasil({ draf: [draf({ id: 'd1', jenis: 'transfer', kategori: 'transfer', wallet_id: 'w-cash', wallet_tujuan_id: 'w-cash' })] }),
+    );
+    expect(tombolSimpan(1).props.accessibilityState.disabled).toBe(true);
+  });
+
   it('hapus satu baris -> Simpan 1 transaksi', async () => {
     await buka();
     await fireEvent.press(screen.getByTestId('hapus-d1'));

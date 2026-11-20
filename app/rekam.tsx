@@ -77,8 +77,17 @@ export default function Rekam() {
     return () => {
       aktifRef.current = false;
       if (timerRef.current) clearTimeout(timerRef.current);
+      // Layar ditutup (back/gestur) saat merekam: hentikan perekam dan kembalikan mode audio.
+      if (statusRef.current === 'merekam' || statusRef.current === 'menyiapkan') {
+        try {
+          void recorder.stop().catch(() => {});
+        } catch {
+          // perekam sudah dilepas
+        }
+        setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+      }
     };
-  }, []);
+  }, [recorder]);
 
   const habis = habisServer || (kuota ? sisaKuota(kuota) <= 0 : false);
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -159,7 +168,12 @@ export default function Rekam() {
         await recorder.prepareToRecordAsync();
         recorder.record();
         mulaiPadaRef.current = Date.now();
-        if (!aktifRef.current) return true;
+        if (!aktifRef.current) {
+          // Layar sudah ditutup saat perekam disiapkan: jangan biarkan rekaman jalan.
+          await recorder.stop().catch(() => {});
+          setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+          return false;
+        }
         ubahStatus('merekam');
         timerRef.current = setTimeout(() => void berhenti(), BATAS_MS);
         return true;
