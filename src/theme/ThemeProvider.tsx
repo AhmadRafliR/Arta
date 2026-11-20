@@ -24,6 +24,13 @@ function toVars(t: Tokens) {
     '--color-mid': t.mid,
     '--color-line': t.line,
     '--color-acc': t.acc,
+    '--color-card2': t.card2,
+    '--color-fg2': t.fg2,
+    '--color-accink': t.accInk,
+    '--color-warn': t.warn,
+    '--color-warnink': t.warnInk,
+    '--color-danger': t.danger,
+    '--color-dangerink': t.dangerInk,
   });
 }
 

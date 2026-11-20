@@ -16,6 +16,21 @@ describe('tokens', () => {
     expect(tokens.gelap.heroTo).toBe('#FFFFFF');
     expect(tokens.terang.heroTo).toBe('#1F6A76');
   });
+
+  it('token arta terang & gelap', () => {
+    expect(tokens.terang).toMatchObject({
+      bg: '#EEF3F5', card: '#FFFFFF', card2: '#F6FAFB', fg: '#0B424F', fg2: '#47646B', mid: '#52727A',
+      line: '#DDE7EA', acc: '#52C3BF', accInk: '#17726F', accFg: '#08343D',
+      heroFrom: '#0B424F', heroTo: '#1F6A76', heroFg: '#FFFFFF', heroSub: 'rgba(255,255,255,0.74)',
+      warn: '#E0A93B', warnInk: '#8A5A00', danger: '#D95C5C', dangerInk: '#A32B2B',
+    });
+    expect(tokens.gelap).toMatchObject({
+      bg: '#0B0B0C', card: '#161618', card2: '#1D1D20', fg: '#FFFFFF', fg2: '#B9B9BF', mid: '#8A8A8F',
+      line: '#26262A', acc: '#C6F432', accInk: '#C6F432', accFg: '#0B0B0C',
+      heroFrom: '#FFFFFF', heroTo: '#FFFFFF', heroFg: '#0B0B0C', heroSub: 'rgba(11,66,79,0.78)',
+      warn: '#E9C46A', warnInk: '#E9C46A', danger: '#FF8A8A', dangerInk: '#FF8A8A',
+    });
+  });
 });
 
 describe('resolveMode', () => {

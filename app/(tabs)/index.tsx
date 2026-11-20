@@ -64,7 +64,7 @@ export default function Beranda() {
         <View className="flex-row gap-6 rounded-2xl border border-line bg-card p-3">
           <View>
             <Text className="text-[11px] text-mid">Masuk</Text>
-            <Text className="text-base font-bold text-acc">{bulanMemuat ? '…' : formatRupiah(ringkasan.masuk)}</Text>
+            <Text className="text-base font-bold text-accink">{bulanMemuat ? '…' : formatRupiah(ringkasan.masuk)}</Text>
           </View>
           <View>
             <Text className="text-[11px] text-mid">Keluar</Text>

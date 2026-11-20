@@ -29,7 +29,7 @@ export function TxRow({ tx, namaDompet }: Props) {
       <Text className="flex-1 text-xs text-fg" numberOfLines={1}>
         {dompet ? `${judul} · ${dompet}` : judul}
       </Text>
-      <Text className={`text-xs font-bold ${masuk ? 'text-acc' : 'text-fg'}`}>{jumlah}</Text>
+      <Text className={`text-xs font-bold ${masuk ? 'text-accink' : 'text-fg'}`}>{jumlah}</Text>
     </View>
   );
 }
