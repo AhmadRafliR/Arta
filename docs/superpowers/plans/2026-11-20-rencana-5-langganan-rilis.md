@@ -468,9 +468,9 @@ Acuan visual: `docs/design/arta/premium-trial.html` (layar Premium), komponen `M
 | 3 Langganan app + Premium | selesai | `5a3ddca` | `useLangganan()` jatuh ke penyedia bawaan tanpa Provider. |
 | 4 Push app + pengaturan | selesai | `92c4e23` | + `src/notifikasi/sinkron.ts` (daftar ulang diam) di Task 9. |
 | 5 debt-reminders | selesai | `4ec4edd` | Menunggu RPC `tagihan_untuk_pengingat` (Rencana 3). |
-| 6 Ekspor | berjalan | | |
+| 6 Ekspor | selesai | lihat `git log` (`feat(ekspor)…`) | Formula injection hanya diamankan di CSV: sel XLSX `inlineStr` tidak pernah dievaluasi sebagai rumus, dan awalan `'` akan terlihat di sel (penyempurnaan K9). `select` tiap sumber wajib memuat `id` (pemutus seri paginasi). |
 | 7 Hapus akun | selesai | `d0f6520` | Web: isi konstanta & placeholder. |
 | 8 Konfigurasi rilis | selesai | `3e8722c` | `app.config.ts` pakai `/// <reference types="node" />`. `.gitignore` + `google-services.json`. |
-| 9 Integrasi + panduan | sebagian | `531e46d` | Panduan uji & SQL cron di commit docs berikutnya; lint akhir belum. |
+| 9 Integrasi + panduan | selesai | `531e46d`, `c94625a`, `9506428` | Worktree tidak punya `eslint.config.js` (ada di branch rencana 2), sehingga `npx expo lint` di sini tidak memeriksa apa pun; file rencana 5 di-lint dengan config checkout utama. |
 
 Catatan tes unit di Windows: `npx jest` tanpa argumen ikut menjalankan `tests/integration` (gagal tanpa env). Pakai `npx jest --testPathIgnorePatterns /node_modules/ integration`.
