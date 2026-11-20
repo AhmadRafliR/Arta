@@ -111,15 +111,90 @@ test('satu item tidak valid -> tidak ada yang tersimpan', async () => {
   expect(await hitung(a.client)).toBe(0);
 });
 
-test('jenis hutang ditolak: belum didukung', async () => {
+// v3 (Rencana 3) menerima jenis hutang; tanpa debt_id / data hutang tetap ditolak.
+test('jenis hutang tanpa debt_id atau data hutang ditolak', async () => {
   const a = await createTestUser();
   const w = await bikinDompet(a.client, 'Tunai');
-  for (const jenis of ['hutang_baru', 'hutang_bayar']) {
-    const { error } = await a.client.rpc('save_transactions', {
-      items: [item({ jenis, wallet_id: w })],
-    });
-    expect(error!.message).toMatch(/belum didukung/i);
-  }
+
+  const bayar = await a.client.rpc('save_transactions', {
+    items: [item({ jenis: 'hutang_bayar', wallet_id: w })],
+  });
+  expect(bayar.error!.message).toBe('Hutang tidak ditemukan');
+
+  const baruTanpaId = await a.client.rpc('save_transactions', {
+    items: [item({ jenis: 'hutang_baru', wallet_id: w })],
+  });
+  expect(baruTanpaId.error!.message).toBe('id hutang wajib diisi');
+
+  const baruTanpaData = await a.client.rpc('save_transactions', {
+    items: [item({ jenis: 'hutang_baru', wallet_id: w, debt_id: randomUUID() })],
+  });
+  expect(baruTanpaData.error!.message).toBe('Data hutang wajib diisi');
+
+  expect(await hitung(a.client)).toBe(0);
+});
+
+test('debt_id pada pengeluaran ditolak', async () => {
+  const a = await createTestUser();
+  const w = await bikinDompet(a.client, 'Tunai');
+  const { error } = await a.client.rpc('save_transactions', {
+    items: [item({ wallet_id: w, debt_id: randomUUID() })],
+  });
+  expect(error!.message).toMatch(/hutang hanya untuk/i);
+  expect(await hitung(a.client)).toBe(0);
+});
+
+test('item gaya Rencana 2 (sumber ai, transkrip terisi) tetap tersimpan seperti v2', async () => {
+  const a = await createTestUser();
+  const w = await bikinDompet(a.client, 'Tunai');
+  const it = item({
+    wallet_id: w,
+    jenis: 'pengeluaran',
+    kategori: 'rokok',
+    nominal: 32000,
+    sumber: 'ai',
+    transkrip: 'beli rokok tiga puluh dua ribu pakai tunai',
+    catatan: 'rokok',
+  });
+  const { data, error } = await a.client.rpc('save_transactions', { items: [it] });
+  expect(error).toBeNull();
+  expect(data).toHaveLength(1);
+  expect(data[0]).toMatchObject({
+    id: it.id,
+    jenis: 'pengeluaran',
+    kategori: 'rokok',
+    wallet_id: w,
+    wallet_tujuan_id: null,
+    debt_id: null,
+    porsi_bunga: null,
+    porsi_pokok: null,
+    sumber: 'ai',
+    transkrip: 'beli rokok tiga puluh dua ribu pakai tunai',
+    catatan: 'rokok',
+    tanggal: '2026-11-19',
+  });
+  expect(Number(data[0].nominal)).toBe(32000);
+
+  // Penyesuaian dompet (tanpa debt_id) tetap butuh dompet seperti v2.
+  const adj = await a.client.rpc('save_transactions', {
+    items: [item({ jenis: 'penyesuaian', kategori: 'penyesuaian', nominal: -5000, wallet_id: null })],
+  });
+  expect(adj.error!.message).toMatch(/dompet wajib diisi/i);
+});
+
+test('51 item ditolak, 50 item diterima', async () => {
+  const a = await createTestUser();
+  const w = await bikinDompet(a.client, 'Tunai');
+  const banyak = Array.from({ length: 51 }, () => item({ wallet_id: w, nominal: 1000 }));
+
+  const r51 = await a.client.rpc('save_transactions', { items: banyak });
+  expect(r51.error!.message).toBe('Terlalu banyak transaksi sekaligus (maks 50)');
+  expect(await hitung(a.client)).toBe(0);
+
+  const r50 = await a.client.rpc('save_transactions', { items: banyak.slice(0, 50) });
+  expect(r50.error).toBeNull();
+  expect(r50.data).toHaveLength(50);
+  expect(await hitung(a.client)).toBe(50);
 });
 
 test('user_id kiriman klien diabaikan', async () => {
