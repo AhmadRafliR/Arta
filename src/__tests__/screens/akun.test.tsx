@@ -31,6 +31,8 @@ jest.mock('@/components/PengaturanPengingat', () => {
     ),
   };
 });
+// MenuRencana (rencana 4) punya badge Pro sendiri; diuji terpisah.
+jest.mock('@/components/MenuRencana', () => ({ MenuRencana: () => null }));
 jest.mock('@/auth/AuthProvider', () => ({ useAuth: () => ({ signOut: mockSignOut }) }));
 jest.mock('@/theme/ThemeProvider', () => ({
   useTheme: () => ({ pref: 'sistem', setPref: jest.fn(), t: { accFg: '#000', mid: '#888', fg: '#000', dangerInk: '#a00' } }),

@@ -1,6 +1,6 @@
 import '../global.css';
 import { useCallback, useEffect, useState } from 'react';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, type Href } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
@@ -37,7 +37,8 @@ function ThemeShell({ children }: { children: React.ReactNode }) {
 // Penangan notifikasi (tampil saat app terbuka + ketuk → buka rute internal). Dipasang sekali.
 function PenanganNotifikasi() {
   const router = useRouter();
-  useEffect(() => pasangPenangan(router), [router]);
+  // URL sudah divalidasi sebagai rute internal di pasangPenangan.
+  useEffect(() => pasangPenangan({ push: (url) => router.push(url as Href) }), [router]);
   return null;
 }
 
