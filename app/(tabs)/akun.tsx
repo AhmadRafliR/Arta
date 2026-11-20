@@ -98,7 +98,7 @@ export default function Akun() {
 
       <View>
         <Text className="mb-2 text-xs font-semibold uppercase text-mid font-sans">Tampilan</Text>
-        <View className="flex-row gap-2">
+        <View className="flex-row gap-1 self-start rounded-full border border-line bg-card p-1">
           {TEMA.map((x) => (
             <Chip key={x.v} label={x.label} selected={pref === x.v} onPress={() => setPref(x.v)} />
           ))}

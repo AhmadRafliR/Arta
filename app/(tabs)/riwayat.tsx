@@ -1,3 +1,4 @@
+import { KeadaanKosong } from '@/components/KeadaanKosong';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -66,7 +67,7 @@ export default function Riwayat() {
       {semua === undefined ? (
         <Text className={`font-sans ${q.error ? 'text-fg' : 'text-mid'}`}>{q.error ? q.error.pesan : 'Memuat…'}</Text>
       ) : grup.length === 0 ? (
-        <Text className="text-mid font-sans">Belum ada transaksi.</Text>
+        <KeadaanKosong ikon="cat-lainnya" pesan="Belum ada transaksi di bulan ini." />
       ) : (
         grup.map((g) => (
           <View key={g.tanggal}>

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { AmountInput } from '@/components/AmountInput';
+import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
 import { useCreateWallet } from '@/data/wallets';
 import { toAppError, type AppError } from '@/data/errors';
@@ -124,33 +125,12 @@ export default function DompetAwal() {
         </View>
       ))}
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => setRows((rs) => [...rs, { key: nextKey.current++, nama: '', saldo: 0 }])}
-        className="items-center rounded-xl border border-line py-3"
-      >
-        <Text className="font-semibold text-fg font-sans">Tambah dompet</Text>
-      </Pressable>
+      <Tombol label="Tambah dompet" onPress={() => setRows((rs) => [...rs, { key: nextKey.current++, nama: '', saldo: 0 }])} />
 
       {kembar ? <Text className="text-fg font-sans">Nama dompet tidak boleh sama.</Text> : null}
       {error ? <Text className="text-fg font-sans">{error}</Text> : null}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Mulai"
-        accessibilityState={{ disabled: nonaktif }}
-        disabled={nonaktif}
-        onPress={mulai}
-        className={`items-center rounded-xl bg-acc py-3 ${nonaktif ? 'opacity-50' : ''}`}
-      >
-        {busy ? (
-          <ActivityIndicator color={t.accFg} />
-        ) : (
-          <Text style={{ color: t.accFg }} className="font-semibold font-sans">
-            Mulai
-          </Text>
-        )}
-      </Pressable>
+      <Tombol primary label="Mulai" onPress={mulai} disabled={nonaktif} busy={busy} />
     </ScrollView>
   );
 }

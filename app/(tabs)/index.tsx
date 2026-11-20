@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeroCard } from '@/components/HeroCard';
 import { WalletChips } from '@/components/WalletChips';
 import { TxRow } from '@/components/TxRow';
+import { KeadaanKosong } from '@/components/KeadaanKosong';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAllTransactions, useTransactions } from '@/data/transactions';
 import { useWallets } from '@/data/wallets';
@@ -71,11 +72,11 @@ export default function Beranda() {
       ) : (
         <View className="flex-row gap-6 rounded-2xl border border-line bg-card p-3">
           <View>
-            <Text className="text-[11px] text-mid font-sans">Masuk</Text>
+            <Text className="text-[11px] text-fg2 font-sans">Masuk</Text>
             <Text className="text-base font-bold text-accink font-sans">{bulanMemuat ? '…' : formatRupiah(ringkasan.masuk)}</Text>
           </View>
           <View>
-            <Text className="text-[11px] text-mid font-sans">Keluar</Text>
+            <Text className="text-[11px] text-fg2 font-sans">Keluar</Text>
             <Text className="text-base font-bold text-fg font-sans">{bulanMemuat ? '…' : formatRupiah(ringkasan.keluar)}</Text>
           </View>
         </View>
@@ -87,17 +88,19 @@ export default function Beranda() {
           <Text className="text-xs text-mid font-sans">Semua ›</Text>
         </Pressable>
       </View>
-      <View className="rounded-2xl border border-line bg-card px-3 py-1">
-        {bulanMemuat ? (
-          <Text className="py-3 text-mid font-sans">Memuat…</Text>
-        ) : bulanGalat ? (
-          <Text className="py-3 text-fg font-sans">{bulanGalat.pesan}</Text>
-        ) : terbaru.length === 0 ? (
-          <Text className="py-3 text-mid font-sans">Belum ada transaksi bulan ini.</Text>
-        ) : (
-          terbaru.map((tx) => <TxRow key={tx.id} tx={tx} namaDompet={namaDompet} hariIni={hariIni(zona)} />)
-        )}
-      </View>
+      {!bulanMemuat && !bulanGalat && terbaru.length === 0 ? (
+        <KeadaanKosong ikon="cat-lainnya" pesan="Belum ada transaksi bulan ini. Tekan tombol mic untuk mencatat yang pertama." />
+      ) : (
+        <View className="rounded-2xl border border-line bg-card px-3 py-1">
+          {bulanMemuat ? (
+            <Text className="py-3 text-mid font-sans">Memuat…</Text>
+          ) : bulanGalat ? (
+            <Text className="py-3 text-fg font-sans">{bulanGalat.pesan}</Text>
+          ) : (
+            terbaru.map((tx) => <TxRow key={tx.id} tx={tx} namaDompet={namaDompet} hariIni={hariIni(zona)} />)
+          )}
+        </View>
+      )}
     </ScrollView>
   );
 }

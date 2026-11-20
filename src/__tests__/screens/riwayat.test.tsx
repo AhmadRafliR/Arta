@@ -100,7 +100,7 @@ describe('Riwayat', () => {
   it('kosong, memuat, galat', async () => {
     mockUseTx.mockReturnValue({ isLoading: false, error: null, data: [] });
     const r = await render(<Riwayat />);
-    expect(screen.getByText('Belum ada transaksi.')).toBeTruthy();
+    expect(screen.getByText('Belum ada transaksi di bulan ini.')).toBeTruthy();
     mockUseTx.mockReturnValue({ isLoading: true, error: null, data: undefined });
     await r.rerender(<Riwayat />);
     expect(screen.getByText('Memuat…')).toBeTruthy();
@@ -108,6 +108,6 @@ describe('Riwayat', () => {
     await r.rerender(<Riwayat />);
     expect(screen.getByText(PESAN_OFFLINE)).toBeTruthy();
     expect(screen.queryByText('Rp0')).toBeNull();
-    expect(screen.queryByText('Belum ada transaksi.')).toBeNull();
+    expect(screen.queryByText('Belum ada transaksi di bulan ini.')).toBeNull();
   });
 });

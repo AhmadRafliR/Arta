@@ -1,16 +1,15 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from './AuthProvider';
 import { routeFor } from './routeFor';
 import { gateView, routeAllowed } from './gateView';
-import { useTheme } from '@/theme/ThemeProvider';
+import { Tombol } from '@/components/Tombol';
 
 // Mengarahkan ke grup rute sesuai keadaan masuk/onboarding. Children (Stack) tetap ter-mount
 // agar router.replace bekerja; tampilan memuat / galat ditumpuk di atasnya.
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { session, profile, loading, profileError, refreshProfile, signOut } = useAuth();
-  const { t } = useTheme();
   const segments = useSegments();
   const router = useRouter();
   const onboardingSelesai = profile ? profile.onboarding_selesai : null;
@@ -35,14 +34,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       {view === 'error' ? (
         <View style={StyleSheet.absoluteFill} className="items-center justify-center gap-4 bg-bg px-6">
           <Text className="text-xl font-bold text-fg font-sans">Gagal memuat profil</Text>
-          <Pressable onPress={refreshProfile} className="items-center rounded-xl bg-acc px-6 py-3">
-            <Text style={{ color: t.accFg }} className="font-semibold font-sans">
-              Coba lagi
-            </Text>
-          </Pressable>
-          <Pressable onPress={() => void signOut()} className="items-center rounded-xl border border-line bg-card px-6 py-3">
-            <Text className="font-semibold text-fg font-sans">Keluar</Text>
-          </Pressable>
+          <Tombol primary label="Coba lagi" onPress={refreshProfile} />
+          <Tombol label="Keluar" onPress={() => void signOut()} />
         </View>
       ) : null}
     </>

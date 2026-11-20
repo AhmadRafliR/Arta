@@ -85,4 +85,10 @@ describe('Beranda', () => {
     expect(screen.queryByText('Rp0')).toBeNull();
     expect(screen.queryByText('Belum ada transaksi bulan ini.')).toBeNull();
   });
+
+  it('bulan kosong: salinan keadaan kosong baru', async () => {
+    mockBulan = { isLoading: false, error: null, data: [] };
+    await render(<Beranda />);
+    expect(screen.getByText('Belum ada transaksi bulan ini. Tekan tombol mic untuk mencatat yang pertama.')).toBeTruthy();
+  });
 });

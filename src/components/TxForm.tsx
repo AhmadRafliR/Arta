@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 import { AmountInput } from '@/components/AmountInput';
 import { Chip } from '@/components/Chip';
+import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
 import { useCategories } from '@/data/categories';
 import { formatRupiah } from '@/domain/money';
@@ -183,22 +184,9 @@ function TxFormBody({ initial, submit }: BodyProps) {
 
       {error ? <Text className="mt-2 text-fg font-sans">{error}</Text> : null}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Simpan"
-        accessibilityState={{ disabled: nonaktif }}
-        disabled={nonaktif}
-        onPress={simpan}
-        className={`mt-4 items-center rounded-xl bg-acc py-3 ${nonaktif ? 'opacity-50' : ''}`}
-      >
-        {busy ? (
-          <ActivityIndicator color={t.accFg} />
-        ) : (
-          <Text style={{ color: t.accFg }} className="font-semibold font-sans">
-            Simpan
-          </Text>
-        )}
-      </Pressable>
+      <View className="mt-4">
+        <Tombol primary label="Simpan" onPress={simpan} disabled={nonaktif} busy={busy} />
+      </View>
     </ScrollView>
   );
 }

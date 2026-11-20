@@ -3,21 +3,26 @@ import { useTheme } from '@/theme/ThemeProvider';
 
 type Props = { label: string; onPress: () => void; disabled?: boolean; primary?: boolean; busy?: boolean };
 
-// Tombol penuh lebar. Aksen hanya untuk tombol utama (primary).
+// Tombol penuh lebar (gaya .btn-primary). Aksen hanya untuk tombol utama (primary).
 export function Tombol({ label, onPress, disabled, primary, busy }: Props) {
   const { t } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
       onPress={onPress}
-      className={`items-center rounded-xl py-3 ${primary ? 'bg-acc' : 'border border-line'} ${disabled ? 'opacity-50' : ''}`}
+      style={{ minHeight: 54 }}
+      className={`items-center justify-center rounded-2xl px-6 ${primary ? 'bg-acc' : 'border border-line'} ${disabled ? 'opacity-50' : ''}`}
     >
       {busy ? (
         <ActivityIndicator color={primary ? t.accFg : t.fg} />
       ) : (
-        <Text style={primary ? { color: t.accFg } : undefined} className={`font-sans font-semibold ${primary ? '' : 'text-fg'}`}>
+        <Text
+          style={primary ? { color: t.accFg, fontSize: 16 } : { fontSize: 16 }}
+          className={`font-sans ${primary ? 'font-bold' : 'font-semibold text-fg'}`}
+        >
           {label}
         </Text>
       )}

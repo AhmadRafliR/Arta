@@ -7,8 +7,16 @@ Aplikasi hanya menerima **kode 6 digit** lewat email, bukan tautan. Template ema
 1. Authentication → Email Templates: edit template **Confirm signup** dan **Magic Link**, tambahkan baris `Kode masuk: {{ .Token }}` (boleh tetap menyertakan tautan).
 2. Authentication → Providers → Email: pastikan **Email OTP Length = 6**.
 3. SMTP bawaan Supabase dibatasi laju (sangat sedikit email per jam). Untuk uji tertutup dengan beberapa orang, pasang SMTP khusus (mis. Resend) di Project Settings → Authentication → SMTP Settings. Saat batas tercapai, aplikasi menampilkan "Terlalu sering mencoba, tunggu sebentar."
+4. Template email hanya bisa diedit setelah SMTP khusus dipasang (dashboard Supabase kini mewajibkannya). Paling cepat untuk uji: SMTP Gmail (`smtp.gmail.com`, port 587, username = alamat Gmail, password = Google App Password yang dibuat di bawah Verifikasi 2 Langkah, nama pengirim `arta`). Sebelum rilis, pakai Resend dengan domain sendiri.
+5. Contoh template kode 6 digit, untuk **Magic Link** dan **Confirm signup**:
+
+   ```html
+   <h2>Kode masuk arta</h2><p>Masukkan kode ini di aplikasi:</p><p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
+   ```
 
 ## Persiapan aplikasi
+
+**APK development harus dibangun ulang** (langkah 4 di bawah) karena ada modul native baru: `react-native-svg`, font Nunito Sans yang ditanam, dan tab bar berbasis Reanimated. APK lama tidak akan jalan dengan kode ini.
 
 1. Buat file `.env` di root proyek dengan menyalin `.env.example`, lalu isi:
    - `EXPO_PUBLIC_SUPABASE_URL` - base URL proyek Supabase, misalnya `https://xxxx.supabase.co` (tanpa `/rest/v1`).
@@ -35,6 +43,8 @@ Centang `- [x]` jika lulus, catat temuan di bawah item bila gagal.
 - [ ] Sesuaikan saldo GoPay
 - [ ] Ganti tema Terang / Gelap / Sistem
 - [ ] Keluar lalu masuk lagi → data tetap ada
+- [ ] Cek visual mode terang dan gelap di semua layar (Beranda, Riwayat, Hutang, Akun, Catat)
+- [ ] Tab bar menjadi kapsul melayang saat gulir ke bawah, dan kembali penuh saat di posisi atas
 
 ## Catatan temuan
 
