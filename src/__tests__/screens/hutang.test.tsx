@@ -3,10 +3,12 @@ import Hutang from '../../../app/(tabs)/hutang';
 import { buatHutang } from '@/domain/testFactories';
 
 const mockPush = jest.fn();
+const mockNavigate = jest.fn();
+let mockPro = false;
 let mockDebts: { data?: unknown; error?: { pesan: string } };
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, back: jest.fn(), canGoBack: () => true }),
+  useRouter: () => ({ push: mockPush, navigate: mockNavigate, back: jest.fn(), canGoBack: () => true }),
   useFocusEffect: jest.fn(),
 }));
 jest.mock('react-native-safe-area-context', () => ({
@@ -16,6 +18,7 @@ jest.mock('@/data/debts', () => ({
   useDebts: () => mockDebts,
   useRiwayatPokok: () => ({ data: {} }),
 }));
+jest.mock('@/data/langganan', () => ({ usePro: () => ({ pro: mockPro, memuat: false }) }));
 jest.mock('@/auth/AuthProvider', () => ({
   useAuth: () => ({ profile: { nama: 'Rafli', zona_waktu: 'Asia/Jakarta' } }),
 }));
@@ -48,14 +51,34 @@ const andi = buatHutang({ id: 'h2', pemberi: 'Pinjaman Andi', pokok_awal: 1_000_
 beforeEach(() => {
   jest.clearAllMocks();
   mockDebts = { data: [kredivo, andi] };
+  mockPro = false;
 });
 
 describe('Tab Hutang', () => {
   it('menampilkan total, jatuh tempo, dan sub cicilan', async () => {
     await render(<Hutang />);
     expect(screen.getByText('Rp1.700.000')).toBeTruthy();
+    // Kartu ringkasan: tagihan terdekat; kartu: tanggal + sisa hari.
     expect(screen.getByText('3 hari lagi')).toBeTruthy();
-    expect(screen.getByText('Sisa pokok · 1 dari 12 cicilan lunas')).toBeTruthy();
+    expect(screen.getByText('23 Nov 2026 · 3 hari lagi')).toBeTruthy();
+    expect(screen.getByText('1/12 lunas · Rp100.000/bln')).toBeTruthy();
+    expect(screen.getByText('2 aktif')).toBeTruthy();
+  });
+
+  it('tombol Bayar di kartu membuka form bayar', async () => {
+    await render(<Hutang />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Bayar Kredivo' }));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/hutang/bayar', params: { id: 'h1' } });
+  });
+
+  it('pengingat: bukan Pro membuka Premium, Pro membuka Akun', async () => {
+    await render(<Hutang />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Pengingat jatuh tempo, fitur Pro' }));
+    expect(mockPush).toHaveBeenCalledWith('/premium?dari=pengingat');
+    mockPro = true;
+    await render(<Hutang />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Atur pengingat jatuh tempo' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/akun');
   });
 
   it('ketuk kartu membuka detail', async () => {
@@ -67,7 +90,7 @@ describe('Tab Hutang', () => {
   it('kosong: pesan dan tombol tambah', async () => {
     mockDebts = { data: [] };
     await render(<Hutang />);
-    expect(screen.getByText('Belum ada hutang tercatat. Tambahkan paylater atau cicilan kalau ada.')).toBeTruthy();
+    expect(screen.getByText('Aman, belum ada hutang')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Tambah hutang' }));
     expect(mockPush).toHaveBeenCalledWith('/hutang/baru');
   });

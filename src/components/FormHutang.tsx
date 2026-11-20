@@ -1,8 +1,18 @@
 import { useRef, useState } from 'react';
-import { ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
 import { AmountInput } from '@/components/AmountInput';
+import { BarisField } from '@/components/BarisField';
 import { Chip } from '@/components/Chip';
-import { Tombol } from '@/components/Tombol';
+import {
+  BarisAksi,
+  CatatanKecil,
+  KELAS_ISIAN,
+  KotakHitung,
+  KotakIsian,
+  Petunjuk,
+  SegmenHutang,
+  TombolAksi,
+} from '@/components/hutang/BagianHutang';
 import { useAuth } from '@/auth/AuthProvider';
 import { toAppError, type AppError } from '@/data/errors';
 import { useSaveTransactions, type HutangBaru, type NewTx } from '@/data/transactions';
@@ -15,10 +25,6 @@ import { useTheme } from '@/theme/ThemeProvider';
 function pesanGalat(e: unknown): string {
   if (e && typeof e === 'object' && typeof (e as AppError).pesan === 'string') return (e as AppError).pesan;
   return toAppError(e).pesan;
-}
-
-function Label({ children }: { children: string }) {
-  return <Text className="mt-2 text-xs font-semibold text-mid font-sans">{children}</Text>;
 }
 
 /** Bunga %/bulan; koma atau titik, maks 2 desimal, 0-100. Null = tidak valid. */
@@ -44,9 +50,17 @@ type Props = {
   txId: string;
   debtId: string;
   onSaved: (debtId: string) => void;
+  /** Bila ada, tampil tombol "Batal" di samping "Simpan" (mockup: .sheet-actions). */
+  onBatal?: () => void;
 };
 
-export function FormHutang({ txId, debtId, onSaved }: Props) {
+const TIPE: { nilai: TipeHutang; label: string; testID: string }[] = [
+  { nilai: 'cicilan_tetap', label: 'Cicilan tetap', testID: 'tipe-cicilan' },
+  { nilai: 'berbunga', label: 'Berbunga', testID: 'tipe-berbunga' },
+];
+
+// Form hutang baru (mockup: lembar "Tambah hutang"): segmen jenis, baris isian berikon, kotak hitung, Batal/Simpan.
+export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
   const { profile } = useAuth();
   const { t } = useTheme();
   const save = useSaveTransactions();
@@ -157,134 +171,181 @@ export function FormHutang({ txId, debtId, onSaved }: Props) {
     }
   }
 
+  // Kotak hitung (mockup: #editCalc). Bunga bulan pertama: flat dari pokok awal, efektif dari sisa sekarang.
+  const dasarBunga = metode === 'efektif' && berjalan && sisaPokok !== null ? sisaPokok : pokokAwal;
+  const bungaPerBulan = bunga !== null && dasarBunga !== null ? Math.round((dasarBunga * bunga) / 100) : null;
+  const hitung = cicilan
+    ? total !== null
+      ? [
+          { label: 'Total dibayar', nilai: formatRupiah(total), testID: 'total-hutang' },
+          { label: 'Per bulan', nilai: formatRupiah(nominalCicilan ?? 0), masuk: true },
+        ]
+      : null
+    : pokokAwal !== null
+      ? [
+          { label: 'Pokok pinjaman', nilai: formatRupiah(pokokAwal), masuk: true },
+          { label: 'Bunga bulan pertama', nilai: bungaPerBulan !== null ? formatRupiah(bungaPerBulan) : '—' },
+          { label: 'Metode', nilai: metode === 'flat' ? 'Flat' : 'Efektif' },
+          { label: 'Sisa pokok', nilai: formatRupiah(berjalan && sisaPokok !== null ? sisaPokok : pokokAwal) },
+        ]
+      : null;
+
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-2 px-5 py-4" keyboardShouldPersistTaps="handled">
-      <Label>Pemberi</Label>
-      <TextInput
-        testID="pemberi"
-        value={pemberi}
-        onChangeText={setPemberi}
-        maxLength={60}
-        placeholder="Mis. Kredivo, Shopee PayLater"
-        placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
-      />
+    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-3 px-[18px] pb-8 pt-1" keyboardShouldPersistTaps="handled">
+      <SegmenHutang pilihan={TIPE} nilai={tipe} onChange={ubahTipe} />
+      <CatatanKecil>
+        {cicilan
+          ? 'Cicilan tetap tanpa bunga, mis. paylater. Jadwal tagihan dibuat otomatis.'
+          : 'Pembayaran pertama tiap bulan melunasi bunga dulu, sisanya mengurangi pokok.'}
+      </CatatanKecil>
 
-      <Label>Jenis hutang</Label>
-      <View className="flex-row flex-wrap gap-2">
-        <Chip testID="tipe-cicilan" label="Cicilan tetap" selected={cicilan} onPress={() => ubahTipe('cicilan_tetap')} />
-        <Chip testID="tipe-berbunga" label="Berbunga" selected={!cicilan} onPress={() => ubahTipe('berbunga')} />
-      </View>
-
-      {cicilan ? (
-        <>
-          <Label>Nominal cicilan per bulan</Label>
-          <AmountInput value={null} onChange={setNominalCicilan} testID="nominal-cicilan" />
-          <Label>Sisa tenor (bulan, 1-60)</Label>
+      <KotakIsian>
+        <BarisField ikon="nav-akun" label="Pemberi" pertama>
           <TextInput
-            testID="tenor"
-            value={tenorTeks}
-            onChangeText={setTenorTeks}
-            keyboardType="number-pad"
-            maxLength={2}
-            placeholder="12"
+            testID="pemberi"
+            value={pemberi}
+            onChangeText={setPemberi}
+            maxLength={60}
+            placeholder="Mis. Kredivo, Shopee PayLater"
             placeholderTextColor={t.mid}
-            className={`font-sans rounded-xl border bg-card px-4 py-3 text-fg ${tenorTeks === '' || tenorOk ? 'border-line' : 'border-fg'}`}
+            className={KELAS_ISIAN}
           />
-          {total !== null ? <Text className="text-xs text-mid font-sans">{`Total ${formatRupiah(total)}`}</Text> : null}
-          <Label>Jatuh tempo berikutnya (YYYY-MM-DD)</Label>
+        </BarisField>
+
+        {cicilan ? (
+          <>
+            <BarisField ikon="ui-money" label="Nominal cicilan per bulan">
+              <AmountInput value={null} onChange={setNominalCicilan} testID="nominal-cicilan" />
+            </BarisField>
+            <BarisField ikon="nav-riwayat" label="Sisa tenor (bulan, 1-60)">
+              <TextInput
+                testID="tenor"
+                value={tenorTeks}
+                onChangeText={setTenorTeks}
+                keyboardType="number-pad"
+                maxLength={2}
+                placeholder="12"
+                placeholderTextColor={t.mid}
+                className={KELAS_ISIAN}
+              />
+              {tenorTeks === '' || tenorOk ? null : <Petunjuk>Tenor harus 1–60 bulan</Petunjuk>}
+            </BarisField>
+            <BarisField ikon="status-jatuh-tempo" label="Jatuh tempo berikutnya (YYYY-MM-DD)">
+              <TextInput
+                testID="jatuh-tempo"
+                value={jatuhTempo}
+                onChangeText={setJatuhTempo}
+                autoCapitalize="none"
+                placeholderTextColor={t.mid}
+                className={KELAS_ISIAN}
+              />
+              {tanggalValid(jatuhTempo) ? null : <Petunjuk>Tanggal tidak valid</Petunjuk>}
+            </BarisField>
+          </>
+        ) : (
+          <>
+            <BarisField ikon="ui-money" label="Pokok awal">
+              <AmountInput value={null} onChange={setPokokAwal} testID="pokok-awal" />
+            </BarisField>
+            <BarisField ikon="ui-percent" label="Bunga per bulan (%)">
+              <TextInput
+                testID="bunga"
+                value={bungaTeks}
+                onChangeText={setBungaTeks}
+                keyboardType="decimal-pad"
+                placeholder="2,5"
+                placeholderTextColor={t.mid}
+                className={KELAS_ISIAN}
+              />
+              {bungaTeks === '' || bunga !== null ? null : <Petunjuk>Bunga 0–100% per bulan</Petunjuk>}
+              <View className="mt-1 flex-row flex-wrap gap-[7px]">
+                <Chip testID="metode-efektif" label="Efektif" selected={metode === 'efektif'} onPress={() => setMetode('efektif')} />
+                <Chip testID="metode-flat" label="Flat" selected={metode === 'flat'} onPress={() => setMetode('flat')} />
+              </View>
+            </BarisField>
+            <BarisField ikon="nav-riwayat" label="Sudah berjalan sebelumnya?">
+              <View className="mt-0.5 flex-row flex-wrap gap-[7px]">
+                <Chip
+                  testID="sudah-berjalan"
+                  label="Sudah berjalan"
+                  ikon={berjalan ? 'ui-check' : undefined}
+                  selected={berjalan}
+                  onPress={() => setBerjalan((b) => !b)}
+                />
+              </View>
+            </BarisField>
+            {berjalan ? (
+              <BarisField ikon="ui-money" label="Sisa pokok sekarang">
+                <AmountInput value={null} onChange={setSisaPokok} testID="sisa-pokok" />
+                {sisaLebih ? <Petunjuk>Sisa pokok tidak boleh lebih dari pokok awal</Petunjuk> : null}
+              </BarisField>
+            ) : null}
+          </>
+        )}
+
+        <BarisField ikon="status-jatuh-tempo" label="Tanggal mulai (YYYY-MM-DD)">
           <TextInput
-            testID="jatuh-tempo"
-            value={jatuhTempo}
-            onChangeText={setJatuhTempo}
+            testID="tanggal"
+            value={tanggal}
+            onChangeText={setTanggal}
             autoCapitalize="none"
             placeholderTextColor={t.mid}
-            className={`font-sans rounded-xl border bg-card px-4 py-3 text-fg ${tanggalValid(jatuhTempo) ? 'border-line' : 'border-fg'}`}
+            className={KELAS_ISIAN}
           />
-          {tanggalValid(jatuhTempo) ? null : <Text className="text-xs text-fg font-sans">Tanggal tidak valid</Text>}
-        </>
-      ) : (
-        <>
-          <Label>Pokok awal</Label>
-          <AmountInput value={null} onChange={setPokokAwal} testID="pokok-awal" />
-          <Label>Bunga per bulan (%)</Label>
+          {tanggalValid(tanggal) ? null : <Petunjuk>Tanggal tidak valid</Petunjuk>}
+        </BarisField>
+
+        <BarisField ikon="wallet-harian" label="Uangnya masuk ke dompet?">
+          {aktif.length === 0 ? <CatatanKecil>Belum ada dompet aktif.</CatatanKecil> : null}
+          <View className="mt-0.5 flex-row flex-wrap gap-[7px]">
+            {aktif.map((w) => (
+              <Chip
+                key={w.id}
+                testID={`dompet-${w.id}`}
+                label={w.nama}
+                ikon="wallet-harian"
+                selected={dompet === w.id}
+                onPress={() => setDompetPilih(w.id)}
+              />
+            ))}
+            <Chip testID="dompet-tidak" label="Tidak masuk dompet" selected={dompet === null} onPress={() => setDompetPilih(null)} />
+          </View>
+        </BarisField>
+
+        {dompet ? (
+          <BarisField ikon="ui-money" label="Dana yang masuk">
+            <AmountInput
+              key={danaDisentuh ? 'dana-ubah' : `dana-${tipe}-${danaBawaan ?? 0}`}
+              value={dana}
+              onChange={(n) => {
+                setDanaDisentuh(true);
+                setDanaNilai(n);
+              }}
+              testID="dana-masuk"
+            />
+          </BarisField>
+        ) : null}
+
+        <BarisField ikon="ui-note" label="Catatan (opsional)">
           <TextInput
-            testID="bunga"
-            value={bungaTeks}
-            onChangeText={setBungaTeks}
-            keyboardType="decimal-pad"
-            placeholder="2,5"
+            testID="catatan"
+            value={catatan}
+            onChangeText={setCatatan}
+            placeholder="Catatan"
             placeholderTextColor={t.mid}
-            className={`font-sans rounded-xl border bg-card px-4 py-3 text-fg ${bungaTeks === '' || bunga !== null ? 'border-line' : 'border-fg'}`}
+            className={KELAS_ISIAN}
           />
-          {bungaTeks === '' || bunga !== null ? null : <Text className="text-xs text-fg font-sans">Bunga 0–100% per bulan</Text>}
-          <Label>Metode bunga</Label>
-          <View className="flex-row flex-wrap gap-2">
-            <Chip testID="metode-efektif" label="Efektif" selected={metode === 'efektif'} onPress={() => setMetode('efektif')} />
-            <Chip testID="metode-flat" label="Flat" selected={metode === 'flat'} onPress={() => setMetode('flat')} />
-          </View>
-          <View className="flex-row flex-wrap gap-2 pt-1">
-            <Chip testID="sudah-berjalan" label="Sudah berjalan" selected={berjalan} onPress={() => setBerjalan((b) => !b)} />
-          </View>
-          {berjalan ? (
-            <>
-              <Label>Sisa pokok sekarang</Label>
-              <AmountInput value={null} onChange={setSisaPokok} testID="sisa-pokok" />
-              {sisaLebih ? <Text className="text-xs text-fg font-sans">Sisa pokok tidak boleh lebih dari pokok awal</Text> : null}
-            </>
-          ) : null}
-        </>
-      )}
+        </BarisField>
+      </KotakIsian>
 
-      <Label>Uangnya masuk ke dompet?</Label>
-      {aktif.length === 0 ? <Text className="text-mid font-sans">Belum ada dompet aktif.</Text> : null}
-      <View className="flex-row flex-wrap gap-2">
-        {aktif.map((w) => (
-          <Chip key={w.id} testID={`dompet-${w.id}`} label={w.nama} selected={dompet === w.id} onPress={() => setDompetPilih(w.id)} />
-        ))}
-        <Chip testID="dompet-tidak" label="Tidak masuk dompet" selected={dompet === null} onPress={() => setDompetPilih(null)} />
-      </View>
+      {hitung ? <KotakHitung item={hitung} /> : null}
+      {error ? <Petunjuk>{error}</Petunjuk> : null}
 
-      {dompet ? (
-        <>
-          <Label>Dana yang masuk</Label>
-          <AmountInput
-            key={danaDisentuh ? 'dana-ubah' : `dana-${tipe}-${danaBawaan ?? 0}`}
-            value={dana}
-            onChange={(n) => {
-              setDanaDisentuh(true);
-              setDanaNilai(n);
-            }}
-            testID="dana-masuk"
-          />
-        </>
-      ) : null}
-
-      <Label>Tanggal mulai (YYYY-MM-DD)</Label>
-      <TextInput
-        testID="tanggal"
-        value={tanggal}
-        onChangeText={setTanggal}
-        autoCapitalize="none"
-        placeholderTextColor={t.mid}
-        className={`font-sans rounded-xl border bg-card px-4 py-3 text-fg ${tanggalValid(tanggal) ? 'border-line' : 'border-fg'}`}
-      />
-      {tanggalValid(tanggal) ? null : <Text className="text-xs text-fg font-sans">Tanggal tidak valid</Text>}
-
-      <Label>Catatan (opsional)</Label>
-      <TextInput
-        testID="catatan"
-        value={catatan}
-        onChangeText={setCatatan}
-        placeholder="Catatan"
-        placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
-      />
-
-      {error ? <Text className="mt-2 text-fg font-sans">{error}</Text> : null}
-
-      <View className="mt-4">
-        <Tombol primary label="Simpan" onPress={simpan} disabled={nonaktif} busy={busy} />
+      <View className="mt-1">
+        <BarisAksi>
+          {onBatal ? <TombolAksi label="Batal" onPress={onBatal} /> : null}
+          <TombolAksi label="Simpan" varian="utama" onPress={simpan} disabled={nonaktif} busy={busy} />
+        </BarisAksi>
       </View>
     </ScrollView>
   );

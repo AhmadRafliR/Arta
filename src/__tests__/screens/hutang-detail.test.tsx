@@ -77,6 +77,9 @@ describe('Detail hutang', () => {
     expect(screen.getAllByText('Rp100.000')).toHaveLength(12);
     expect(screen.getAllByText('Lunas')).toHaveLength(1);
     expect(screen.getByText('Cicilan Rp100.000 × 12 bulan')).toBeTruthy();
+    expect(screen.getByText('1/12 lunas')).toBeTruthy();
+    expect(screen.getByText('Rp1.100.000')).toBeTruthy();
+    expect(screen.getByText('Rp100.000 (8%)')).toBeTruthy();
   });
 
   it('Bayar membuka form bayar', async () => {

@@ -1,26 +1,40 @@
 import { Text, View } from 'react-native';
-import { labelJatuhTempo } from '@/domain/hutang';
+import { labelTanggal } from '@/components/hutang/tampilan';
+import { Ikon } from '@/components/ikon/Ikon';
+import { hariMenuju, labelJatuhTempo } from '@/domain/hutang';
 import { formatRupiah } from '@/domain/money';
 import type { Tagihan } from '@/domain/types';
 import { useTheme } from '@/theme/ThemeProvider';
 
-// Satu baris jadwal: nominal, tanggal jatuh tempo, dan status (Lunas / sisa hari).
-export function BarisTagihan({ tagihan, hariIni }: { tagihan: Tagihan; hariIni: string }) {
+type Props = { tagihan: Tagihan; hariIni: string; /** Baris pertama: tanpa garis atas. */ pertama?: boolean };
+
+// Satu baris jadwal (mockup: .sched-row): bulatan centang, tanggal + status, nominal (dicoret bila lunas).
+export function BarisTagihan({ tagihan, hariIni, pertama }: Props) {
   const { t } = useTheme();
   const lunas = tagihan.status === 'lunas';
+  const lewat = !lunas && hariMenuju(tagihan.jatuh_tempo, hariIni) < 0;
   return (
-    <View className="flex-row items-center justify-between py-2.5">
-      <View>
-        <Text className="text-[15px] font-semibold text-fg font-sans">{formatRupiah(tagihan.nominal)}</Text>
-        <Text className="text-xs text-fg2 font-sans">{tagihan.jatuh_tempo}</Text>
+    <View className={`flex-row items-center gap-2.5 px-3 py-[9px] ${pertama ? '' : 'border-t border-line'}`}>
+      <View
+        style={{ width: 22, height: 22, borderWidth: 1.5 }}
+        className={`items-center justify-center rounded-full ${lunas ? 'border-accink bg-accsoft' : 'border-line'}`}
+      >
+        {lunas ? <Ikon nama="ui-check" ukuran={13} warna={t.accInk} /> : null}
       </View>
-      {lunas ? (
-        <Text className="text-xs font-semibold text-accink font-sans">Lunas</Text>
-      ) : (
-        <Text style={{ color: t.warnInk }} className="text-xs font-semibold font-sans">
-          {labelJatuhTempo(tagihan.jatuh_tempo, hariIni)}
+      <View className="min-w-0 flex-1 gap-px">
+        <Text className={`font-sans text-[12.5px] ${lunas ? 'font-medium text-fg2' : 'font-semibold text-fg'}`}>
+          {labelTanggal(tagihan.jatuh_tempo)}
         </Text>
-      )}
+        <Text className={`font-sans text-[11px] ${lewat ? 'font-semibold text-dangerink' : 'text-mid'}`}>
+          {lunas ? 'Lunas' : labelJatuhTempo(tagihan.jatuh_tempo, hariIni)}
+        </Text>
+      </View>
+      <Text
+        style={{ fontVariant: ['tabular-nums'], textDecorationLine: lunas ? 'line-through' : 'none' }}
+        className={`font-sans text-[12.5px] font-semibold ${lunas ? 'text-mid' : 'text-fg'}`}
+      >
+        {formatRupiah(tagihan.nominal)}
+      </Text>
     </View>
   );
 }

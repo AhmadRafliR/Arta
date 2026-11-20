@@ -39,6 +39,7 @@ jest.mock('@/theme/ThemeProvider', () => ({
 
 const simpan = () => screen.getByRole('button', { name: 'Simpan' });
 const nonaktif = () => simpan().props.accessibilityState?.disabled === true;
+const porsi = () => [screen.getByTestId('porsi-bunga').props.children, screen.getByTestId('porsi-pokok').props.children];
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -76,7 +77,8 @@ describe('Bayar hutang', () => {
     await render(<HutangBayar />);
     await fireEvent.changeText(screen.getByTestId('tanggal'), '2026-11-19');
     await fireEvent.changeText(screen.getByTestId('nominal'), '300000');
-    expect(screen.getByText('Bunga Rp20.000 · Pokok Rp280.000')).toBeTruthy();
+    expect(porsi()).toEqual(['Rp20.000', 'Rp280.000']);
+    expect(screen.getByTestId('sisa-setelah').props.children).toBe('Rp720.000');
   });
 
   it('sudah ada pembayaran bulan itu: semuanya pokok', async () => {
@@ -84,10 +86,10 @@ describe('Bayar hutang', () => {
     await render(<HutangBayar />);
     await fireEvent.changeText(screen.getByTestId('tanggal'), '2026-11-19');
     await fireEvent.changeText(screen.getByTestId('nominal'), '300000');
-    expect(screen.getByText('Bunga Rp0 · Pokok Rp300.000')).toBeTruthy();
+    expect(porsi()).toEqual(['Rp0', 'Rp300.000']);
     // bulan lain: bunga ditagih lagi
     await fireEvent.changeText(screen.getByTestId('tanggal'), '2026-12-01');
-    expect(screen.getByText('Bunga Rp20.000 · Pokok Rp280.000')).toBeTruthy();
+    expect(porsi()).toEqual(['Rp20.000', 'Rp280.000']);
   });
 
   it('melebihi sisa: peringatan dan Simpan nonaktif', async () => {

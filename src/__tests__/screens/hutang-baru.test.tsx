@@ -55,7 +55,7 @@ describe('Hutang baru', () => {
   it('cicilan 100.000 x 12 menampilkan total dan menyimpan satu item', async () => {
     await render(<HutangBaru />);
     await isiCicilan();
-    expect(screen.getByText('Total Rp1.200.000')).toBeTruthy();
+    expect(screen.getByTestId('total-hutang').props.children).toBe('Rp1.200.000');
     await fireEvent.press(simpan());
     await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
     expect(mockSave).toHaveBeenCalledTimes(1);

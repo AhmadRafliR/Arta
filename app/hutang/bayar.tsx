@@ -1,15 +1,24 @@
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AmountInput } from '@/components/AmountInput';
+import { BarisField } from '@/components/BarisField';
 import { Chip } from '@/components/Chip';
-import { Tombol } from '@/components/Tombol';
+import {
+  BarisAksi,
+  KELAS_ISIAN,
+  KepalaHutang,
+  KotakHitung,
+  KotakIsian,
+  Petunjuk,
+  TombolAksi,
+} from '@/components/hutang/BagianHutang';
 import { useAuth } from '@/auth/AuthProvider';
 import { useDebt } from '@/data/debts';
 import { toAppError, type AppError } from '@/data/errors';
 import { newTxId, useDebtTransactions, useSaveTransactions, type NewTx } from '@/data/transactions';
 import { useWallets } from '@/data/wallets';
-import { pecahPembayaran } from '@/domain/hutang';
+import { bungaBulanIni, pecahPembayaran } from '@/domain/hutang';
 import { formatRupiah } from '@/domain/money';
 import type { Hutang } from '@/domain/types';
 import { hariIni, tanggalValid } from '@/lib/tanggal';
@@ -20,11 +29,17 @@ function pesanGalat(e: unknown): string {
   return toAppError(e).pesan;
 }
 
-function Label({ children }: { children: string }) {
-  return <Text className="mt-2 text-xs font-semibold text-mid font-sans">{children}</Text>;
-}
-
-function FormBayar({ hutang, txId, onSaved }: { hutang: Hutang; txId: string; onSaved: () => void }) {
+function FormBayar({
+  hutang,
+  txId,
+  onSaved,
+  onBatal,
+}: {
+  hutang: Hutang;
+  txId: string;
+  onSaved: () => void;
+  onBatal: () => void;
+}) {
   const { profile } = useAuth();
   const { t } = useTheme();
   const save = useSaveTransactions();
@@ -78,50 +93,76 @@ function FormBayar({ hutang, txId, onSaved }: { hutang: Hutang; txId: string; on
     }
   }
 
+  // Kotak hitung (mockup: #payCalc). Cicilan: tanpa bunga, cukup sisa sebelum/sesudah.
+  const sisaSetelah = pecah && !lebih ? formatRupiah(Math.max(0, hutang.sisa_pokok - pecah.pokok)) : '—';
+  const hitung = berbunga
+    ? [
+        { label: 'Porsi bunga', nilai: pecah && !lebih ? formatRupiah(pecah.bunga) : '—', testID: 'porsi-bunga' },
+        { label: 'Porsi pokok', nilai: pecah && !lebih ? formatRupiah(pecah.pokok) : '—', masuk: true, testID: 'porsi-pokok' },
+        { label: 'Sisa setelah bayar', nilai: sisaSetelah, testID: 'sisa-setelah' },
+        {
+          label: 'Bunga bulan ini',
+          nilai: sudahBayarBulanIni ? 'Sudah dibayar' : formatRupiah(bungaBulanIni(hutang, hutang.sisa_pokok)),
+        },
+      ]
+    : [
+        { label: 'Sisa sekarang', nilai: formatRupiah(hutang.sisa_pokok) },
+        { label: 'Sisa setelah bayar', nilai: sisaSetelah, masuk: true, testID: 'sisa-setelah' },
+      ];
+
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-2 px-5 py-4" keyboardShouldPersistTaps="handled">
-      <Text className="text-mid font-sans">{`${hutang.pemberi} · Sisa ${formatRupiah(hutang.sisa_pokok)}`}</Text>
+    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-3 px-[18px] pb-8 pt-1" keyboardShouldPersistTaps="handled">
+      <KotakIsian>
+        <BarisField ikon="ui-money" label="Nominal bayar" pertama>
+          <AmountInput value={hutang.nominal_berikutnya ?? null} onChange={setNominal} testID="nominal" />
+        </BarisField>
+        <BarisField ikon="status-jatuh-tempo" label="Tanggal bayar (YYYY-MM-DD)">
+          <TextInput
+            testID="tanggal"
+            value={tanggal}
+            onChangeText={setTanggal}
+            autoCapitalize="none"
+            placeholderTextColor={t.mid}
+            className={KELAS_ISIAN}
+          />
+          {tglOk ? null : <Petunjuk>Tanggal tidak valid</Petunjuk>}
+        </BarisField>
+        <BarisField ikon="wallet-harian" label="Bayar dari dompet">
+          {aktif.length === 0 ? <Text className="font-sans text-[12.5px] text-mid">Belum ada dompet aktif.</Text> : null}
+          <View className="mt-0.5 flex-row flex-wrap gap-[7px]">
+            {aktif.map((w) => (
+              <Chip
+                key={w.id}
+                testID={`dompet-${w.id}`}
+                label={w.nama}
+                ikon="wallet-harian"
+                selected={dompet === w.id}
+                onPress={() => setDompet(w.id)}
+              />
+            ))}
+          </View>
+        </BarisField>
+        <BarisField ikon="ui-note" label="Catatan (opsional)">
+          <TextInput
+            testID="catatan"
+            value={catatan}
+            onChangeText={setCatatan}
+            placeholder="Catatan"
+            placeholderTextColor={t.mid}
+            className={KELAS_ISIAN}
+          />
+        </BarisField>
+      </KotakIsian>
 
-      <Label>Nominal</Label>
-      <AmountInput value={hutang.nominal_berikutnya ?? null} onChange={setNominal} testID="nominal" />
-      {berbunga && pecah && !lebih ? (
-        <Text className="text-xs text-mid font-sans">{`Bunga ${formatRupiah(pecah.bunga)} · Pokok ${formatRupiah(pecah.pokok)}`}</Text>
-      ) : null}
-      {lebih ? <Text className="text-xs text-fg font-sans">{`Melebihi sisa hutang (${formatRupiah(hutang.sisa_pokok)})`}</Text> : null}
+      <KotakHitung item={hitung} />
+      {lebih ? <Petunjuk>{`Melebihi sisa hutang (${formatRupiah(hutang.sisa_pokok)})`}</Petunjuk> : null}
+      {error ? <Petunjuk>{error}</Petunjuk> : null}
 
-      <Label>Dompet</Label>
-      {aktif.length === 0 ? <Text className="text-mid font-sans">Belum ada dompet aktif.</Text> : null}
-      <View className="flex-row flex-wrap gap-2">
-        {aktif.map((w) => (
-          <Chip key={w.id} testID={`dompet-${w.id}`} label={w.nama} selected={dompet === w.id} onPress={() => setDompet(w.id)} />
-        ))}
-      </View>
-
-      <Label>Tanggal (YYYY-MM-DD)</Label>
-      <TextInput
-        testID="tanggal"
-        value={tanggal}
-        onChangeText={setTanggal}
-        autoCapitalize="none"
-        placeholderTextColor={t.mid}
-        className={`font-sans rounded-xl border bg-card px-4 py-3 text-fg ${tglOk ? 'border-line' : 'border-fg'}`}
-      />
-      {tglOk ? null : <Text className="text-xs text-fg font-sans">Tanggal tidak valid</Text>}
-
-      <Label>Catatan (opsional)</Label>
-      <TextInput
-        testID="catatan"
-        value={catatan}
-        onChangeText={setCatatan}
-        placeholder="Catatan"
-        placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
-      />
-
-      {error ? <Text className="mt-2 text-fg font-sans">{error}</Text> : null}
-
-      <View className="mt-4">
-        <Tombol primary label="Simpan" onPress={simpan} disabled={nonaktif} busy={busy} />
+      <View className="mt-1">
+        <BarisAksi>
+          <TombolAksi label="Batal" onPress={onBatal} />
+          <TombolAksi label="Simpan" varian="utama" onPress={simpan} disabled={nonaktif} busy={busy} />
+        </BarisAksi>
       </View>
     </ScrollView>
   );
@@ -134,18 +175,21 @@ export default function BayarHutang() {
   const debt = useDebt(id);
   const [txId] = useState(() => newTxId());
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const h = debt.data;
   return (
     <View className="flex-1 bg-bg">
-      <View className="flex-row items-center justify-between px-5 pb-1 pt-4">
-        <Text className="text-lg font-bold text-fg font-sans">Bayar hutang</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid font-sans">Batal</Text>
-        </Pressable>
+      <View className="px-[18px] pb-3 pt-5">
+        <KepalaHutang
+          ikon="ui-money"
+          judul="Bayar hutang"
+          sub={h ? `${h.pemberi} · sisa ${formatRupiah(h.sisa_pokok)}` : undefined}
+          onTutup={tutup}
+        />
       </View>
-      {debt.data ? (
-        <FormBayar hutang={debt.data} txId={txId} onSaved={tutup} />
+      {h ? (
+        <FormBayar hutang={h} txId={txId} onSaved={tutup} onBatal={tutup} />
       ) : (
-        <Text className="px-5 py-4 text-mid font-sans">{debt.error ? debt.error.pesan : 'Memuat…'}</Text>
+        <Text className="px-[18px] py-4 text-mid font-sans">{debt.error ? debt.error.pesan : 'Memuat…'}</Text>
       )}
     </View>
   );

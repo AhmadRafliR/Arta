@@ -1,8 +1,17 @@
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AmountInput } from '@/components/AmountInput';
-import { Tombol } from '@/components/Tombol';
+import { BarisField } from '@/components/BarisField';
+import {
+  BarisAksi,
+  CatatanKecil,
+  KepalaHutang,
+  KotakHitung,
+  KotakIsian,
+  Petunjuk,
+  TombolAksi,
+} from '@/components/hutang/BagianHutang';
 import { useAuth } from '@/auth/AuthProvider';
 import { useDebt } from '@/data/debts';
 import { toAppError, type AppError } from '@/data/errors';
@@ -16,7 +25,17 @@ function pesanGalat(e: unknown): string {
   return toAppError(e).pesan;
 }
 
-function FormSesuaikan({ hutang, txId, onSaved }: { hutang: Hutang; txId: string; onSaved: () => void }) {
+function FormSesuaikan({
+  hutang,
+  txId,
+  onSaved,
+  onBatal,
+}: {
+  hutang: Hutang;
+  txId: string;
+  onSaved: () => void;
+  onBatal: () => void;
+}) {
   const { profile } = useAuth();
   const save = useSaveTransactions();
   const [sisaBaru, setSisaBaru] = useState<number | null>(null);
@@ -57,19 +76,35 @@ function FormSesuaikan({ hutang, txId, onSaved }: { hutang: Hutang; txId: string
     }
   }
 
+  // Selisih positif = sisa turun; negatif = sisa naik (mis. bunga/denda dari pemberi).
+  const labelSelisih =
+    selisih === null || sama ? '—' : selisih > 0 ? `Turun ${formatRupiah(selisih)}` : `Naik ${formatRupiah(-selisih)}`;
+
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-2 px-5 py-4" keyboardShouldPersistTaps="handled">
-      <Text className="text-mid font-sans">{`${hutang.pemberi} · Sisa pokok tercatat ${formatRupiah(hutang.sisa_pokok)}`}</Text>
-      <Text className="mt-2 text-xs font-semibold text-mid font-sans">Sisa pokok sebenarnya</Text>
-      <AmountInput value={null} onChange={setSisaBaru} testID="sisa-baru" />
+    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-3 px-[18px] pb-8 pt-1" keyboardShouldPersistTaps="handled">
+      <KotakIsian>
+        <BarisField ikon="ui-money" label="Sisa pokok sebenarnya" pertama>
+          <AmountInput value={null} onChange={setSisaBaru} testID="sisa-baru" />
+        </BarisField>
+      </KotakIsian>
+      <KotakHitung
+        item={[
+          { label: 'Sisa tercatat', nilai: formatRupiah(hutang.sisa_pokok) },
+          { label: 'Selisih', nilai: labelSelisih, masuk: true },
+        ]}
+      />
       {sisaBaru !== null ? (
-        <Text className="text-xs text-mid font-sans">
-          {sama ? 'Sudah sama' : `${formatRupiah(hutang.sisa_pokok)} → ${formatRupiah(sisaBaru)}`}
-        </Text>
+        <Petunjuk ok>{sama ? 'Sudah sama' : `${formatRupiah(hutang.sisa_pokok)} → ${formatRupiah(sisaBaru)}`}</Petunjuk>
       ) : null}
-      {error ? <Text className="mt-2 text-fg font-sans">{error}</Text> : null}
-      <View className="mt-4">
-        <Tombol primary label="Simpan" onPress={simpan} disabled={nonaktif} busy={busy} />
+      <CatatanKecil>
+        Pakai ini bila sisa dari pemberi berbeda dengan catatan (mis. bunga atau denda). Saldo dompet tidak berubah.
+      </CatatanKecil>
+      {error ? <Petunjuk>{error}</Petunjuk> : null}
+      <View className="mt-1">
+        <BarisAksi>
+          <TombolAksi label="Batal" onPress={onBatal} />
+          <TombolAksi label="Simpan" varian="utama" onPress={simpan} disabled={nonaktif} busy={busy} />
+        </BarisAksi>
       </View>
     </ScrollView>
   );
@@ -82,18 +117,21 @@ export default function SesuaikanHutang() {
   const debt = useDebt(id);
   const [txId] = useState(() => newTxId());
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const h = debt.data;
   return (
     <View className="flex-1 bg-bg">
-      <View className="flex-row items-center justify-between px-5 pb-1 pt-4">
-        <Text className="text-lg font-bold text-fg font-sans">Sesuaikan sisa hutang</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid font-sans">Batal</Text>
-        </Pressable>
+      <View className="px-[18px] pb-3 pt-5">
+        <KepalaHutang
+          ikon="act-ubah"
+          judul="Sesuaikan sisa hutang"
+          sub={h ? `${h.pemberi} · tercatat ${formatRupiah(h.sisa_pokok)}` : undefined}
+          onTutup={tutup}
+        />
       </View>
-      {debt.data ? (
-        <FormSesuaikan hutang={debt.data} txId={txId} onSaved={tutup} />
+      {h ? (
+        <FormSesuaikan hutang={h} txId={txId} onSaved={tutup} onBatal={tutup} />
       ) : (
-        <Text className="px-5 py-4 text-mid font-sans">{debt.error ? debt.error.pesan : 'Memuat…'}</Text>
+        <Text className="px-[18px] py-4 text-mid font-sans">{debt.error ? debt.error.pesan : 'Memuat…'}</Text>
       )}
     </View>
   );
