@@ -73,7 +73,15 @@
           "enableBackgroundPlayback": false
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-notifications",
+        {
+          "color": "#0B424F",
+          "defaultChannel": "pengingat"
+        }
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

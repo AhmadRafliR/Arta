@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Hapus akun arta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEF3F5; --card: #FFFFFF; --fg: #0B424F; --mid: #52727A; --line: #DDE7EA;
+    --acc: #52C3BF; --acc-fg: #08343D; --warn: #E0A93B; --warn-ink: #8A5A00;
+    --danger: #D95C5C; --danger-ink: #A32B2B; --danger-fg: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0B0C; --card: #161618; --fg: #FFFFFF; --mid: #8A8A8F; --line: #26262A;
+      --acc: #C6F432; --acc-fg: #0B0B0C; --warn: #E9C46A; --warn-ink: #E9C46A;
+      --danger: #FF8A8A; --danger-ink: #FF8A8A; --danger-fg: #0B0B0C;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Nunito Sans', system-ui, sans-serif; line-height: 1.55; }
+  main { max-width: 520px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 24px; margin: 8px 0 4px; }
+  p { margin: 0 0 12px; }
+  .mid { color: var(--mid); }
+  .kartu { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 16px 0; }
+  .peringatan { border-color: var(--warn); }
+  .peringatan strong { color: var(--warn-ink); }
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  input { width: 100%; font: inherit; font-size: 16px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+  button { width: 100%; min-height: 52px; font: inherit; font-size: 16px; font-weight: 700; border: 0; border-radius: 16px; padding: 0 20px; cursor: pointer; background: var(--acc); color: var(--acc-fg); }
+  button.bahaya { background: var(--danger); color: var(--danger-fg); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .pesan { margin-top: 12px; font-weight: 600; }
+  .galat { color: var(--danger-ink); }
+  .ok { color: var(--fg); }
+  a { color: inherit; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hapus akun arta</h1>
+  <p class="mid">Halaman ini menghapus akun arta dan semua datamu secara permanen. Tindakan ini tidak bisa dibatalkan.</p>
+
+  <div class="kartu peringatan">
+    <p><strong>Langganan Google Play tidak ikut batal.</strong></p>
+    <p class="mid" style="margin:0">Bila kamu berlangganan arta Pro, batalkan dulu di
+      <a href="https://play.google.com/store/account/subscriptions" rel="noopener">Google Play &rarr; Langganan</a>
+      agar tidak ditagih lagi.</p>
+  </div>
+
+  <div class="kartu" id="belum-diisi" hidden>
+    <p class="galat"><strong>Halaman belum dikonfigurasi.</strong></p>
+    <p class="mid" style="margin:0">Isi <code>SUPABASE_URL</code> dan <code>SUPABASE_ANON_KEY</code> di bagian skrip halaman ini (lihat web/README.md).</p>
+  </div>
+
+  <div id="alur">
+    <form class="kartu" id="f-email" novalidate>
+      <p><strong>Langkah 1.</strong> Masukkan email akunmu. Kami kirim kode 6 digit.</p>
+      <label for="email">Email</label>
+      <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="nama@email.com" required>
+      <button type="submit" id="b-kirim">Kirim kode</button>
+    </form>
+
+    <form class="kartu" id="f-kode" novalidate hidden>
+      <p><strong>Langkah 2.</strong> Masukkan kode 6 digit yang dikirim ke <span id="email-tujuan"></span>.</p>
+      <label for="kode">Kode</label>
+      <input id="kode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" required>
+      <button type="submit" id="b-verif">Verifikasi</button>
+    </form>
+
+    <form class="kartu" id="f-hapus" novalidate hidden>
+      <p><strong>Langkah 3.</strong> Semua data akun (dompet, transaksi, kategori, hutang, budget, pengaturan, kuota, token notifikasi, dan status langganan) akan dihapus permanen.</p>
+      <label for="konfirmasi">Ketik HAPUS untuk konfirmasi</label>
+      <input id="konfirmasi" type="text" autocomplete="off" autocapitalize="characters" placeholder="HAPUS">
+      <button type="submit" id="b-hapus" class="bahaya" disabled>Hapus akun permanen</button>
+    </form>
+  </div>
+
+  <div class="kartu" id="selesai" hidden>
+    <p><strong>Akunmu sudah dihapus.</strong></p>
+    <p class="mid" style="margin:0">Semua data telah dihapus permanen. Terima kasih sudah memakai arta.</p>
+  </div>
+
+  <p class="pesan" id="pesan" role="status" aria-live="polite"></p>
+
+  <p class="mid" style="margin-top:32px">Tidak bisa masuk atau punya kendala? Kirim permintaan hapus akun ke
+    <a href="mailto:[EMAIL KONTAK]">[EMAIL KONTAK]</a> dari email yang terdaftar di arta.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<script>
+  // Isi dua konstanta ini (lihat web/README.md). Kunci anon memang publik; jangan pernah isi service role.
+  var SUPABASE_URL = 'GANTI_DENGAN_URL_SUPABASE';
+  var SUPABASE_ANON_KEY = 'GANTI_DENGAN_ANON_KEY';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var belumDiisi = SUPABASE_URL.indexOf('GANTI_') === 0 || SUPABASE_ANON_KEY.indexOf('GANTI_') === 0;
+  var sb = null;
+  var email = '';
+
+  function pesan(teks, galat) {
+    var el = $('pesan');
+    el.textContent = teks || '';
+    el.className = 'pesan ' + (galat ? 'galat' : 'ok');
+  }
+  function tampil(id) {
+    ['f-email', 'f-kode', 'f-hapus'].forEach(function (x) { $(x).hidden = x !== id; });
+  }
+  function sibuk(tombol, aktif, label) {
+    tombol.disabled = aktif;
+    if (label) tombol.textContent = label;
+  }
+
+  if (belumDiisi || !window.supabase) {
+    $('alur').hidden = true;
+    $('belum-diisi').hidden = false;
+    if (!belumDiisi) pesan('Gagal memuat pustaka. Periksa koneksi lalu muat ulang halaman.', true);
+  } else {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    });
+
+    $('f-email').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      email = $('email').value.trim();
+      if (!email || email.indexOf('@') < 1) { pesan('Masukkan email yang valid.', true); return; }
+      var b = $('b-kirim');
+      sibuk(b, true, 'Mengirim…');
+      pesan('');
+      try {
+        // shouldCreateUser: false → email yang belum terdaftar ditolak, tidak membuat akun baru.
+        var r = await sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
+        if (r.error) throw r.error;
+        $('email-tujuan').textContent = email;
+        tampil('f-kode');
+        pesan('Kode dikirim. Cek kotak masuk (dan folder spam).');
+      } catch (err) {
+        pesan('Tidak bisa mengirim kode. Pastikan email sudah terdaftar di arta, lalu coba lagi.', true);
+      } finally {
+        sibuk(b, false, 'Kirim kode');
+      }
+    });
+
+    $('f-kode').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var kode = $('kode').value.replace(/\s+/g, '');
+      if (!/^\d{6}$/.test(kode)) { pesan('Kode harus 6 digit angka.', true); return; }
+      var b = $('b-verif');
+      sibuk(b, true, 'Memeriksa…');
+      pesan('');
+      try {
+        var r = await sb.auth.verifyOtp({ email: email, token: kode, type: 'email' });
+        if (r.error) throw r.error;
+        tampil('f-hapus');
+        pesan('Terverifikasi. Satu langkah lagi.');
+      } catch (err) {
+        pesan('Kode salah atau sudah kedaluwarsa. Coba lagi atau minta kode baru.', true);
+      } finally {
+        sibuk(b, false, 'Verifikasi');
+      }
+    });
+
+    $('konfirmasi').addEventListener('input', function () {
+      $('b-hapus').disabled = $('konfirmasi').value !== 'HAPUS';
+    });
+
+    $('f-hapus').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if ($('konfirmasi').value !== 'HAPUS') return;
+      var b = $('b-hapus');
+      sibuk(b, true, 'Menghapus…');
+      pesan('');
+      try {
+        var r = await sb.functions.invoke('delete-account', { body: { konfirmasi: 'HAPUS' } });
+        if (r.error) throw r.error;
+        try { await sb.auth.signOut({ scope: 'local' }); } catch (_) { /* akun sudah terhapus */ }
+        $('alur').hidden = true;
+        $('selesai').hidden = false;
+        pesan('');
+      } catch (err) {
+        var teks = 'Akun belum terhapus, coba lagi.';
+        try {
+          var isi = err && err.context && (await err.context.json());
+          if (isi && typeof isi.pesan === 'string' && isi.pesan) teks = isi.pesan;
+        } catch (_) { /* pakai pesan umum */ }
+        pesan(teks, true);
+        sibuk(b, false, 'Hapus akun permanen');
+      }
+    });
+  }
+</script>
+</body>
+</html>

@@ -433,3 +433,13 @@ verify_jwt = false
 
 [functions.report-monthly]
 verify_jwt = false
+
+# Rencana 5: Edge Functions. Webhook RevenueCat dan pengingat cron memakai secret sendiri (bukan JWT).
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+[functions.debt-reminders]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = true

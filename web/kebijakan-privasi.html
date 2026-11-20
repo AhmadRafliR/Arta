@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Kebijakan Privasi arta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #EEF3F5; --card: #FFFFFF; --fg: #0B424F; --mid: #52727A; --line: #DDE7EA; --acc-ink: #17726F; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0B0B0C; --card: #161618; --fg: #FFFFFF; --mid: #8A8A8F; --line: #26262A; --acc-ink: #C6F432; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Nunito Sans', system-ui, sans-serif; line-height: 1.65; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 56px; }
+  h1 { font-size: 26px; margin: 8px 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 8px; }
+  p, ul { margin: 0 0 12px; }
+  ul { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .mid { color: var(--mid); }
+  .catatan { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  a { color: var(--acc-ink); overflow-wrap: anywhere; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--mid); font-weight: 600; }
+  .gulir { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Kebijakan Privasi arta</h1>
+  <p class="mid">Terakhir diperbarui: [TANGGAL]</p>
+  <p class="catatan"><strong>Draf.</strong> Dokumen ini draf yang perlu ditinjau pengendali data sebelum dipublikasikan. Ganti semua teks dalam tanda kurung siku sebelum dipakai.</p>
+
+  <h2>1. Siapa kami</h2>
+  <p>arta adalah aplikasi pencatat keuangan pribadi untuk Android. Pengendali data pribadi adalah Rafli, perorangan (selanjutnya "kami"). Pertanyaan atau permintaan terkait data pribadi dapat dikirim ke <a href="mailto:[EMAIL KONTAK]">[EMAIL KONTAK]</a>.</p>
+
+  <h2>2. Data yang kami kumpulkan</h2>
+  <ul>
+    <li><strong>Email</strong>, untuk membuat akun dan masuk (kode sekali pakai lewat email).</li>
+    <li><strong>Data keuangan yang kamu ketik atau ucapkan:</strong> dompet dan saldo, transaksi, kategori, hutang dan jadwalnya, budget, serta catatan yang kamu tulis.</li>
+    <li><strong>Rekaman suara</strong> bila kamu memakai catat dengan suara. Audio dikirim untuk ditranskripsi menjadi teks lalu <strong>dibuang</strong>; kami tidak menyimpan file audionya. Teks hasil transkripsi dapat disimpan bersama transaksi.</li>
+    <li><strong>Pengaturan dan kuota:</strong> preferensi (misalnya tema, zona waktu, jam pengingat) dan pemakaian kuota catat AI.</li>
+    <li><strong>Token notifikasi (push)</strong> perangkat, agar pengingat tagihan bisa dikirim.</li>
+    <li><strong>Status langganan</strong> (apakah Pro aktif, masa berlaku, dan produk). Pembayaran diproses Google Play; kami tidak menerima nomor kartu atau data pembayaran kamu.</li>
+  </ul>
+  <p>Kami tidak menjual data pribadi dan tidak menampilkan iklan.</p>
+
+  <h2>3. Tujuan penggunaan</h2>
+  <ul>
+    <li>Menyediakan fitur inti: mencatat, menampilkan, dan mengelola keuanganmu.</li>
+    <li>Memproses catatan suara/teks menjadi draf transaksi (catat dengan AI).</li>
+    <li>Mengirim pengingat tagihan bila kamu mengaktifkannya.</li>
+    <li>Mengelola langganan Pro dan membatasi kuota sesuai paket.</li>
+    <li>Menjaga keamanan akun dan mencegah penyalahgunaan.</li>
+  </ul>
+
+  <h2>4. Pihak yang memproses data (pemroses)</h2>
+  <div class="gulir">
+  <table>
+    <thead><tr><th>Pihak</th><th>Peran</th><th>Data</th></tr></thead>
+    <tbody>
+      <tr><td>Supabase</td><td>Basis data, autentikasi, dan fungsi server</td><td>Email dan seluruh data akun</td></tr>
+      <tr><td>OpenAI</td><td>Transkripsi suara dan penguraian teks menjadi transaksi</td><td>Audio atau teks yang kamu kirim ke fitur catat AI, plus daftar nama dompet dan kategori sebagai konteks</td></tr>
+      <tr><td>RevenueCat</td><td>Pengelolaan langganan</td><td>ID akun (acak) dan status langganan</td></tr>
+      <tr><td>Google Play</td><td>Pembayaran dan penagihan langganan</td><td>Data pembelian di akun Google kamu</td></tr>
+      <tr><td>Expo (layanan push)</td><td>Pengiriman notifikasi</td><td>Token notifikasi perangkat dan isi pengingat</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-top:12px">Sebagian pemroses berada di luar Indonesia, sehingga data dapat diproses di negara lain. Kami memilih penyedia yang menerapkan perlindungan data yang layak.</p>
+
+  <h2>5. Lama penyimpanan</h2>
+  <ul>
+    <li>Data akun disimpan selama akunmu aktif.</li>
+    <li>Audio tidak disimpan setelah ditranskripsi.</li>
+    <li>Saat akun dihapus, seluruh data akun dihapus permanen dari basis data kami. Salinan cadangan dapat bertahan paling lama [JANGKA WAKTU CADANGAN] sebelum terhapus otomatis.</li>
+    <li>Catatan pembelian dapat tetap disimpan oleh Google Play sesuai kebijakan Google.</li>
+  </ul>
+
+  <h2>6. Hak kamu menurut UU PDP</h2>
+  <p>Sesuai Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi, kamu berhak untuk:</p>
+  <ul>
+    <li>mendapat informasi tentang pemrosesan data pribadimu;</li>
+    <li>mengakses dan mendapatkan salinan datamu;</li>
+    <li>melengkapi atau memperbarui data yang tidak akurat;</li>
+    <li>menghapus atau mengakhiri pemrosesan datamu;</li>
+    <li>menarik persetujuan pemrosesan;</li>
+    <li>mengajukan keberatan atas pemrosesan tertentu; dan</li>
+    <li>menggunakan atau mengirimkan datamu ke pihak lain bila memungkinkan (di arta kamu dapat mengekspor data ke XLSX/CSV dengan fitur Pro).</li>
+  </ul>
+  <p>Ajukan permintaan lewat <a href="mailto:[EMAIL KONTAK]">[EMAIL KONTAK]</a>. Kami berusaha menanggapi dalam waktu yang wajar dan paling lambat sesuai batas waktu yang ditentukan peraturan.</p>
+
+  <h2>7. Cara menghapus akun dan data</h2>
+  <ul>
+    <li><strong>Di aplikasi:</strong> Akun &rarr; Hapus akun, lalu ketik HAPUS.</li>
+    <li><strong>Lewat web:</strong> <a href="[URL HAPUS AKUN]">[URL HAPUS AKUN]</a>.</li>
+    <li><strong>Lewat email:</strong> kirim permintaan dari email terdaftar ke <a href="mailto:[EMAIL KONTAK]">[EMAIL KONTAK]</a>.</li>
+  </ul>
+  <p><strong>Penting:</strong> menghapus akun tidak membatalkan langganan Google Play. Batalkan langganan di <a href="https://play.google.com/store/account/subscriptions" rel="noopener">Google Play &rarr; Langganan</a> agar tidak ditagih lagi.</p>
+
+  <h2>8. Keamanan</h2>
+  <p>Data dikirim melalui koneksi terenkripsi (HTTPS) dan setiap akun hanya dapat mengakses datanya sendiri lewat aturan keamanan tingkat baris di basis data. Tidak ada sistem yang sepenuhnya kebal; bila terjadi kegagalan pelindungan data yang berdampak padamu, kami akan memberi tahu sesuai ketentuan peraturan yang berlaku.</p>
+
+  <h2>9. Anak-anak</h2>
+  <p>arta ditujukan untuk pengguna berusia 18 tahun ke atas. Kami tidak dengan sengaja mengumpulkan data anak.</p>
+
+  <h2>10. Perubahan kebijakan</h2>
+  <p>Kebijakan ini dapat diperbarui. Perubahan penting akan diumumkan di aplikasi atau lewat email, dan tanggal "Terakhir diperbarui" di atas akan berubah.</p>
+
+  <h2>11. Kontak</h2>
+  <p>Rafli (pengendali data) &middot; <a href="mailto:[EMAIL KONTAK]">[EMAIL KONTAK]</a></p>
+</main>
+</body>
+</html>
