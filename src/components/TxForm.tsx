@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import { AmountInput } from '@/components/AmountInput';
 import { Chip } from '@/components/Chip';
+import { PeringatanBudget } from '@/components/PeringatanBudget';
 import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
 import { useCategories } from '@/data/categories';
@@ -183,6 +184,10 @@ function TxFormBody({ initial, submit }: BodyProps) {
       />
 
       {error ? <Text className="mt-2 text-fg font-sans">{error}</Text> : null}
+
+      {jenis === 'pengeluaran' && nominal !== null && nominal > 0 && tanggalValid(tanggal) ? (
+        <PeringatanBudget kategori={kategori} nominal={nominal} tanggal={tanggal} abaikanTxId={ubah ? initial.id : undefined} />
+      ) : null}
 
       <View className="mt-4">
         <Tombol primary label="Simpan" onPress={simpan} disabled={nonaktif} busy={busy} />

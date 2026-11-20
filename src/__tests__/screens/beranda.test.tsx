@@ -3,6 +3,7 @@ import Beranda from '../../../app/(tabs)/index';
 
 const mockNavigate = jest.fn();
 
+let mockBudgets: { data: unknown[] | undefined; error?: unknown } = { data: [] };
 let mockBulan: { isLoading: boolean; error: unknown; data: unknown[] | undefined } | null = null;
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ navigate: mockNavigate, push: jest.fn() }), useFocusEffect: jest.fn() }));
@@ -18,6 +19,7 @@ jest.mock('@/theme/ThemeProvider', () => ({
     t: { heroFrom: '#0B424F', heroTo: '#1F6A76', heroFg: '#FFFFFF' },
   }),
 }));
+jest.mock('@/data/budgets', () => ({ useBudgets: () => mockBudgets }));
 jest.mock('@/data/wallets', () => {
   const { W } = jest.requireActual('@/domain/testFactories');
   return {
@@ -49,6 +51,7 @@ jest.mock('@/data/transactions', () => {
 
 beforeEach(() => {
   mockBulan = null;
+  mockBudgets = { data: [] };
 });
 
 describe('Beranda', () => {
@@ -90,5 +93,36 @@ describe('Beranda', () => {
     mockBulan = { isLoading: false, error: null, data: [] };
     await render(<Beranda />);
     expect(screen.getByText('Belum ada transaksi bulan ini. Tekan tombol mic untuk mencatat yang pertama.')).toBeTruthy();
+  });
+
+  describe('kartu budget kritis', () => {
+    const B = (id: string, kategori: string, batas: number) => ({ id, kategori, batas_bulanan: batas });
+
+    it('menampilkan budget paling kritis', async () => {
+      mockBudgets = { data: [B('b1', 'makan', 50000), B('b2', 'transport', 500000)] };
+      await render(<Beranda />);
+      expect(screen.getByText('Budget paling kritis')).toBeTruthy();
+      expect(screen.getByRole('button', { name: /^Makan, Rp25\.000 \/ Rp50\.000/ })).toBeTruthy();
+      expect(screen.getByText('Aman, 50% terpakai')).toBeTruthy();
+      expect(screen.queryByText('Transport')).toBeNull();
+    });
+
+    it('tanpa budget: kartu tidak tampil', async () => {
+      await render(<Beranda />);
+      expect(screen.queryByText('Budget paling kritis')).toBeNull();
+    });
+
+    it('budget memuat: kartu tidak tampil dan Beranda tetap utuh', async () => {
+      mockBudgets = { data: undefined };
+      await render(<Beranda />);
+      expect(screen.queryByText('Budget paling kritis')).toBeNull();
+      expect(screen.getByText('Bulan ini')).toBeTruthy();
+    });
+
+    it('budget galat: kartu tidak tampil', async () => {
+      mockBudgets = { data: undefined, error: { kind: 'offline', pesan: 'x' } };
+      await render(<Beranda />);
+      expect(screen.queryByText('Budget paling kritis')).toBeNull();
+    });
   });
 });

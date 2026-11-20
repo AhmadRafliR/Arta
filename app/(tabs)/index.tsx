@@ -5,6 +5,7 @@ import { HeroCard } from '@/components/HeroCard';
 import { WalletChips } from '@/components/WalletChips';
 import { TxRow } from '@/components/TxRow';
 import { KeadaanKosong } from '@/components/KeadaanKosong';
+import { KartuBudgetKritis } from '@/components/KartuBudgetKritis';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAllTransactions, useTransactions } from '@/data/transactions';
 import { useWallets } from '@/data/wallets';
@@ -82,6 +83,7 @@ export default function Beranda() {
           </View>
         </View>
       )}
+      <KartuBudgetKritis />
 
       <View className="mt-1 flex-row items-center justify-between">
         <Text className="text-xs font-bold text-fg font-sans">Terbaru</Text>
