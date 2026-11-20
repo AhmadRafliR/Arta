@@ -45,6 +45,10 @@ export default function RootLayout() {
               <Stack.Screen name="transaksi/[id]" options={{ presentation: "modal" }} />
               <Stack.Screen name="dompet/[id]" options={{ presentation: "modal" }} />
               <Stack.Screen name="dompet/baru" options={{ presentation: "modal" }} />
+              <Stack.Screen name="hutang/baru" options={{ presentation: "modal" }} />
+              <Stack.Screen name="hutang/[id]" options={{ presentation: "modal" }} />
+              <Stack.Screen name="hutang/bayar" options={{ presentation: "modal" }} />
+              <Stack.Screen name="hutang/sesuaikan" options={{ presentation: "modal" }} />
             </Stack>
           </AuthGate>
         </ThemeShell>
