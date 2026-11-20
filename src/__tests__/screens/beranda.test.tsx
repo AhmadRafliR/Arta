@@ -1,9 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { buatHutang } from '@/domain/testFactories';
 import Beranda from '../../../app/(tabs)/index';
 
 const mockNavigate = jest.fn();
 
 let mockBulan: { isLoading: boolean; error: unknown; data: unknown[] | undefined } | null = null;
+let mockHutang: { data?: unknown[]; error?: unknown } = { data: [] };
+let mockHanyaHarian = false;
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ navigate: mockNavigate, push: jest.fn() }), useFocusEffect: jest.fn() }));
 jest.mock('react-native-safe-area-context', () => ({
@@ -15,7 +18,7 @@ jest.mock('@/auth/AuthProvider', () => ({
 jest.mock('@/theme/ThemeProvider', () => ({
   useTheme: () => ({
     mode: 'terang',
-    t: { heroFrom: '#0B424F', heroTo: '#1F6A76', heroFg: '#FFFFFF' },
+    t: { heroFrom: '#0B424F', heroTo: '#1F6A76', heroFg: '#FFFFFF', warnInk: '#8A5A00', fg2: '#555', mid: '#777' },
   }),
 }));
 jest.mock('@/data/wallets', () => {
@@ -25,11 +28,15 @@ jest.mock('@/data/wallets', () => {
       data: [
         { ...W('GoPay', 200000), nama: 'GoPay' },
         { ...W('Cash', 88000), nama: 'Cash' },
-        { ...W('Tabungan', 5000000, 'darurat'), nama: 'Tabungan' },
+        ...(mockHanyaHarian ? [] : [{ ...W('Tabungan', 5000000, 'darurat'), nama: 'Tabungan' }]),
       ],
     }),
   };
 });
+jest.mock('@/data/debts', () => ({
+  useDebts: () => mockHutang,
+  useRiwayatPokok: () => ({ data: {} }),
+}));
 jest.mock('@/data/transactions', () => {
   const { T } = jest.requireActual('@/domain/testFactories');
   const bln = jest.requireActual('@/lib/tanggal').hariIni('Asia/Jakarta').slice(0, 7);
@@ -49,7 +56,16 @@ jest.mock('@/data/transactions', () => {
 
 beforeEach(() => {
   mockBulan = null;
+  mockHutang = { data: [] };
+  mockHanyaHarian = false;
+  mockNavigate.mockClear();
 });
+
+function tambahHari(n: number): string {
+  const d = new Date(`${jest.requireActual('@/lib/tanggal').hariIni('Asia/Jakarta')}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
 
 describe('Beranda', () => {
   it('sapaan, nama, hero, bulan ini, terbaru', async () => {
@@ -90,5 +106,52 @@ describe('Beranda', () => {
     mockBulan = { isLoading: false, error: null, data: [] };
     await render(<Beranda />);
     expect(screen.getByText('Belum ada transaksi bulan ini. Tekan tombol mic untuk mencatat yang pertama.')).toBeTruthy();
+  });
+
+  describe('kartu hutang', () => {
+    const kredivo = () =>
+      buatHutang({
+        pemberi: 'Kredivo',
+        tipe: 'cicilan_tetap',
+        pokok_awal: 1200000,
+        sisa_pokok: 1100000,
+        jumlah_tagihan: 12,
+        tagihan_lunas: 1,
+        jatuh_tempo_berikutnya: tambahHari(3),
+        nominal_berikutnya: 100000,
+        jatuh_tempo_terakhir: tambahHari(3 + 30 * 10),
+      });
+
+    it('menampilkan kartu, kekayaan bersih dikurangi hutang, dan ketuk menuju Hutang', async () => {
+      mockHanyaHarian = true;
+      mockHutang = { data: [kredivo()] };
+      await render(<Beranda />);
+      expect(screen.getByText('Kekayaan bersih -Rp812.000')).toBeTruthy();
+      expect(screen.getByText('Kredivo · Rp100.000')).toBeTruthy();
+      expect(screen.getByText('3 hari lagi')).toBeTruthy();
+      expect(screen.getByText(/^Sisa Rp1\.100\.000 · bebas hutang /)).toBeTruthy();
+      await fireEvent.press(screen.getByRole('button', { name: 'Hutang' }));
+      expect(mockNavigate).toHaveBeenCalledWith('/hutang');
+    });
+
+    it('tanpa hutang: kartu tidak tampil', async () => {
+      await render(<Beranda />);
+      expect(screen.queryByRole('button', { name: 'Hutang' })).toBeNull();
+      expect(screen.getByText('Kekayaan bersih Rp5.288.000')).toBeTruthy();
+    });
+
+    it('useDebts galat: Beranda tetap menampilkan sisa uang', async () => {
+      mockHutang = { data: undefined, error: { kind: 'offline', pesan: 'Tidak ada koneksi. Coba lagi.' } };
+      await render(<Beranda />);
+      expect(screen.getByText('Rp288.000')).toBeTruthy();
+      expect(screen.getByText('Kekayaan bersih Rp5.288.000')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Hutang' })).toBeNull();
+    });
+
+    it('useDebts masih memuat: kekayaan memakai hutang 0', async () => {
+      mockHutang = { data: undefined };
+      await render(<Beranda />);
+      expect(screen.getByText('Kekayaan bersih Rp5.288.000')).toBeTruthy();
+    });
   });
 });
