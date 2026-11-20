@@ -49,6 +49,12 @@ describe('cocokkanDompet', () => {
     expect(cocokkanDompet('shopee pay', K.dompet)).toBe('w-spay');
     expect(cocokkanDompet('Go-Pay', K.dompet)).toBe('w-gopay');
   });
+  it('nama persis diutamakan atas alias', () => {
+    const w = (nama: string) => [{ id: 'x', nama, tipe: 'harian' as const }];
+    expect(cocokkanDompet('tunai', w('Tunai'))).toBe('x');
+    expect(cocokkanDompet('tunai', w('Cash'))).toBe('x');
+    expect(cocokkanDompet('tunai', w('GoPay'))).toBeNull();
+  });
   it('tidak cocok -> null', () => {
     expect(cocokkanDompet('dana', K.dompet)).toBeNull();
     expect(cocokkanDompet('', K.dompet)).toBeNull();
@@ -133,6 +139,18 @@ describe('validasiHasil', () => {
       wallet_id: 'w-dar',
       wallet_tujuan_id: 'w-cash',
     });
+  });
+
+  it('setor/tarik dari dompet darurat itu sendiri dibuang', () => {
+    const r = parse([
+      item({ jenis: 'tabungan_setor', dompet: 'dana darurat' }),
+      item({ jenis: 'tabungan_tarik', dompet: 'Dana darurat' }),
+    ]);
+    expect(r.draf).toEqual([]);
+    expect(r.tidakDidukung).toEqual([
+      'Transfer ke dompet yang sama dilewati',
+      'Transfer ke dompet yang sama dilewati',
+    ]);
   });
 
   it('tanpa dompet darurat', () => {

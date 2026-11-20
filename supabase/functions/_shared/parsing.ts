@@ -123,8 +123,11 @@ const ALIAS: Record<string, string> = {
 export function cocokkanDompet(nama: string, dompet: Konteks['dompet']): string | null {
   const n = normal(nama);
   if (!n) return null;
-  const target = ALIAS[n] ?? n;
-  return dompet.find((d) => normal(d.nama) === target)?.id ?? null;
+  // Nama persis dulu, baru alias (dompet bernama "Tunai" harus cocok dengan dirinya).
+  const persis = dompet.find((d) => normal(d.nama) === n);
+  if (persis) return persis.id;
+  const alias = ALIAS[n];
+  return alias ? (dompet.find((d) => normal(d.nama) === alias)?.id ?? null) : null;
 }
 
 const adaObjek = (x: unknown): x is Record<string, unknown> =>
@@ -233,6 +236,10 @@ export function validasiHasil(
       const harian = cari(namaDompet, peringatan);
       if (!darurat) peringatan.push('Belum punya dompet dana darurat');
       const setor = jenis === 'tabungan_setor';
+      if (harian && darurat && harian === darurat) {
+        tidakDidukung.push('Transfer ke dompet yang sama dilewati');
+        continue;
+      }
       draf.push({
         id: buatId(),
         ...dasar,
