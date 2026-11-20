@@ -34,3 +34,7 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Firebase (Rencana 5): jangan commit konfigurasi/kunci
+google-services.json
+*-service-account*.json
