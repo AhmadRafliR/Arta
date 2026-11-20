@@ -7,6 +7,8 @@ import { SKEMA_PARSE, type Konteks } from '../_shared/parsing.ts';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const MODEL_STT = Deno.env.get('OPENAI_MODEL_STT') || 'gpt-4o-mini-transcribe';
+// 'transcriptions' = /audio/transcriptions (OpenAI); 'chat' = input_audio di chat/completions (Gemini).
+const STT_MODE = Deno.env.get('OPENAI_STT_MODE') || 'transcriptions';
 const MODEL_PARSE = Deno.env.get('OPENAI_MODEL_PARSE') || 'gpt-5-mini';
 // Endpoint kompatibel OpenAI. Bawaan OpenAI; ganti lewat secret, misalnya router.bangunweb.com/v1.
 const OPENAI = (Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1').replace(/\/+$/, '');
@@ -76,6 +78,27 @@ function kunciOpenAI(stt = false): string {
   return k;
 }
 
+function base64(bytes: Uint8Array): string {
+  let biner = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    biner += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(biner);
+}
+
+// Format yang dikenal input_audio Gemini: wav, mp3, aac, ogg, flac, aiff.
+// m4a (AAC dalam MP4) dipetakan ke aac; webm/3gp/caf tidak didukung dan ditolak.
+function formatAudioChat(mime: string): string | null {
+  const m = mime.toLowerCase();
+  if (m.includes('wav')) return 'wav';
+  if (m.includes('mpeg') || m.includes('mp3')) return 'mp3';
+  if (m.includes('aac') || m.includes('m4a') || m.includes('mp4')) return 'aac';
+  if (m.includes('ogg')) return 'ogg';
+  if (m.includes('flac')) return 'flac';
+  if (m.includes('aiff')) return 'aiff';
+  return null;
+}
+
 function ekstensi(mime: string): string {
   const m = mime.toLowerCase();
   if (m.includes('webm')) return 'webm';
@@ -96,6 +119,34 @@ async function cekRespons(res: Response, tahap: string): Promise<void> {
 
 const openai = {
   async transkripsi(audio: Uint8Array, mime: string): Promise<string> {
+    // Gemini (lewat endpoint OpenAI-compatible) tidak punya /audio/transcriptions;
+    // audio dikirim sebagai input_audio di chat/completions.
+    if (STT_MODE === 'chat') {
+      const format = formatAudioChat(mime);
+      if (!format) throw new Error(`format audio tidak didukung: ${mime}`);
+      const res = await fetch(`${OPENAI_STT}/chat/completions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${kunciOpenAI(true)}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: MODEL_STT,
+          temperature: 0,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: 'Transkripsikan audio ini ke teks Bahasa Indonesia. Keluarkan hanya teksnya, tanpa penjelasan.' },
+                { type: 'input_audio', input_audio: { data: base64(audio), format } },
+              ],
+            },
+          ],
+        }),
+      });
+      await cekRespons(res, 'stt');
+      const data = await res.json();
+      const isi = data?.choices?.[0]?.message?.content;
+      return typeof isi === 'string' ? isi.trim() : '';
+    }
+
     const form = new FormData();
     form.append('file', new Blob([audio], { type: mime }), `rekaman.${ekstensi(mime)}`);
     form.append('model', MODEL_STT);
