@@ -208,7 +208,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
             maxLength={60}
             placeholder="Mis. Kredivo, Shopee PayLater"
             placeholderTextColor={t.mid}
-            className={KELAS_ISIAN}
+            className={`font-sans ${KELAS_ISIAN}`}
           />
         </BarisField>
 
@@ -226,7 +226,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
                 maxLength={2}
                 placeholder="12"
                 placeholderTextColor={t.mid}
-                className={KELAS_ISIAN}
+                className={`font-sans ${KELAS_ISIAN}`}
               />
               {tenorTeks === '' || tenorOk ? null : <Petunjuk>Tenor harus 1–60 bulan</Petunjuk>}
             </BarisField>
@@ -237,7 +237,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
                 onChangeText={setJatuhTempo}
                 autoCapitalize="none"
                 placeholderTextColor={t.mid}
-                className={KELAS_ISIAN}
+                className={`font-sans ${KELAS_ISIAN}`}
               />
               {tanggalValid(jatuhTempo) ? null : <Petunjuk>Tanggal tidak valid</Petunjuk>}
             </BarisField>
@@ -255,7 +255,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
                 keyboardType="decimal-pad"
                 placeholder="2,5"
                 placeholderTextColor={t.mid}
-                className={KELAS_ISIAN}
+                className={`font-sans ${KELAS_ISIAN}`}
               />
               {bungaTeks === '' || bunga !== null ? null : <Petunjuk>Bunga 0–100% per bulan</Petunjuk>}
               <View className="mt-1 flex-row flex-wrap gap-[7px]">
@@ -290,7 +290,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
             onChangeText={setTanggal}
             autoCapitalize="none"
             placeholderTextColor={t.mid}
-            className={KELAS_ISIAN}
+            className={`font-sans ${KELAS_ISIAN}`}
           />
           {tanggalValid(tanggal) ? null : <Petunjuk>Tanggal tidak valid</Petunjuk>}
         </BarisField>
@@ -333,7 +333,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
             onChangeText={setCatatan}
             placeholder="Catatan"
             placeholderTextColor={t.mid}
-            className={KELAS_ISIAN}
+            className={`font-sans ${KELAS_ISIAN}`}
           />
         </BarisField>
       </KotakIsian>

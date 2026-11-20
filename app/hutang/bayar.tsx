@@ -123,7 +123,7 @@ function FormBayar({
             onChangeText={setTanggal}
             autoCapitalize="none"
             placeholderTextColor={t.mid}
-            className={KELAS_ISIAN}
+            className={`font-sans ${KELAS_ISIAN}`}
           />
           {tglOk ? null : <Petunjuk>Tanggal tidak valid</Petunjuk>}
         </BarisField>
@@ -149,7 +149,7 @@ function FormBayar({
             onChangeText={setCatatan}
             placeholder="Catatan"
             placeholderTextColor={t.mid}
-            className={KELAS_ISIAN}
+            className={`font-sans ${KELAS_ISIAN}`}
           />
         </BarisField>
       </KotakIsian>

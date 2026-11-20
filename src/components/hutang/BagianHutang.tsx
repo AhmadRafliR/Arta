@@ -7,7 +7,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 // jadi variasi yang tidak tersedia di sana (tombol berikon, segmen ber-testID, kotak hitung) ada di sini.
 
 /** Kelas isian polos di dalam BarisField (mockup: .field-input). */
-export const KELAS_ISIAN = 'p-0 font-sans text-[14.5px] font-semibold text-fg';
+export const KELAS_ISIAN = 'p-0 text-[14.5px] font-semibold text-fg';
 
 type VarianTombol = 'utama' | 'bahaya' | 'biasa';
 

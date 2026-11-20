@@ -179,7 +179,7 @@ export default function DetailHutang() {
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={t.mid}
                 autoCapitalize="none"
-                className={KELAS_ISIAN}
+                className={`font-sans ${KELAS_ISIAN}`}
               />
             </BarisField>
             <BarisField ikon="ui-money" label="Nominal tagihan">
