@@ -13,9 +13,11 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('@/data/transactions', () => ({
   useSaveTransactions: () => ({ mutateAsync: mockSave }),
+  useTransactions: () => ({ data: [] }),
   useUpdateTransaction: () => ({ mutateAsync: mockUpdate }),
   newTxId: () => mockNewTxId(),
 }));
+jest.mock('@/data/budgets', () => ({ useBudgets: () => ({ data: [] }) }));
 jest.mock('@/data/wallets', () => ({
   useWallets: () => ({
     data: [

@@ -19,7 +19,9 @@ jest.mock('@/data/transactions', () => ({
   useUpdateTransaction: () => ({ mutateAsync: mockUpdate }),
   useDeleteTransaction: () => ({ mutateAsync: mockDelete }),
   useSaveTransactions: () => ({ mutateAsync: jest.fn() }),
+  useTransactions: () => ({ data: [] }),
 }));
+jest.mock('@/data/budgets', () => ({ useBudgets: () => ({ data: [] }) }));
 jest.mock('@/data/wallets', () => ({
   useWallets: () => ({
     data: [

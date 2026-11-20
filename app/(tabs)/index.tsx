@@ -6,6 +6,7 @@ import { WalletChips } from '@/components/WalletChips';
 import { TxRow } from '@/components/TxRow';
 import { KartuHutangBeranda } from '@/components/KartuHutangBeranda';
 import { KeadaanKosong } from '@/components/KeadaanKosong';
+import { KartuBudgetKritis } from '@/components/KartuBudgetKritis';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAllTransactions, useTransactions } from '@/data/transactions';
 import { useDebts, useRiwayatPokok } from '@/data/debts';
@@ -90,6 +91,7 @@ export default function Beranda() {
           </View>
         </View>
       )}
+      <KartuBudgetKritis />
 
       {adaHutang ? (
         <KartuHutangBeranda ringkas={ringkasHutangKini} hariIni={hariIniStr} onPress={() => router.navigate('/hutang')} />

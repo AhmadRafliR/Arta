@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip } from '@/components/Chip';
+import { MenuRencana } from '@/components/MenuRencana';
 import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
 import { walletBalances } from '@/domain/balances';
@@ -95,6 +96,8 @@ export default function Akun() {
             : null}
         </View>
       ) : null}
+
+      <MenuRencana />
 
       <View>
         <Text className="mb-2 text-xs font-semibold uppercase text-mid font-sans">Tampilan</Text>

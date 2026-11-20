@@ -12,6 +12,7 @@ const mockUpdateTx = jest.fn();
 const mockSetPref = jest.fn();
 const mockSignOut = jest.fn();
 let mockId = 'w1';
+let mockTipe: string | undefined;
 let mockTxs: unknown[];
 
 const W = (id: string, nama: string, over: object = {}) => ({
@@ -33,7 +34,7 @@ const mockWallets = [
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, push: mockPush, canGoBack: () => true, replace: jest.fn() }),
-  useLocalSearchParams: () => ({ id: mockId }),
+  useLocalSearchParams: () => ({ id: mockId, tipe: mockTipe }),
   useFocusEffect: jest.fn(),
 }));
 jest.mock('react-native-safe-area-context', () => ({
@@ -62,6 +63,7 @@ const btn = (name: string) => screen.getByRole('button', { name });
 beforeEach(() => {
   jest.clearAllMocks();
   mockId = 'w1';
+  mockTipe = undefined;
   mockTxs = [];
   mockUpdate.mockResolvedValue({});
   mockCreate.mockResolvedValue({});
@@ -165,6 +167,20 @@ describe('Dompet baru', () => {
     await fireEvent.press(btn('Simpan'));
     await waitFor(() => expect(mockCreate).toHaveBeenCalled());
     expect(mockCreate.mock.calls[0][0]).toMatchObject({ nama: 'Darurat 2', tipe: 'darurat', saldo_awal: 1000, target: 9000 });
+  });
+
+  it('param tipe=darurat memilih chip Darurat sejak awal; nilai lain diabaikan', async () => {
+    mockTipe = 'darurat';
+    await render(<Baru />);
+    expect(screen.getByTestId('target')).toBeTruthy();
+    expect(btn('Darurat').props.accessibilityState.selected).toBe(true);
+  });
+
+  it('param tipe tidak dikenal memakai Harian', async () => {
+    mockTipe = 'ngawur';
+    await render(<Baru />);
+    expect(screen.queryByTestId('target')).toBeNull();
+    expect(btn('Harian').props.accessibilityState.selected).toBe(true);
   });
 
   it('target hanya untuk darurat', async () => {

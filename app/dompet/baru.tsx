@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AmountInput } from '@/components/AmountInput';
 import { Chip } from '@/components/Chip';
 import { Tombol } from '@/components/Tombol';
@@ -23,7 +23,8 @@ export default function DompetBaru() {
   const { t } = useTheme();
   const create = useCreateWallet();
   const [nama, setNama] = useState('');
-  const [tipe, setTipe] = useState<TipeDompet>('harian');
+  const { tipe: tipeAwal } = useLocalSearchParams<{ tipe?: string }>();
+  const [tipe, setTipe] = useState<TipeDompet>(TIPE.find((x) => x.v === tipeAwal)?.v ?? 'harian');
   const [saldo, setSaldo] = useState<number | null>(0);
   const [target, setTarget] = useState<number | null>(0);
   const [busy, setBusy] = useState(false);
