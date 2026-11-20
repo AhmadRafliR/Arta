@@ -8,7 +8,12 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const MODEL_STT = Deno.env.get('OPENAI_MODEL_STT') || 'gpt-4o-mini-transcribe';
 const MODEL_PARSE = Deno.env.get('OPENAI_MODEL_PARSE') || 'gpt-5-mini';
-const OPENAI = 'https://api.openai.com/v1';
+// Endpoint kompatibel OpenAI. Bawaan OpenAI; ganti lewat secret, misalnya router.bangunweb.com/v1.
+const OPENAI = (Deno.env.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1').replace(/\/+$/, '');
+// Transkripsi boleh memakai penyedia/kunci lain (router teks belum tentu punya model suara).
+const OPENAI_STT = (Deno.env.get('OPENAI_STT_BASE_URL') || OPENAI).replace(/\/+$/, '');
+// reasoning_effort hanya dikenal model OpenAI; kirim hanya bila diatur.
+const REASONING = Deno.env.get('OPENAI_REASONING_EFFORT') || (OPENAI.includes('api.openai.com') ? 'low' : '');
 
 type GalatPostgrest = { code?: string; message?: string } | null;
 
@@ -65,8 +70,8 @@ function buatDb(token: string): DbPengguna {
   };
 }
 
-function kunciOpenAI(): string {
-  const k = Deno.env.get('OPENAI_API_KEY');
+function kunciOpenAI(stt = false): string {
+  const k = (stt ? Deno.env.get('OPENAI_STT_API_KEY') : undefined) || Deno.env.get('OPENAI_API_KEY');
   if (!k) throw new Error('OPENAI_API_KEY belum diset');
   return k;
 }
@@ -96,9 +101,9 @@ const openai = {
     form.append('model', MODEL_STT);
     form.append('language', 'id');
     form.append('temperature', '0');
-    const res = await fetch(`${OPENAI}/audio/transcriptions`, {
+    const res = await fetch(`${OPENAI_STT}/audio/transcriptions`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${kunciOpenAI()}` },
+      headers: { Authorization: `Bearer ${kunciOpenAI(true)}` },
       body: form,
     });
     await cekRespons(res, 'stt');
@@ -115,7 +120,7 @@ const openai = {
       },
       body: JSON.stringify({
         model: MODEL_PARSE,
-        reasoning_effort: 'low',
+        ...(REASONING ? { reasoning_effort: REASONING } : {}),
         messages: [
           { role: 'system', content: prompt },
           { role: 'user', content: teks },
