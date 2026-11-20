@@ -34,6 +34,10 @@ const mockWallets = [
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, push: mockPush, canGoBack: () => true, replace: jest.fn() }),
   useLocalSearchParams: () => ({ id: mockId }),
+  useFocusEffect: jest.fn(),
+}));
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock('@/data/wallets', () => ({
   useWallets: () => ({ data: mockWallets }),

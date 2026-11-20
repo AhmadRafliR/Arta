@@ -11,10 +11,13 @@ import { formatRupiah } from '@/domain/money';
 import { monthSummary } from '@/domain/summary';
 import { sapaan } from '@/lib/greeting';
 import { hariIni, jamDi } from '@/lib/tanggal';
+import { useGulirPulau } from '@/nav/useGulirPulau';
+import { TINGGI_NAV } from '@/nav/pulau';
 
 export default function Beranda() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const gulir = useGulirPulau('index');
   const { profile } = useAuth();
   const zona = profile?.zona_waktu || undefined;
   const bulan = hariIni(zona).slice(0, 7);
@@ -41,8 +44,9 @@ export default function Beranda() {
   return (
     <ScrollView
       className="flex-1 bg-bg"
-      contentContainerClassName="gap-3 px-4 pb-6"
-      contentContainerStyle={{ paddingTop: insets.top + 12 }}
+      contentContainerClassName="gap-3 px-4"
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: TINGGI_NAV + insets.bottom + 16 }}
+      {...gulir}
     >
       <View>
         <Text className="text-xs text-mid font-sans">{`${sapaan(jamDi(zona))},`}</Text>

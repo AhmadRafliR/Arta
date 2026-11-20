@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip } from '@/components/Chip';
 import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
@@ -11,6 +12,8 @@ import { useAllTransactions } from '@/data/transactions';
 import { useWallets } from '@/data/wallets';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { Pref } from '@/theme/tokens';
+import { useGulirPulau } from '@/nav/useGulirPulau';
+import { TINGGI_NAV } from '@/nav/pulau';
 
 const TIPE: { v: TipeDompet; label: string }[] = [
   { v: 'harian', label: 'Harian' },
@@ -39,6 +42,8 @@ function Baris({ w, saldo, onPress }: { w: Wallet; saldo: number | undefined; on
 
 export default function Akun() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const gulir = useGulirPulau('akun');
   const { signOut } = useAuth();
   const { pref, setPref } = useTheme();
   const wallets = useWallets().data ?? [];
@@ -51,7 +56,12 @@ export default function Akun() {
   const arsip = wallets.filter((w) => w.diarsip);
 
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-4 px-5 pb-8 pt-12">
+    <ScrollView
+      className="flex-1 bg-bg"
+      contentContainerClassName="gap-4 px-5 pt-12"
+      contentContainerStyle={{ paddingBottom: TINGGI_NAV + insets.bottom + 16 }}
+      {...gulir}
+    >
       <Text className="text-2xl font-bold text-fg font-sans">Akun</Text>
 
       {TIPE.map(({ v, label }) => {

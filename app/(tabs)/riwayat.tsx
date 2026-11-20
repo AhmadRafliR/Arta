@@ -10,6 +10,8 @@ import { useWallets } from '@/data/wallets';
 import { formatRupiah } from '@/domain/money';
 import { filterTx, kelompokHarian, type FilterTx } from '@/lib/filterTx';
 import { geserBulan, hariIni, labelBulan, NAMA_BULAN } from '@/lib/tanggal';
+import { useGulirPulau } from '@/nav/useGulirPulau';
+import { TINGGI_NAV } from '@/nav/pulau';
 
 function labelHari(tanggal: string): string {
   const [, m, d] = tanggal.split('-').map(Number);
@@ -19,6 +21,7 @@ function labelHari(tanggal: string): string {
 export default function Riwayat() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const gulir = useGulirPulau('riwayat');
   const { profile } = useAuth();
   const [bulan, setBulan] = useState(() => hariIni(profile?.zona_waktu || undefined).slice(0, 7));
   const [filter, setFilter] = useState<FilterTx>({});
@@ -42,7 +45,12 @@ export default function Riwayat() {
   const grup = useMemo(() => kelompokHarian(filterTx(semua ?? [], filter)), [semua, filter]);
 
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-3 px-4 pb-6" contentContainerStyle={{ paddingTop: insets.top + 12 }}>
+    <ScrollView
+      className="flex-1 bg-bg"
+      contentContainerClassName="gap-3 px-4"
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: TINGGI_NAV + insets.bottom + 16 }}
+      {...gulir}
+    >
       <View className="flex-row items-center justify-between">
         <Pressable accessibilityRole="button" accessibilityLabel="Bulan sebelumnya" onPress={() => gantiBulan(-1)} className="px-3 py-1">
           <Text className="text-lg text-fg font-sans">‹</Text>

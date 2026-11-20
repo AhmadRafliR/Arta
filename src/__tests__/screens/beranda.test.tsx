@@ -5,7 +5,7 @@ const mockNavigate = jest.fn();
 
 let mockBulan: { isLoading: boolean; error: unknown; data: unknown[] | undefined } | null = null;
 
-jest.mock('expo-router', () => ({ useRouter: () => ({ navigate: mockNavigate, push: jest.fn() }) }));
+jest.mock('expo-router', () => ({ useRouter: () => ({ navigate: mockNavigate, push: jest.fn() }), useFocusEffect: jest.fn() }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
