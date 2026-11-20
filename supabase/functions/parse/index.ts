@@ -126,6 +126,22 @@ async function cekRespons(res: Response, tahap: string): Promise<void> {
   throw new Error(`openai ${tahap} ${res.status}`);
 }
 
+const BATAS_MS = Number(Deno.env.get('OPENAI_TIMEOUT_MS')) || 30_000;
+
+// fetch dengan batas waktu dan catatan durasi per tahap (tanpa isi permintaan/respons).
+async function ambil(tahap: string, url: string, init: RequestInit): Promise<Response> {
+  const mulai = Date.now();
+  try {
+    const res = await fetch(url, { ...init, signal: AbortSignal.timeout(BATAS_MS) });
+    console.error(`parse: ${tahap} http ${res.status} ${Date.now() - mulai}ms`);
+    return res;
+  } catch (e) {
+    const nama = e instanceof Error ? e.name : 'galat';
+    console.error(`parse: ${tahap} gagal ${nama} ${Date.now() - mulai}ms`);
+    throw new Error(`openai ${tahap} ${nama}`);
+  }
+}
+
 const openai = {
   async transkripsi(audio: Uint8Array, mime: string): Promise<string> {
     // Gemini: endpoint kompatibel-OpenAI hanya menerima wav/mp3 untuk input_audio, jadi
@@ -133,7 +149,7 @@ const openai = {
     if (STT_MODE === 'gemini') {
       const format = formatAudioGemini(mime);
       if (!format) throw new Error(`format audio tidak didukung: ${mime}`);
-      const res = await fetch(`${GEMINI}/models/${encodeURIComponent(MODEL_STT)}:generateContent`, {
+      const res = await ambil('stt', `${GEMINI}/models/${encodeURIComponent(MODEL_STT)}:generateContent`, {
         method: 'POST',
         headers: { 'x-goog-api-key': kunciOpenAI(true), 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,7 +178,7 @@ const openai = {
     form.append('model', MODEL_STT);
     form.append('language', 'id');
     form.append('temperature', '0');
-    const res = await fetch(`${OPENAI_STT}/audio/transcriptions`, {
+    const res = await ambil('stt', `${OPENAI_STT}/audio/transcriptions`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${kunciOpenAI(true)}` },
       body: form,
@@ -173,7 +189,7 @@ const openai = {
   },
 
   async parse(prompt: string, teks: string): Promise<unknown> {
-    const res = await fetch(`${OPENAI}/chat/completions`, {
+    const res = await ambil('parse', `${OPENAI}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${kunciOpenAI()}`,
