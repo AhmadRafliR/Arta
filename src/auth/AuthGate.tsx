@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from './AuthProvider';
 import { routeFor } from './routeFor';
+import { ambilBaruMasuk } from './baruMasuk';
+import { useTransisi } from '@/animasi/TransisiProvider';
 import { gateView, routeAllowed } from './gateView';
 import { MarkMuat } from '@/components/MarkMuat';
 import { Tombol } from '@/components/Tombol';
@@ -23,6 +25,26 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [target, group, router]);
 
   const view = gateView({ loading, session: !!session, profileError, onboardingSelesai, group });
+
+  // Momen penting: baru masuk (OTP/Google) -> putar transisi menabung sampai profil termuat dan rute
+  // settle. useLayoutEffect agar overlay terpasang sebelum frame pertama setelah sesi muncul.
+  // Sesi tersimpan saat app dibuka ulang tidak ditandai, jadi tidak memutar transisi.
+  const { putar } = useTransisi();
+  const lepasTunggu = useRef<(() => void) | null>(null);
+  const userId = session?.user.id ?? null;
+  useLayoutEffect(() => {
+    if (!userId || !ambilBaruMasuk()) return;
+    const tunggu = new Promise<void>((resolve) => {
+      lepasTunggu.current = resolve;
+    });
+    void putar({ judul: 'Menyiapkan dompetmu', tunggu });
+  }, [userId, putar]);
+  useEffect(() => {
+    if ((view !== 'loading' || !userId) && lepasTunggu.current) {
+      lepasTunggu.current();
+      lepasTunggu.current = null;
+    }
+  }, [view, userId]);
 
   return (
     <>

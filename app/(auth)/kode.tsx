@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Tombol } from '@/components/Tombol';
+import { batalkanBaruMasuk, tandaiBaruMasuk } from '@/auth/baruMasuk';
 import { pesanAuth } from '@/auth/pesanAuth';
 import { supabase } from '@/lib/supabase';
 
@@ -15,10 +16,15 @@ export default function Kode() {
     if (kode.length !== 6) return setError('Kode terdiri dari 6 digit.');
     setBusy(true);
     setError(null);
+    // Ditandai SEBELUM memanggil: onAuthStateChange bisa terpicu sebelum await selesai.
+    tandaiBaruMasuk();
     const { error: err } = await supabase.auth.verifyOtp({ email, token: kode, type: 'email' });
     setBusy(false);
-    // Berhasil: onAuthStateChange memicu pengalihan otomatis di AuthGate.
-    if (err) setError(pesanAuth(err, 'Kode salah atau kedaluwarsa.'));
+    // Berhasil: onAuthStateChange memicu transisi + pengalihan otomatis di AuthGate.
+    if (err) {
+      batalkanBaruMasuk();
+      setError(pesanAuth(err, 'Kode salah atau kedaluwarsa.'));
+    }
   }
 
   return (

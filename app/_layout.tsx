@@ -8,6 +8,7 @@ import { AuthGate } from '@/auth/AuthGate';
 import { QueryCacheGuard } from '@/auth/QueryCacheGuard';
 import { ThemeProfileBridge } from '@/auth/ThemeProfileBridge';
 import { KerangkaLogo } from '@/components/KerangkaLogo';
+import { TransisiProvider } from '@/animasi/TransisiProvider';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import type { Pref } from '@/theme/tokens';
 import { LanggananProvider } from '@/langganan/LanggananProvider';
@@ -65,6 +66,7 @@ export default function RootLayout() {
             <ThemeProfileBridge />
             <PenanganNotifikasi />
             <SinkronPushBersesi />
+            <TransisiProvider>
             <AuthGate>
               <KerangkaLogo>
               <Stack screenOptions={{ headerShown: false }}>
@@ -85,6 +87,7 @@ export default function RootLayout() {
               </Stack>
               </KerangkaLogo>
             </AuthGate>
+            </TransisiProvider>
           </ThemeShell>
         </LanggananProvider>
       </AuthProvider>

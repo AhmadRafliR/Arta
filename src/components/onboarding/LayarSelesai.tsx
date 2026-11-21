@@ -1,12 +1,13 @@
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AnimasiNabung } from '@/components/animasi/AnimasiNabung';
 import { Ikon } from '@/components/ikon/Ikon';
 import { formatRupiah } from '@/domain/money';
 import { useTheme } from '@/theme/ThemeProvider';
 
 type Props = { total: number; sub: string; onLanjut: () => void };
 
-/** Layar selesai "Saldo awal tersimpan" (akun.html: .done): cincin centang, total, tombol catat transaksi pertama. */
+/** Layar selesai "Saldo awal tersimpan" (akun.html: .done): animasi menabung sekali main + centang kecil, total, tombol catat transaksi pertama. */
 export function LayarSelesai({ total, sub, onLanjut }: Props) {
   const { t } = useTheme();
   const insets = useSafeAreaInsets();
@@ -16,12 +17,11 @@ export function LayarSelesai({ total, sub, onLanjut }: Props) {
       className="flex-1 items-center justify-center bg-bg p-7"
     >
       <View className="w-full items-center gap-[14px]">
-        <View className="h-[88px] w-[88px] items-center justify-center rounded-full bg-accsoft">
-          <View
-            pointerEvents="none"
-            style={{ position: 'absolute', top: -7, left: -7, right: -7, bottom: -7, borderRadius: 51, borderWidth: 1, borderColor: t.acc, opacity: 0.45 }}
-          />
-          <Ikon nama="ui-check" ukuran={42} warna={t.accInk} />
+        <View className="items-center gap-2">
+          <AnimasiNabung ukuran={120} />
+          <View className="h-[26px] w-[26px] items-center justify-center rounded-full bg-accsoft">
+            <Ikon nama="ui-check" ukuran={16} warna={t.accInk} />
+          </View>
         </View>
         <Text accessibilityRole="header" className="text-[21px] font-bold text-fg font-sans" style={{ letterSpacing: -0.63 }}>
           Saldo awal tersimpan

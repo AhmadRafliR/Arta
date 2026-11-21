@@ -331,7 +331,7 @@ describe('Dompet awal: overlay "Akun siap"', () => {
     expect(screen.getByText('Isi saldo awal dompetmu')).toBeTruthy();
   });
 
-  it('dengan animasi: tampil ± 1,2 detik lalu menutup', async () => {
+  it('dengan animasi: tampil ± 1,8 detik lalu menutup', async () => {
     mockReduced = false;
     jest.useFakeTimers();
     try {
@@ -340,7 +340,7 @@ describe('Dompet awal: overlay "Akun siap"', () => {
       expect(screen.getByText('Tinggal satu langkah: beri tahu uangmu ada di mana.')).toBeTruthy();
       expect(screen.queryByText('Isi saldo awal dompetmu')).toBeNull();
       await act(async () => {
-        jest.advanceTimersByTime(1300);
+        jest.advanceTimersByTime(1900);
       });
       expect(screen.queryByText('Akun siap')).toBeNull();
       expect(screen.getByText('Isi saldo awal dompetmu')).toBeTruthy();

@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { MarkArta } from '@/components/MarkArta';
 import { Tombol } from '@/components/Tombol';
+import { batalkanBaruMasuk, tandaiBaruMasuk } from '@/auth/baruMasuk';
 import { pesanAuth } from '@/auth/pesanAuth';
 import { supabase } from '@/lib/supabase';
 
@@ -53,9 +54,14 @@ export default function Masuk() {
         setBusy(false);
         return; // dibatalkan pengguna
       }
+      tandaiBaruMasuk(); // sebelum signInWithIdToken: sesi bisa muncul sebelum await selesai
       const { error: err } = await supabase.auth.signInWithIdToken({ provider: 'google', token });
-      if (err) setError('Masuk dengan Google gagal. Coba lagi.');
+      if (err) {
+        batalkanBaruMasuk();
+        setError('Masuk dengan Google gagal. Coba lagi.');
+      }
     } catch (x) {
+      batalkanBaruMasuk();
       const kode = String((x as { code?: unknown } | null)?.code ?? '');
       setError(
         kode === '10' || kode === 'DEVELOPER_ERROR'
