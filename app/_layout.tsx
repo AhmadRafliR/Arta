@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { AuthGate } from '@/auth/AuthGate';
 import { QueryCacheGuard } from '@/auth/QueryCacheGuard';
 import { ThemeProfileBridge } from '@/auth/ThemeProfileBridge';
+import { KerangkaLogo } from '@/components/KerangkaLogo';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import type { Pref } from '@/theme/tokens';
 import { LanggananProvider } from '@/langganan/LanggananProvider';
@@ -65,6 +66,7 @@ export default function RootLayout() {
             <PenanganNotifikasi />
             <SinkronPushBersesi />
             <AuthGate>
+              <KerangkaLogo>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="catat" options={{ presentation: "modal" }} />
                 <Stack.Screen name="rekam" options={{ presentation: "modal" }} />
@@ -81,6 +83,7 @@ export default function RootLayout() {
                 <Stack.Screen name="hapus-akun" options={{ presentation: "modal" }} />
                 <Stack.Screen name="notifikasi-dompet" options={{ presentation: "modal" }} />
               </Stack>
+              </KerangkaLogo>
             </AuthGate>
           </ThemeShell>
         </LanggananProvider>
