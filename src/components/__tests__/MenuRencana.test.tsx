@@ -27,4 +27,12 @@ describe('MenuRencana', () => {
     await fireEvent.press(screen.getByRole('button', { name: nama }));
     expect(mockPush).toHaveBeenCalledWith(rute);
   });
+
+  it('Budget memanggil onBukaBudget (sheet) dan tidak pindah halaman', async () => {
+    const buka = jest.fn();
+    await render(<MenuRencana onBukaBudget={buka} />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Budget' }));
+    expect(buka).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+  });
 });

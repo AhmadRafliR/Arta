@@ -61,7 +61,14 @@ function susunMenu(r: RingkasanRencana): ItemMenu[] {
 }
 
 /** Bagian "Rencana keuangan" di layar Akun: pintu masuk ke budget, dana darurat, investasi, dan laporan. */
-export function MenuRencana({ ringkasan = {} }: { ringkasan?: RingkasanRencana }) {
+export function MenuRencana({
+  ringkasan = {},
+  onBukaBudget,
+}: {
+  ringkasan?: RingkasanRencana;
+  /** Bila diisi, baris Budget memanggil ini (mis. membuka sheet) alih-alih pindah ke halaman Budget. */
+  onBukaBudget?: () => void;
+}) {
   const router = useRouter();
   return (
     <View className="gap-3">
@@ -79,7 +86,7 @@ export function MenuRencana({ ringkasan = {} }: { ringkasan?: RingkasanRencana }
             nilai={m.nilai}
             kanan={m.pro ? <BadgeTier tier="pro" tinggi={20} /> : null}
             accessibilityLabel={m.label}
-            onPress={() => router.push(m.rute as never)}
+            onPress={() => (m.rute === '/budget' && onBukaBudget ? onBukaBudget() : router.push(m.rute as never))}
           />
         ))}
       </KartuGrupAkun>

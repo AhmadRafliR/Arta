@@ -23,7 +23,10 @@ jest.mock('@/auth/AuthProvider', () => ({
 }));
 jest.mock('@/theme/ThemeProvider', () => ({
   useTheme: () => ({
-    t: { accFg: '#000', mid: '#888', acc: '#0f0', fg: '#000', warn: '#ea0', warnInk: '#850', danger: '#d55', dangerInk: '#a22' },
+    t: {
+      accFg: '#000', accInk: '#070', mid: '#888', acc: '#0f0', fg: '#000', fg2: '#333', line: '#ddd', card2: '#f6f6f6',
+      warn: '#ea0', warnInk: '#850', warnBg: '#fe9', danger: '#d55', dangerInk: '#a22', dangerSoft: '#fdd',
+    },
   }),
 }));
 jest.mock('@/data/budgets', () => ({
@@ -33,6 +36,7 @@ jest.mock('@/data/budgets', () => ({
   useHapusBudget: () => ({ mutateAsync: mockHapus }),
 }));
 jest.mock('@/data/transactions', () => ({ useTransactions: () => mockTxs }));
+jest.mock('@/animasi/useMomen', () => ({ useMomen: () => jest.fn() }));
 jest.mock('@/data/categories', () => ({
   useCategories: () => ({
     data: [
@@ -62,34 +66,35 @@ beforeEach(() => {
   mockHapus.mockResolvedValue(undefined);
 });
 
-describe('Budget: daftar', () => {
-  it('urut menurut persen, dengan total dan teks status', async () => {
+describe('Budget: daftar (Budget bulanan)', () => {
+  it('ringkasan dipakai dibatasi per kategori, status, dan urutan menurut persen', async () => {
     await render(<BudgetIndex />);
-    expect(screen.getByText('Terpakai Rp470.000 dari Rp900.000')).toBeTruthy();
-    expect(screen.getByText('Lewat budget Rp50.000')).toBeTruthy();
-    expect(screen.getByText('Aman, 40% terpakai')).toBeTruthy();
+    expect(screen.getByText('Rp420.000')).toBeTruthy();
+    expect(screen.getByText('dari Rp900.000 total batas')).toBeTruthy();
+    expect(screen.getByText('47%')).toBeTruthy();
+    expect(screen.getByText('1 kategori sudah lewat batas bulan ini.')).toBeTruthy();
+    expect(screen.getByText('LEWAT')).toBeTruthy();
+    expect(screen.getByText('AMAN')).toBeTruthy();
+    expect(screen.getByText('Rp50.000 lewat')).toBeTruthy();
     const nama = screen.getAllByText(/^(Makan|Transport)$/).map((n) => n.props.children);
     expect(nama).toEqual(['Transport', 'Makan']);
   });
 
-  it('seluruh kategori: kartu menonjol di atas, tanpa sentinel, info total per kategori', async () => {
+  it('seluruh kategori tampil sebagai baris teratas tanpa sentinel', async () => {
     mockBudgets = { data: [B('b1', 'makan', 800000), B('bs', '__semua__', 1000000)] };
     await render(<BudgetIndex />);
     expect(screen.queryByText(/__semua__/)).toBeNull();
-    expect(screen.getByTestId('kartu-budget-semua')).toBeTruthy();
-    expect(screen.getByText('Seluruh kategori')).toBeTruthy();
-    expect(screen.getByText('Rp470.000 / Rp1.000.000')).toBeTruthy();
-    expect(screen.getByText('Total budget per kategori: Rp800.000')).toBeTruthy();
-    expect(screen.getByText('Terpakai Rp320.000 dari Rp800.000')).toBeTruthy();
+    const nama = screen.getAllByText(/^(Makan|Seluruh kategori)$/).map((n) => n.props.children);
+    expect(nama).toEqual(['Seluruh kategori', 'Makan']);
     await fireEvent.press(screen.getByRole('button', { name: /^Seluruh kategori,/ }));
     expect(mockPush).toHaveBeenCalledWith('/budget/ubah?id=bs');
   });
 
-  it('hanya seluruh kategori: tanpa kartu daftar kategori', async () => {
+  it('hanya seluruh kategori: ringkasan memakai budget itu', async () => {
     mockBudgets = { data: [B('bs', '__semua__', 1000000)] };
     await render(<BudgetIndex />);
-    expect(screen.getByTestId('kartu-budget-semua')).toBeTruthy();
-    expect(screen.queryByText(/Ketuk kategori/)).toBeNull();
+    expect(screen.getByText('dari Rp1.000.000 total batas')).toBeTruthy();
+    expect(screen.getByText('1 aktif')).toBeTruthy();
   });
 
   it('ketuk baris membuka ubah; tambah membuka form baru', async () => {
@@ -103,9 +108,8 @@ describe('Budget: daftar', () => {
   it('kosong: keadaan kosong', async () => {
     mockBudgets = { data: [] };
     await render(<BudgetIndex />);
-    expect(
-      screen.getByText('Belum ada budget. Pasang batas bulanan per kategori supaya pengeluaran tetap terkendali.'),
-    ).toBeTruthy();
+    expect(screen.getByText('Belum ada budget')).toBeTruthy();
+    expect(screen.getByText('Belum diatur')).toBeTruthy();
   });
 
   it('galat: pesan galat; Kembali menutup', async () => {
@@ -118,38 +122,51 @@ describe('Budget: daftar', () => {
 });
 
 describe('Budget: tambah dan ubah', () => {
-  it('tambah: kategori yang sudah punya budget tidak muncul; simpan', async () => {
+  it('tambah: kategori yang sudah punya budget dinonaktifkan; wajib pilih kategori; simpan', async () => {
     mockBudgets = { data: [B('b2', 'transport', 100000)] };
     await render(<BudgetUbah />);
-    expect(screen.queryByTestId('kat-Transport')).toBeNull();
-    expect(btn('Simpan').props.accessibilityState.disabled).toBe(true);
-    await fireEvent.press(screen.getByTestId('kat-Makan'));
+    expect(screen.getByTestId('kat-Transport').props.accessibilityState.disabled).toBe(true);
     await fireEvent.changeText(screen.getByTestId('batas'), '800000');
+    await fireEvent.press(btn('Simpan'));
+    expect(screen.getByText('Pilih kategori budget dulu.')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('kat-Makan'));
+    expect(screen.getByDisplayValue('800.000')).toBeTruthy();
     await fireEvent.press(btn('Simpan'));
     await waitFor(() => expect(mockSimpan).toHaveBeenCalledWith({ id: undefined, kategori: 'Makan', batas_bulanan: 800000 }));
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
   });
 
-  it('tambah: chip Seluruh kategori menyimpan sentinel; hilang bila sudah ada', async () => {
+  it('tambah: chip cepat mengisi nominal; batas minimal Rp10.000', async () => {
+    mockBudgets = { data: [] };
     await render(<BudgetUbah />);
-    expect(screen.getByText('Batas total semua pengeluaran dalam sebulan')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('kat-Makan'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Isi Rp500.000' }));
+    expect(screen.getByDisplayValue('500.000')).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('batas'), '5000');
+    await fireEvent.press(btn('Simpan'));
+    expect(screen.getByText('Batas minimal Rp10.000.')).toBeTruthy();
+    expect(mockSimpan).not.toHaveBeenCalled();
+  });
+
+  it('tambah: petak Seluruh kategori menyimpan sentinel', async () => {
+    await render(<BudgetUbah />);
     await fireEvent.press(screen.getByTestId('kat-semua'));
     await fireEvent.changeText(screen.getByTestId('batas'), '2000000');
     await fireEvent.press(btn('Simpan'));
     await waitFor(() => expect(mockSimpan).toHaveBeenCalledWith({ id: undefined, kategori: '__semua__', batas_bulanan: 2000000 }));
   });
 
-  it('tambah: chip Seluruh kategori tidak muncul bila sudah ada', async () => {
+  it('tambah: petak Seluruh kategori nonaktif bila sudah ada', async () => {
     mockBudgets = { data: [B('bs', '__semua__', 1000000)] };
     await render(<BudgetUbah />);
-    expect(screen.queryByTestId('kat-semua')).toBeNull();
+    expect(screen.getByTestId('kat-semua').props.accessibilityState.disabled).toBe(true);
   });
 
-  it('ubah sentinel: judul kategori Seluruh kategori', async () => {
+  it('ubah sentinel: subjudul Seluruh kategori tanpa sentinel', async () => {
     mockBudgets = { data: [B('bs', '__semua__', 1000000)] };
     mockId = 'bs';
     await render(<BudgetUbah />);
-    expect(screen.getByText('Seluruh kategori')).toBeTruthy();
+    expect(screen.getByText('Seluruh kategori · batas Rp1.000.000')).toBeTruthy();
     expect(screen.queryByText(/__semua__/)).toBeNull();
   });
 
@@ -158,18 +175,19 @@ describe('Budget: tambah dan ubah', () => {
     mockSimpan.mockRejectedValue({ kind: 'lain', pesan: 'Terjadi kesalahan. Coba lagi.', code: '23505' });
     await render(<BudgetUbah />);
     await fireEvent.press(screen.getByTestId('kat-Makan'));
-    await fireEvent.changeText(screen.getByTestId('batas'), '5000');
+    await fireEvent.changeText(screen.getByTestId('batas'), '50000');
     await fireEvent.press(btn('Simpan'));
     expect(await screen.findByText('Budget untuk kategori ini sudah ada')).toBeTruthy();
     expect(mockBack).not.toHaveBeenCalled();
   });
 
-  it('ubah: kategori tetap, batas terisi, simpan dengan id', async () => {
+  it('ubah: kategori terkunci, batas terisi, catatan pemakaian, simpan dengan id', async () => {
     mockId = 'b1';
     await render(<BudgetUbah />);
-    expect(screen.queryByTestId('kat-Makan')).toBeNull();
-    expect(screen.getByText('Makan')).toBeTruthy();
-    expect(screen.getByDisplayValue('800000')).toBeTruthy();
+    expect(screen.getByText('Ubah budget')).toBeTruthy();
+    expect(screen.getByTestId('kat-Transport').props.accessibilityState.disabled).toBe(true);
+    expect(screen.getByDisplayValue('800.000')).toBeTruthy();
+    expect(screen.getByText('Rp480.000 setelah disimpan.')).toBeTruthy();
     await fireEvent.changeText(screen.getByTestId('batas'), '900000');
     await fireEvent.press(btn('Simpan'));
     await waitFor(() => expect(mockSimpan).toHaveBeenCalledWith({ id: 'b1', kategori: 'makan', batas_bulanan: 900000 }));

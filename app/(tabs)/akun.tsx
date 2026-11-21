@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BadgeTier } from '@/components/BadgeTier';
 import { BarisMenuAkun, JudulSeksiAkun, KartuGrupAkun } from '@/components/BarisAkun';
 import { KartuProfilAkun } from '@/components/KartuProfilAkun';
+import { SheetBudget } from '@/components/SheetBudget';
 import { MenuRencana, type RingkasanRencana } from '@/components/MenuRencana';
 import { PengaturanPengingat } from '@/components/PengaturanPengingat';
 import { Segmented } from '@/components/Segmented';
@@ -119,6 +120,7 @@ export default function Akun() {
   const wallets = walletsQ.data ?? [];
   const txs = useAllTransactions();
   const [arsipBuka, setArsipBuka] = useState(false);
+  const [budgetBuka, setBudgetBuka] = useState(false);
   const langganan = useStatusLangganan();
   const pro = langganan.data?.pro === true;
   const kuota = useKuotaAi().data;
@@ -300,7 +302,8 @@ export default function Akun() {
         </KartuGrupAkun>
       ) : null}
 
-      <MenuRencana ringkasan={ringkasan} />
+      <MenuRencana ringkasan={ringkasan} onBukaBudget={() => setBudgetBuka(true)} />
+      {budgetBuka ? <SheetBudget terbuka onTutup={() => setBudgetBuka(false)} /> : null}
 
       <View className="gap-3" onLayout={(e) => setTemaY(e.nativeEvent.layout.y)}>
         <JudulSeksiAkun>Tampilan</JudulSeksiAkun>
