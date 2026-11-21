@@ -98,6 +98,14 @@
             ]
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "arta memakai galeri hanya saat kamu memilih screenshot tagihan untuk mengisi hutang.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

@@ -82,7 +82,7 @@ export function tanggalDiZona(sekarang: Date, zona: string | null | undefined): 
 type Masukan = { jenis: 'teks'; teks: string } | { jenis: 'audio'; audio: Uint8Array; mime: string };
 
 // Ukuran hasil decode dihitung dari panjang string agar string raksasa ditolak sebelum di-decode.
-function decodeBase64(s: string): Uint8Array | 'besar' | null {
+export function decodeBase64(s: string): Uint8Array | 'besar' | null {
   let b = s.startsWith('data:') ? s.slice(s.indexOf(',') + 1) : s;
   b = b.replace(/\s+/g, '');
   if (!b || b.length % 4 === 1 || !/^[A-Za-z0-9+/]*={0,2}$/.test(b)) return null;
@@ -120,7 +120,7 @@ function bacaMasukan(body: unknown): Masukan | Response {
   return galat(400, 'bad_request', PESAN.kosong);
 }
 
-function tokenDari(req: Request): string | null {
+export function tokenDari(req: Request): string | null {
   const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('authorization') ?? '');
   return m ? m[1] : null;
 }

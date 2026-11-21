@@ -443,3 +443,7 @@ verify_jwt = false
 
 [functions.delete-account]
 verify_jwt = true
+
+# Baca screenshot tagihan dengan Gemini; JWT pengguna diteruskan ke handler (kuota per pengguna).
+[functions.parse-hutang]
+verify_jwt = true

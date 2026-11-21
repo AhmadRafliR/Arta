@@ -15,6 +15,7 @@ import {
 } from '@/components/hutang/BagianHutang';
 import { useAuth } from '@/auth/AuthProvider';
 import { toAppError, type AppError } from '@/data/errors';
+import type { DrafHutang } from '@/data/hutangGambar';
 import { useSaveTransactions, type HutangBaru, type NewTx } from '@/data/transactions';
 import { useWallets } from '@/data/wallets';
 import { formatRupiah } from '@/domain/money';
@@ -52,6 +53,8 @@ type Props = {
   onSaved: (debtId: string) => void;
   /** Bila ada, tampil tombol "Batal" di samping "Simpan" (mockup: .sheet-actions). */
   onBatal?: () => void;
+  /** Draf dari screenshot: mengisi state awal. Pemanggil memasang ulang form (key baru) untuk draf baru. */
+  awal?: DrafHutang;
 };
 
 const TIPE: { nilai: TipeHutang; label: string; testID: string }[] = [
@@ -60,7 +63,7 @@ const TIPE: { nilai: TipeHutang; label: string; testID: string }[] = [
 ];
 
 // Form hutang baru (mockup: lembar "Tambah hutang"): segmen jenis, baris isian berikon, kotak hitung, Batal/Simpan.
-export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
+export function FormHutang({ txId, debtId, onSaved, onBatal, awal }: Props) {
   const { profile } = useAuth();
   const { t } = useTheme();
   const save = useSaveTransactions();
@@ -68,22 +71,26 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
   const aktif = (wallets.data ?? []).filter((w) => !w.diarsip);
   const zona = profile?.zona_waktu || undefined;
 
-  const [pemberi, setPemberi] = useState('');
-  const [tipe, setTipe] = useState<TipeHutang>('cicilan_tetap');
-  const [nominalCicilan, setNominalCicilan] = useState<number | null>(null);
-  const [tenorTeks, setTenorTeks] = useState('');
-  const [jatuhTempo, setJatuhTempo] = useState(() => bulanDepan(hariIni(zona)));
-  const [pokokAwal, setPokokAwal] = useState<number | null>(null);
-  const [bungaTeks, setBungaTeks] = useState('');
+  const [pemberi, setPemberi] = useState(awal?.pemberi ?? '');
+  const [tipe, setTipe] = useState<TipeHutang>(awal?.tipe ?? 'cicilan_tetap');
+  const [nominalCicilan, setNominalCicilan] = useState<number | null>(awal?.nominal_cicilan ?? null);
+  const [tenorTeks, setTenorTeks] = useState(awal?.tenor_bulan != null ? String(awal.tenor_bulan) : '');
+  const [jatuhTempo, setJatuhTempo] = useState(() =>
+    awal?.jatuh_tempo && tanggalValid(awal.jatuh_tempo) ? awal.jatuh_tempo : bulanDepan(hariIni(zona)),
+  );
+  const [pokokAwal, setPokokAwal] = useState<number | null>(awal?.pokok_awal ?? null);
+  const [bungaTeks, setBungaTeks] = useState(
+    awal?.bunga_persen_bulanan != null ? String(awal.bunga_persen_bulanan).replace('.', ',') : '',
+  );
   const [metode, setMetode] = useState<MetodeBunga>('efektif');
-  const [berjalan, setBerjalan] = useState(false);
-  const [sisaPokok, setSisaPokok] = useState<number | null>(null);
+  const [berjalan, setBerjalan] = useState(awal?.sisa_pokok != null);
+  const [sisaPokok, setSisaPokok] = useState<number | null>(awal?.sisa_pokok ?? null);
   // undefined = belum dipilih; null = "Tidak masuk dompet".
   const [dompetPilih, setDompetPilih] = useState<string | null | undefined>(undefined);
   const [danaDisentuh, setDanaDisentuh] = useState(false);
   const [danaNilai, setDanaNilai] = useState<number | null>(null);
   const [tanggal, setTanggal] = useState(() => hariIni(zona));
-  const [catatan, setCatatan] = useState('');
+  const [catatan, setCatatan] = useState(awal?.catatan ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sedangSimpan = useRef(false);
@@ -231,7 +238,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
         {cicilan ? (
           <>
             <BarisField ikon="ui-money" label="Nominal cicilan per bulan">
-              <AmountInput value={null} onChange={setNominalCicilan} testID="nominal-cicilan" />
+              <AmountInput value={nominalCicilan} onChange={setNominalCicilan} testID="nominal-cicilan" />
             </BarisField>
             <BarisField ikon="nav-riwayat" label="Sisa tenor (bulan, 1-60)">
               <TextInput
@@ -261,7 +268,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
         ) : (
           <>
             <BarisField ikon="ui-money" label="Pokok awal">
-              <AmountInput value={null} onChange={setPokokAwal} testID="pokok-awal" />
+              <AmountInput value={pokokAwal} onChange={setPokokAwal} testID="pokok-awal" />
             </BarisField>
             <BarisField ikon="ui-percent" label="Bunga per bulan (%)">
               <TextInput
@@ -292,7 +299,7 @@ export function FormHutang({ txId, debtId, onSaved, onBatal }: Props) {
             </BarisField>
             {berjalan ? (
               <BarisField ikon="ui-money" label="Sisa pokok sekarang">
-                <AmountInput value={null} onChange={setSisaPokok} testID="sisa-pokok" />
+                <AmountInput value={sisaPokok} onChange={setSisaPokok} testID="sisa-pokok" />
                 {sisaLebih ? <Petunjuk>Sisa pokok tidak boleh lebih dari pokok awal</Petunjuk> : null}
               </BarisField>
             ) : null}

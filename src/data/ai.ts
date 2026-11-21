@@ -28,7 +28,7 @@ export function useKuotaAi() {
 type BodyGalat = { galat?: string; pesan?: string };
 
 // Petakan galat functions.invoke (HTTP/relay/fetch) ke AppError.
-async function petakanGalat(e: unknown): Promise<AppError> {
+export async function petakanGalat(e: unknown): Promise<AppError> {
   const o = (e && typeof e === 'object' ? e : {}) as { name?: unknown; context?: { json?: () => Promise<unknown> } };
   if (o.name === 'FunctionsFetchError') return { kind: 'offline', pesan: PESAN_OFFLINE_UMUM };
   if (o.name === 'FunctionsHttpError') {

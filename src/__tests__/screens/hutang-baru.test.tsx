@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HutangBaru from '../../../app/hutang/baru';
 import { PESAN_OFFLINE } from '@/data/errors';
 
@@ -53,7 +54,7 @@ beforeEach(() => {
 
 describe('Hutang baru', () => {
   it('cicilan 100.000 x 12 menampilkan total dan menyimpan satu item', async () => {
-    await render(<HutangBaru />);
+    await render(<QueryClientProvider client={new QueryClient()}><HutangBaru /></QueryClientProvider>);
     await isiCicilan();
     expect(screen.getByTestId('total-hutang').props.children).toBe('Rp1.200.000');
     await fireEvent.press(simpan());
@@ -79,7 +80,7 @@ describe('Hutang baru', () => {
   it('simpan dua kali cepat tetap satu panggilan', async () => {
     let selesai: (v: unknown[]) => void = () => {};
     mockSave.mockImplementation(() => new Promise((r) => (selesai = r)));
-    await render(<HutangBaru />);
+    await render(<QueryClientProvider client={new QueryClient()}><HutangBaru /></QueryClientProvider>);
     await isiCicilan();
     // Dua onPress dalam satu render yang sama (sebelum busy sempat tampil): hanya satu yang jalan.
     const tombol = simpan();
@@ -94,7 +95,7 @@ describe('Hutang baru', () => {
 
   it('gagal lalu coba lagi memakai id dan debt_id yang sama', async () => {
     mockSave.mockRejectedValueOnce({ kind: 'offline', pesan: PESAN_OFFLINE });
-    await render(<HutangBaru />);
+    await render(<QueryClientProvider client={new QueryClient()}><HutangBaru /></QueryClientProvider>);
     await isiCicilan();
     await fireEvent.press(simpan());
     expect(await screen.findByText(PESAN_OFFLINE)).toBeTruthy();
@@ -110,7 +111,7 @@ describe('Hutang baru', () => {
   });
 
   it('berbunga tanpa memilih dompet: Simpan nonaktif; "Tidak masuk dompet" mengaktifkan', async () => {
-    await render(<HutangBaru />);
+    await render(<QueryClientProvider client={new QueryClient()}><HutangBaru /></QueryClientProvider>);
     await isiBerbunga();
     expect(nonaktif()).toBe(true);
     await fireEvent.press(screen.getByTestId('dompet-tidak'));
@@ -118,7 +119,7 @@ describe('Hutang baru', () => {
   });
 
   it('bunga "2,5" dikirim sebagai 2.5, metode efektif bawaan, dompet dipilih', async () => {
-    await render(<HutangBaru />);
+    await render(<QueryClientProvider client={new QueryClient()}><HutangBaru /></QueryClientProvider>);
     await isiBerbunga();
     await fireEvent.press(screen.getByTestId('dompet-w1'));
     expect(screen.queryByTestId('dompet-w3')).toBeNull();
@@ -134,7 +135,7 @@ describe('Hutang baru', () => {
   });
 
   it('sudah berjalan dengan sisa lebih dari pokok: galat dan Simpan nonaktif', async () => {
-    await render(<HutangBaru />);
+    await render(<QueryClientProvider client={new QueryClient()}><HutangBaru /></QueryClientProvider>);
     await isiBerbunga();
     await fireEvent.press(screen.getByTestId('dompet-tidak'));
     await fireEvent.press(screen.getByTestId('sudah-berjalan'));
@@ -149,12 +150,12 @@ describe('Hutang baru', () => {
   });
 
   it('Simpan nonaktif sebelum isian wajib terisi', async () => {
-    await render(<HutangBaru />);
+    await render(<QueryClientProvider client={new QueryClient()}><HutangBaru /></QueryClientProvider>);
     expect(nonaktif()).toBe(true);
   });
 
   it('menjelaskan kolom yang belum beres, dan pesannya hilang saat lengkap', async () => {
-    await render(<HutangBaru />);
+    await render(<QueryClientProvider client={new QueryClient()}><HutangBaru /></QueryClientProvider>);
     expect(
       screen.getByText(
         'Belum bisa disimpan. Lengkapi: nama pemberi; nominal cicilan per bulan; sisa tenor (1–60 bulan).',

@@ -44,3 +44,8 @@ jest.mock('expo-sharing', () => ({
 // Iklan: modul native AdMob dan banner dimatikan di tes. Tes iklan memakai jest.requireActual untuk BannerIklan.
 jest.mock('@/components/BannerIklan', () => ({ BannerIklan: () => null }));
 jest.mock('react-native-google-mobile-ads', () => require('./jest.mock-admob'));
+
+// Pemilih gambar: modul native tidak ada di tes. Tes layar yang butuh hasil memakai mockResolvedValueOnce.
+jest.mock('expo-image-picker', () => ({
+  launchImageLibraryAsync: jest.fn(async () => ({ canceled: true, assets: null })),
+}));
