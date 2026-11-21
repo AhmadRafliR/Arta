@@ -7,6 +7,20 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const RAHASIA = Deno.env.get('REVENUECAT_WEBHOOK_SECRET') ?? '';
 const ENTITLEMENT = Deno.env.get('REVENUECAT_ENTITLEMENT') || 'pro';
+// Kunci rahasia API v1 RevenueCat: membaca status terkini pengguna tujuan TRANSFER (pulihkan pembelian).
+const KUNCI_API = Deno.env.get('REVENUECAT_SECRET_KEY') ?? '';
+
+async function ambilPelanggan(userId: string): Promise<unknown> {
+  const res = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`, {
+    headers: { Authorization: `Bearer ${KUNCI_API}`, Accept: 'application/json' },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) {
+    await res.body?.cancel();
+    throw new Error(`revenuecat ${res.status}`);
+  }
+  return await res.json();
+}
 
 const sb = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -33,5 +47,6 @@ Deno.serve(
     entitlement: ENTITLEMENT,
     terapkan,
     sekarang: () => Date.now(),
+    ambilPelanggan: KUNCI_API ? ambilPelanggan : undefined,
   }),
 );

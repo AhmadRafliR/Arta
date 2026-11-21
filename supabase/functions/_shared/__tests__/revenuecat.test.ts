@@ -2,6 +2,8 @@ import {
   buatHandlerWebhook,
   samaWaktuKonstan,
   tafsirkanEvent,
+  tafsirkanPelanggan,
+  tujuanTransfer,
   type Perubahan,
 } from '../revenuecat';
 
@@ -265,5 +267,133 @@ describe('buatHandlerWebhook', () => {
     await handler(req({ body: ev({ type: 'TEST' }) }));
     expect(JSON.stringify(spy.mock.calls)).not.toContain(U1);
     spy.mockRestore();
+  });
+});
+
+describe('TRANSFER ke pengguna lain (pulihkan pembelian di akun arta lain)', () => {
+  const RAHASIA = 'rahasia-uji';
+  const transfer = (over: Record<string, unknown> = {}) =>
+    ev({ type: 'TRANSFER', transferred_from: [U1], transferred_to: [U2.toUpperCase()], ...over });
+
+  function pelanggan(ent: Record<string, unknown> | null, sub: Record<string, unknown> = {}) {
+    return {
+      request_date_ms: SEKARANG + 5_000,
+      subscriber: {
+        entitlements: ent ? { pro: ent } : {},
+        subscriptions: {
+          arta_pro: {
+            period_type: 'normal',
+            unsubscribe_detected_at: null,
+            billing_issues_detected_at: null,
+            is_sandbox: false,
+            product_plan_identifier: 'bulanan',
+            ...sub,
+          },
+        },
+      },
+    };
+  }
+  const aktif = { expires_date: new Date(MASA_DEPAN).toISOString(), product_identifier: 'arta_pro' };
+  const opsi = { entitlement: 'pro', sekarangMs: SEKARANG, eventMs: SEKARANG };
+
+  it('tujuanTransfer: UUID unik huruf kecil, hanya untuk TRANSFER', () => {
+    expect(tujuanTransfer(transfer({ transferred_to: [U2, U2.toUpperCase(), '$RCAnonymousID:y'] }))).toEqual([U2]);
+    expect(tujuanTransfer(ev())).toEqual([]);
+    expect(tujuanTransfer(null)).toEqual([]);
+  });
+
+  it('transfer dari pengguna anonim ke UUID tidak diabaikan', () => {
+    expect(tafsirkanEvent(transfer({ transferred_from: ['$RCAnonymousID:x'] }), SEKARANG)).toEqual([]);
+  });
+
+  it('tafsirkanPelanggan: entitlement aktif -> pro, produk dengan base plan, waktu permintaan API', () => {
+    expect(tafsirkanPelanggan(pelanggan(aktif), U2, opsi)).toEqual({
+      userId: U2,
+      pro: true,
+      berlakuSampai: new Date(MASA_DEPAN).toISOString(),
+      produk: 'arta_pro:bulanan',
+      periode: 'normal',
+      akanDiperpanjang: true,
+      eventMs: SEKARANG + 5_000,
+      sumber: 'revenuecat',
+    });
+  });
+
+  it('tafsirkanPelanggan: uji coba, dibatalkan, sandbox, dan masa tenggang', () => {
+    const p = tafsirkanPelanggan(
+      pelanggan(
+        { ...aktif, expires_date: new Date(LAMPAU).toISOString(), grace_period_expires_date: new Date(MASA_DEPAN).toISOString() },
+        { period_type: 'trial', unsubscribe_detected_at: '2026-11-01T00:00:00Z', is_sandbox: true },
+      ),
+      U2,
+      opsi,
+    );
+    expect(p).toMatchObject({
+      pro: true,
+      berlakuSampai: new Date(MASA_DEPAN).toISOString(),
+      periode: 'trial',
+      akanDiperpanjang: false,
+      sumber: 'revenuecat_sandbox',
+    });
+  });
+
+  it('tafsirkanPelanggan: tanpa entitlement -> bukan Pro; kedaluwarsa -> bukan Pro; seumur hidup -> Pro', () => {
+    expect(tafsirkanPelanggan(pelanggan(null), U2, opsi)).toMatchObject({ pro: false, akanDiperpanjang: false });
+    expect(
+      tafsirkanPelanggan(pelanggan({ ...aktif, expires_date: new Date(LAMPAU).toISOString() }), U2, opsi),
+    ).toMatchObject({ pro: false });
+    expect(
+      tafsirkanPelanggan({ subscriber: { entitlements: { pro: { expires_date: null, product_identifier: 'arta_seumur' } } } }, U2, opsi),
+    ).toMatchObject({ pro: true, berlakuSampai: null, produk: 'arta_seumur', periode: null, akanDiperpanjang: null });
+  });
+
+  it('tafsirkanPelanggan: respons rusak atau tanggal tidak valid -> diabaikan (tidak mengubah status)', () => {
+    expect(tafsirkanPelanggan({}, U2, opsi)).toHaveProperty('abaikan');
+    expect(tafsirkanPelanggan(pelanggan({ ...aktif, expires_date: 'bukan-tanggal' }), U2, opsi)).toHaveProperty('abaikan');
+  });
+
+  function reqTransfer(body: unknown) {
+    return new Request('http://localhost/revenuecat-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RAHASIA}` },
+      body: JSON.stringify(body),
+    });
+  }
+
+  it('handler: asal dicabut, tujuan dibaca dari API RevenueCat lalu diterapkan', async () => {
+    const terapkan = jest.fn(async () => true);
+    const ambilPelanggan = jest.fn(async () => pelanggan(aktif));
+    const handler = buatHandlerWebhook({ rahasia: RAHASIA, terapkan, sekarang: () => SEKARANG, ambilPelanggan });
+    const res = await handler(reqTransfer(transfer()));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ diterapkan: 2 });
+    expect(ambilPelanggan).toHaveBeenCalledWith(U2);
+    expect(terapkan).toHaveBeenNthCalledWith(1, expect.objectContaining({ userId: U1, pro: false }));
+    expect(terapkan).toHaveBeenNthCalledWith(2, expect.objectContaining({ userId: U2, pro: true }));
+  });
+
+  it('handler: API RevenueCat gagal -> 500 agar webhook dikirim ulang', async () => {
+    const terapkan = jest.fn(async () => true);
+    const handler = buatHandlerWebhook({
+      rahasia: RAHASIA,
+      terapkan,
+      sekarang: () => SEKARANG,
+      ambilPelanggan: jest.fn(async () => {
+        throw new Error('revenuecat 503');
+      }),
+    });
+    const galat = jest.spyOn(console, 'error').mockImplementation(() => {});
+    expect((await handler(reqTransfer(transfer()))).status).toBe(500);
+    expect(terapkan).not.toHaveBeenCalled();
+    galat.mockRestore();
+  });
+
+  it('handler: tanpa kunci API, hanya pengguna asal yang diperbarui (dengan peringatan)', async () => {
+    const terapkan = jest.fn(async () => true);
+    const peringatan = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const handler = buatHandlerWebhook({ rahasia: RAHASIA, terapkan, sekarang: () => SEKARANG });
+    expect(await (await handler(reqTransfer(transfer()))).json()).toEqual({ diterapkan: 1 });
+    expect(peringatan).toHaveBeenCalled();
+    peringatan.mockRestore();
   });
 });

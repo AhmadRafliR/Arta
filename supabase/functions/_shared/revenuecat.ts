@@ -73,7 +73,9 @@ export function tafsirkanEvent(
 
   if (tipe === 'TRANSFER') {
     const dari = [...new Set(daftarString(e.transferred_from).filter((x) => UUID.test(x)))];
-    if (dari.length === 0) return { abaikan: 'transfer tanpa pengguna asal berUUID' };
+    // Pengguna tujuan diperbarui handler lewat API RevenueCat (lihat tujuanTransfer), jadi transfer dari
+    // pengguna anonim ke pengguna berUUID tetap diproses.
+    if (dari.length === 0 && tujuanTransfer(body).length === 0) return { abaikan: 'transfer tanpa pengguna berUUID' };
     return dari.map((userId) => ({
       userId: userId.toLowerCase(),
       pro: false,
@@ -114,6 +116,85 @@ export function tafsirkanEvent(
   ];
 }
 
+/**
+ * Pengguna tujuan TRANSFER (berUUID, huruf kecil). Event TRANSFER tidak membawa masa berlaku, jadi status
+ * mereka dibaca dari API RevenueCat. Contoh: pulihkan pembelian di akun arta lain (akun baru setelah hapus akun).
+ */
+export function tujuanTransfer(body: unknown): string[] {
+  if (!adalahObjek(body) || !adalahObjek(body.event) || body.event.type !== 'TRANSFER') return [];
+  const ke = daftarString(body.event.transferred_to).filter((x) => UUID.test(x));
+  return [...new Set(ke.map((x) => x.toLowerCase()))];
+}
+
+function msDariIso(v: unknown): number | null {
+  if (typeof v !== 'string' || !v) return null;
+  const ms = Date.parse(v);
+  return Number.isNaN(ms) ? null : ms;
+}
+
+/**
+ * Status entitlement dari respons GET /v1/subscribers/{id} RevenueCat (keadaan terkini, sumber kebenaran).
+ * `eventMs` memakai waktu permintaan API bila lebih baru, sehingga event lama yang datang belakangan diabaikan RPC.
+ */
+export function tafsirkanPelanggan(
+  json: unknown,
+  userId: string,
+  opsi: { entitlement: string; sekarangMs: number; eventMs: number },
+): Perubahan | Abaikan {
+  if (!adalahObjek(json) || !adalahObjek(json.subscriber)) return { abaikan: 'respons pelanggan tidak valid' };
+  const s = json.subscriber;
+  const eventMs = Math.max(opsi.eventMs, angka(json.request_date_ms) ?? 0);
+  const ent = adalahObjek(s.entitlements) ? s.entitlements[opsi.entitlement] : undefined;
+  if (!adalahObjek(ent)) {
+    return {
+      userId,
+      pro: false,
+      berlakuSampai: null,
+      produk: null,
+      periode: null,
+      akanDiperpanjang: false,
+      eventMs,
+      sumber: 'revenuecat',
+    };
+  }
+
+  // expires_date null = seumur hidup. Selain itu harus tanggal valid; masa tenggang (grace) ikut dihitung.
+  let kedaluwarsaMs: number | null = null;
+  if (ent.expires_date !== null) {
+    const habis = msDariIso(ent.expires_date);
+    if (habis === null) return { abaikan: 'expires_date entitlement tidak valid' };
+    kedaluwarsaMs = Math.max(habis, msDariIso(ent.grace_period_expires_date) ?? 0);
+  }
+
+  const idProduk = typeof ent.product_identifier === 'string' && ent.product_identifier ? ent.product_identifier : null;
+  const langganan = adalahObjek(s.subscriptions) ? s.subscriptions : {};
+  const sub = idProduk
+    ? (langganan[idProduk] ?? (idProduk.includes(':') ? langganan[idProduk.split(':')[0]] : undefined))
+    : undefined;
+  const subObj = adalahObjek(sub) ? sub : null;
+  const rencana =
+    typeof ent.product_plan_identifier === 'string' && ent.product_plan_identifier
+      ? ent.product_plan_identifier
+      : typeof subObj?.product_plan_identifier === 'string' && subObj.product_plan_identifier
+        ? subObj.product_plan_identifier
+        : null;
+  const produk = idProduk && rencana && !idProduk.includes(':') ? `${idProduk}:${rencana}` : idProduk;
+  const tipePeriode = String(subObj?.period_type ?? '').toLowerCase();
+
+  return {
+    userId,
+    pro: kedaluwarsaMs === null || kedaluwarsaMs > opsi.sekarangMs,
+    berlakuSampai: kedaluwarsaMs === null ? null : isoDariMs(kedaluwarsaMs),
+    produk,
+    periode: tipePeriode === 'trial' ? 'trial' : tipePeriode === 'intro' ? 'intro' : subObj ? 'normal' : null,
+    akanDiperpanjang: subObj
+      ? subObj.unsubscribe_detected_at == null && subObj.billing_issues_detected_at == null
+      : null,
+    eventMs,
+    sumber: subObj?.is_sandbox === true ? 'revenuecat_sandbox' : 'revenuecat',
+  };
+}
+
 // Perbandingan waktu-konstan: seluruh byte selalu dibandingkan, tanpa return lebih awal.
 export function samaWaktuKonstan(a: string, b: string): boolean {
   const enc = new TextEncoder();
@@ -132,6 +213,8 @@ export type DepsWebhook = {
   terapkan(p: Perubahan): Promise<boolean>;
   sekarang(): number;
   entitlement?: string;
+  /** GET /v1/subscribers/{id} RevenueCat (butuh REVENUECAT_SECRET_KEY). Tanpa ini tujuan TRANSFER dilewati. */
+  ambilPelanggan?(userId: string): Promise<unknown>;
 };
 
 function json(status: number, data: unknown): Response {
@@ -156,7 +239,9 @@ export function buatHandlerWebhook(deps: DepsWebhook): (req: Request) => Promise
       return json(400, { error: 'JSON tidak valid' });
     }
 
-    const hasil = tafsirkanEvent(body, deps.sekarang(), deps.entitlement ?? 'pro');
+    const entitlement = deps.entitlement ?? 'pro';
+    const sekarangMs = deps.sekarang();
+    const hasil = tafsirkanEvent(body, sekarangMs, entitlement);
     if ('abaikan' in hasil) {
       const tipe = adalahObjek(body) && adalahObjek(body.event) ? String(body.event.type).slice(0, 40) : '?';
       console.log(`revenuecat-webhook: abaikan ${tipe}: ${hasil.abaikan}`);
@@ -164,8 +249,24 @@ export function buatHandlerWebhook(deps: DepsWebhook): (req: Request) => Promise
     }
 
     try {
+      const perubahan = [...hasil];
+      const tujuan = tujuanTransfer(body);
+      if (tujuan.length > 0 && !deps.ambilPelanggan) {
+        console.warn('revenuecat-webhook: TRANSFER tanpa REVENUECAT_SECRET_KEY, pengguna tujuan tidak diperbarui');
+      }
+      if (tujuan.length > 0 && deps.ambilPelanggan) {
+        const e = (body as { event: Record<string, unknown> }).event;
+        const eventMs = angka(e.event_timestamp_ms) ?? sekarangMs;
+        for (const userId of tujuan) {
+          // Galat API dilempar: balas 500 agar RevenueCat mengirim ulang webhook.
+          const p = tafsirkanPelanggan(await deps.ambilPelanggan(userId), userId, { entitlement, sekarangMs, eventMs });
+          if ('abaikan' in p) console.log(`revenuecat-webhook: tujuan TRANSFER dilewati: ${p.abaikan}`);
+          else perubahan.push(p);
+        }
+      }
+
       let n = 0;
-      for (const p of hasil) {
+      for (const p of perubahan) {
         if (await deps.terapkan(p)) n++;
       }
       return json(200, { diterapkan: n });
