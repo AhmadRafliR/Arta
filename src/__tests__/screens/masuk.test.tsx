@@ -42,4 +42,11 @@ describe('layar masuk', () => {
     await fireEvent(email, 'submitEditing');
     expect(otp).toHaveBeenCalledTimes(1);
   });
+
+  it('tombol Google selalu tampil; tanpa client ID menjelaskan belum dikonfigurasi', async () => {
+    await render(<Masuk />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Masuk dengan Google' }));
+    expect(screen.getByText(/belum dikonfigurasi/)).toBeTruthy();
+    expect(supabase.auth.signInWithIdToken).not.toHaveBeenCalled();
+  });
 });

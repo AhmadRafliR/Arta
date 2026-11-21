@@ -38,6 +38,10 @@ export default function Masuk() {
   }
 
   async function masukGoogle() {
+    if (busy || sedangKirim.current) return;
+    if (!GOOGLE_WEB_CLIENT_ID) {
+      return setError('Masuk dengan Google belum dikonfigurasi di build ini. Pakai email dulu.');
+    }
     setBusy(true);
     setError(null);
     try {
@@ -51,8 +55,13 @@ export default function Masuk() {
       }
       const { error: err } = await supabase.auth.signInWithIdToken({ provider: 'google', token });
       if (err) setError('Masuk dengan Google gagal. Coba lagi.');
-    } catch {
-      setError('Masuk dengan Google gagal. Coba lagi.');
+    } catch (x) {
+      const kode = String((x as { code?: unknown } | null)?.code ?? '');
+      setError(
+        kode === '10' || kode === 'DEVELOPER_ERROR'
+          ? 'Konfigurasi Google belum cocok dengan aplikasi ini (SHA-1 / client ID). Pakai email dulu.'
+          : 'Masuk dengan Google gagal. Coba lagi.',
+      );
     }
     setBusy(false);
   }
@@ -70,9 +79,12 @@ export default function Masuk() {
         <Text className="text-xs tracking-[0.22em] text-mid font-sans">OWN YOUR MONEY</Text>
       </View>
       <Text className="text-2xl font-bold text-fg font-sans">Masuk</Text>
-      {GOOGLE_WEB_CLIENT_ID ? (
-        <Tombol label="Masuk dengan Google" primary disabled={busy} onPress={() => void masukGoogle()} />
-      ) : null}
+      <Tombol label="Masuk dengan Google" primary disabled={busy} onPress={() => void masukGoogle()} />
+      <View className="flex-row items-center gap-3">
+        <View className="h-px flex-1 bg-line" />
+        <Text className="text-xs text-mid font-sans">atau pakai email</Text>
+        <View className="h-px flex-1 bg-line" />
+      </View>
       <TextInput
         value={email}
         onChangeText={setEmail}
