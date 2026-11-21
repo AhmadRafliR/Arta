@@ -17,6 +17,7 @@ import type { Tx } from '@/domain/types';
 import { filterTx, kelompokHarian, type FilterTx } from '@/lib/filterTx';
 import { geserBulan, hariIni as hariIniDi } from '@/lib/tanggal';
 import { useGulirPulau } from '@/nav/useGulirPulau';
+import { BannerIklan } from '@/components/BannerIklan';
 import { spacerNav } from '@/nav/pulau';
 
 export default function Riwayat() {
@@ -150,6 +151,7 @@ export default function Riwayat() {
             </View>
           </>
         )}
+        <BannerIklan />
       </ScrollView>
 
       <SheetTransaksi

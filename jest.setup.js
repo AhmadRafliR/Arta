@@ -40,3 +40,7 @@ jest.mock('expo-sharing', () => ({
   isAvailableAsync: jest.fn(async () => true),
   shareAsync: jest.fn(async () => undefined),
 }));
+
+// Iklan: modul native AdMob dan banner dimatikan di tes. Tes iklan memakai jest.requireActual untuk BannerIklan.
+jest.mock('@/components/BannerIklan', () => ({ BannerIklan: () => null }));
+jest.mock('react-native-google-mobile-ads', () => require('./jest.mock-admob'));

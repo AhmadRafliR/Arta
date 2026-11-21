@@ -8,6 +8,7 @@ import { KartuHutangBeranda } from '@/components/KartuHutangBeranda';
 import { KeadaanKosong } from '@/components/KeadaanKosong';
 import { KartuBudgetKritis } from '@/components/KartuBudgetKritis';
 import { AksiKepalaBeranda } from '@/components/AksiKepalaBeranda';
+import { BannerIklan } from '@/components/BannerIklan';
 import { KartuNotifDompet } from '@/components/KartuNotifDompet';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAllTransactions, useTransactions } from '@/data/transactions';
@@ -123,6 +124,7 @@ export default function Beranda() {
           )}
         </View>
       )}
+      <BannerIklan />
     </ScrollView>
   );
 }
