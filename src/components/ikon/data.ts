@@ -68,7 +68,15 @@ export type NamaIkon =
   | 'ui-logout'
   | 'ui-privacy'
   | 'ui-alert'
-  | 'ui-tukar';
+  | 'ui-tukar'
+  | 'ui-spark'
+  | 'ui-pocket'
+  | 'ui-shield-ok'
+  | 'ui-wallet-plus'
+  | 'ui-rp'
+  | 'ui-sigma'
+  | 'ui-info'
+  | 'ui-arrow-right';
 
 export const IKON: Record<NamaIkon, Elemen[]> = {
   'nav-beranda': [
@@ -351,5 +359,38 @@ export const IKON: Record<NamaIkon, Elemen[]> = {
     { tag: 'path', kelas: 'ln', attr: { d: 'M13.4 5.4 L17.2 9.2 L13.4 13' } },
     { tag: 'path', kelas: 'ln', attr: { d: 'M19.8 15.4 H6.8' } },
     { tag: 'path', kelas: 'ln', attr: { d: 'M10.6 11.6 L6.8 15.4 L10.6 19.2' } },
+  ],
+  'ui-spark': [
+    { tag: 'path', kelas: 'ln', attr: { d: 'M12 3.6 L13.9 9.3 L19.6 11.2 L13.9 13.1 L12 18.8 L10.1 13.1 L4.4 11.2 L10.1 9.3 Z' } },
+  ],
+  'ui-pocket': [
+    { tag: 'path', kelas: 'ln', attr: { d: 'M12 3.6 L20.4 7.4 V9.6 H3.6 V7.4 Z' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M4.8 9.6 V19 A1.8 1.8 0 0 0 6.6 20.8 H17.4 A1.8 1.8 0 0 0 19.2 19 V9.6' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M9.6 13.6 H14.4' } },
+  ],
+  'ui-shield-ok': [
+    { tag: 'path', kelas: 'ln', attr: { d: 'M12 3.2 L19.4 6.2 V12 C19.4 16.4 16.2 19.4 12 20.8 C7.8 19.4 4.6 16.4 4.6 12 V6.2 Z' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M8.8 12.2 L11.2 14.6 L15.4 9.8' } },
+  ],
+  'ui-wallet-plus': [
+    { tag: 'rect', kelas: 'ln', attr: { x: '3', y: '6.6', width: '18', height: '13', rx: '2.8' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M15.4 13.1 H20.4 V16.7 H15.4 A1.8 1.8 0 0 1 15.4 13.1 Z' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M12 9.4 V3.4 M9 6.4 H15' } },
+  ],
+  'ui-rp': [
+    { tag: 'path', kelas: 'ln', attr: { d: 'M6.4 20 V4.6 H13 A4.6 4.6 0 0 1 13 13.8 H6.4' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M4.6 16.8 H14.4' } },
+  ],
+  'ui-sigma': [
+    { tag: 'path', kelas: 'ln', attr: { d: 'M17.6 5.4 H6.4 L12.2 12 L6.4 18.6 H17.6' } },
+  ],
+  'ui-info': [
+    { tag: 'circle', kelas: 'ln', attr: { cx: '12', cy: '12', r: '8.4' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M12 11 V16.4' } },
+    { tag: 'circle', kelas: 'fill', attr: { cx: '12', cy: '7.9', r: '1' } },
+  ],
+  'ui-arrow-right': [
+    { tag: 'path', kelas: 'ln', attr: { d: 'M4.8 12 H19.2' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M14 6.8 L19.2 12 L14 17.2' } },
   ],
 };

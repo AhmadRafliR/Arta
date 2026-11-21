@@ -1,17 +1,38 @@
-import { useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { AmountInput } from '@/components/AmountInput';
-import { Tombol } from '@/components/Tombol';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
+import { Ikon } from '@/components/ikon/Ikon';
+import { BarisDompetLain } from '@/components/onboarding/BarisDompetLain';
+import { BarisPilihDompet, PetakIkon } from '@/components/onboarding/BarisPilihDompet';
+import {
+  NAMA_BAWAAN,
+  PILIHAN_AWAL,
+  SARAN,
+  namaDepan,
+  type ItemDompet,
+  type TipeSaran,
+} from '@/components/onboarding/data';
+import { DockOnboarding } from '@/components/onboarding/DockOnboarding';
+import { HeroSaldoAwal } from '@/components/onboarding/HeroSaldoAwal';
+import { IntroOnboarding } from '@/components/onboarding/IntroOnboarding';
+import { KartuSaldoDompet } from '@/components/onboarding/KartuSaldoDompet';
+import { LayarSelesai } from '@/components/onboarding/LayarSelesai';
+import { OverlayAkunSiap } from '@/components/onboarding/OverlayAkunSiap';
+import { StripTotal } from '@/components/onboarding/StripTotal';
+import { CatatanInfo, KepalaSeksi, KolomGalat } from '@/components/onboarding/Teks';
+import { TopbarOnboarding } from '@/components/onboarding/TopbarOnboarding';
 import { useCreateWallet } from '@/data/wallets';
 import { toAppError, type AppError } from '@/data/errors';
 import { adalahNamaKembar } from '@/data/pesan';
+import { formatRupiah } from '@/domain/money';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/theme/ThemeProvider';
 
-type Row = { key: number; nama: string; saldo: number | null; dibuat?: boolean };
-
-const BAWAAN = ['GoPay', 'Cash', 'ShopeePay'];
+type Tambahan = { key: string; nama: string };
+type Selesai = { total: number; sub: string };
+type Baris = { key: string; nama: string; tipe: TipeSaran; saldo: number; target: number | null };
 
 // Hook data sudah melempar AppError; galat mentah (mis. dari supabase) dibungkus.
 function pesanGalat(e: unknown): string {
@@ -25,55 +46,178 @@ function hariIniLokal(): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+function jumlah(daftar: ItemDompet[], nilai: (it: ItemDompet) => number, tipe?: TipeSaran): number {
+  return daftar.filter((it) => !tipe || it.tipe === tipe).reduce((s, it) => s + nilai(it), 0);
+}
+
 export default function DompetAwal() {
-  const { session, refreshProfile } = useAuth();
+  const { session, profile, refreshProfile } = useAuth();
   const { t } = useTheme();
+  const insets = useSafeAreaInsets();
   const createWallet = useCreateWallet();
+  const kurangiGerak = useReducedMotion();
+
+  const [intro, setIntro] = useState(!kurangiGerak);
+  const [langkah, setLangkah] = useState<1 | 2>(1);
   const [nama, setNama] = useState('');
-  const [rows, setRows] = useState<Row[]>(() => BAWAAN.map((n, i) => ({ key: i, nama: n, saldo: 0 })));
+  const [pilih, setPilih] = useState<Record<string, boolean>>(PILIHAN_AWAL);
+  const [saldo, setSaldo] = useState<Record<string, number | null>>({});
+  const [target, setTarget] = useState<Record<string, number | null>>({});
+  const [revisi, setRevisi] = useState<Record<string, number>>({});
+  const [tambahan, setTambahan] = useState<Tambahan[]>([]);
+  const [dibuat, setDibuat] = useState<Record<string, boolean>>({});
+  const [fokusKey, setFokusKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const nextKey = useRef(BAWAAN.length);
+  const [selesai, setSelesai] = useState<Selesai | null>(null);
+  const urut = useRef(0);
   const jalan = useRef(false); // penjaga proses berjalan: ketukan ganda tidak memulai dua kali
+  const dibuatRef = useRef<Record<string, number>>({}); // key -> saldo awal dompet yang sudah dibuat (idempoten)
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
-  const namaBersih = rows.map((r) => r.nama.trim().toLowerCase());
+  const semua: ItemDompet[] = useMemo(
+    () => [
+      ...SARAN,
+      ...tambahan.map<ItemDompet>((c) => ({
+        key: c.key,
+        nama: c.nama,
+        tipe: 'harian',
+        ikon: 'ui-pocket',
+        hint: 'Dompet tambahan',
+        custom: true,
+      })),
+    ],
+    [tambahan],
+  );
+  const terpilih = semua.filter((it) => it.custom || pilih[it.key]);
+  const nilaiSaldo = (it: ItemDompet) => saldo[it.key] ?? 0;
+  const total = jumlah(terpilih, nilaiSaldo);
+  const harian = jumlah(terpilih, nilaiSaldo, 'harian');
+  const darurat = jumlah(terpilih, nilaiSaldo, 'darurat');
+  const terisi = terpilih.filter((it) => nilaiSaldo(it) > 0).length;
+
+  // Validasi: nama tidak kosong dan tidak kembar; nominal & target valid.
+  const namaBersih = terpilih.map((it) => it.nama.trim().toLowerCase());
   const kembar = namaBersih.some((n, i) => n !== '' && namaBersih.indexOf(n) !== i);
-  const valid = rows.length > 0 && !kembar && rows.every((r) => r.nama.trim() !== '' && r.saldo !== null);
-  const nonaktif = busy || !valid;
+  const kosong = terpilih.some((it) => it.nama.trim() === '');
+  const nominalSalah = terpilih.some((it) => saldo[it.key] === null || target[it.key] === null);
+  const peringatan = kembar ? 'Nama dompet tidak boleh sama.' : kosong ? 'Isi nama dompet dulu.' : null;
+  const tampilGalat = error ?? peringatan;
+  const namaBermasalah = kembar || kosong;
 
-  function ubah(key: number, patch: Partial<Row>) {
-    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const sapaan = namaDepan(nama) || namaDepan(profile?.nama) || namaDepan(sumberGoogle(session));
+
+  const catatanHero =
+    langkah === 1
+      ? terisi
+        ? `${terisi} dompet sudah ada saldo · lanjut untuk periksa`
+        : 'Belum ada saldo terisi.'
+      : total > 0
+        ? `${terisi} dompet terisi · total dana saat ini`
+        : 'Isi saldo di bawah atau kosongkan saja.';
+
+  const ke = useCallback((l: 1 | 2) => {
+    setLangkah(l);
+    setError(null);
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
+
+  // Tombol kembali Android: dari langkah 2 ke langkah 1 dulu.
+  useEffect(() => {
+    if (langkah !== 2 || selesai || busy) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      ke(1);
+      return true;
+    });
+    return () => sub.remove();
+  }, [langkah, selesai, busy, ke]);
+
+  const tutupIntro = useCallback(() => setIntro(false), []);
+
+  function ubahTarget(key: string, n: number | null) {
+    // allowZero: 0/kosong = tanpa target; null = nominal tidak valid.
+    setTarget((s) => ({ ...s, [key]: n === null ? null : n > 0 ? n : 0 }));
   }
 
-  async function mulai() {
-    if (nonaktif || !session || jalan.current) return;
+  function tambahDompet() {
+    urut.current += 1;
+    const key = `c${urut.current}`;
+    setTambahan((c) => [...c, { key, nama: '' }]);
+    setFokusKey(key);
+    if (langkah === 1) ke(2);
+  }
+
+  function hapusTambahan(key: string) {
+    setTambahan((c) => c.filter((x) => x.key !== key));
+    setSaldo((s) => omit(s, key));
+    setTarget((s) => omit(s, key));
+  }
+
+  function pintasan(key: string, v: number) {
+    setSaldo((s) => ({ ...s, [key]: v }));
+    setRevisi((r) => ({ ...r, [key]: (r[key] ?? 0) + 1 }));
+  }
+
+  function lanjut() {
+    if (terpilih.length === 0) {
+      setError('Pilih minimal satu dompet dulu.');
+      return;
+    }
+    ke(2);
+  }
+
+  async function simpan(lewati: boolean) {
+    if (busy || jalan.current || !session || namaBermasalah) return;
+    if (!lewati && nominalSalah) return;
     jalan.current = true;
     setBusy(true);
     setError(null);
     try {
+      // Tanpa dompet terpilih (hanya lewat Lewati): buat "Cash" bawaan agar app tidak kosong.
+      const baris: Baris[] =
+        terpilih.length === 0
+          ? [{ key: 'bawaan', nama: NAMA_BAWAAN, tipe: 'harian', saldo: 0, target: null }]
+          : terpilih.map((it) => ({
+              key: it.key,
+              nama: it.nama.trim(),
+              tipe: it.tipe,
+              saldo: lewati ? 0 : (saldo[it.key] ?? 0),
+              target: it.tipe === 'darurat' ? target[it.key] || null : null,
+            }));
       const tanggal = hariIniLokal();
-      for (const r of rows) {
-        // Baris yang sudah dibuat (terkunci) dilewati saat coba lagi: tanpa duplikat.
-        if (r.dibuat) continue;
+      for (const r of baris) {
+        // Baris yang sudah dibuat dilewati saat coba lagi: tanpa duplikat.
+        if (r.key in dibuatRef.current) continue;
         try {
           await createWallet.mutateAsync({
-            nama: r.nama.trim(),
-            tipe: 'harian',
-            saldo_awal: r.saldo ?? 0,
+            nama: r.nama,
+            tipe: r.tipe,
+            saldo_awal: r.saldo,
             tanggal_saldo_awal: tanggal,
+            ...(r.tipe === 'darurat' ? { target: r.target } : {}),
           });
         } catch (e) {
           // 23505 (nama sudah ada): percobaan sebelumnya sudah membuatnya (respons hilang / profil gagal) -> lanjut.
           if (!adalahNamaKembar(e)) throw e;
         }
-        ubah(r.key, { dibuat: true });
+        dibuatRef.current[r.key] = r.saldo;
+        setDibuat((d) => ({ ...d, [r.key]: true }));
       }
       const { error: err } = await supabase
         .from('profiles')
         .update({ nama: nama.trim() || null, onboarding_selesai: true })
         .eq('id', session.user.id);
       if (err) throw toAppError(err);
-      refreshProfile(); // AuthGate mengalihkan ke /(tabs)
+      const jumlahTotal = baris.reduce((s, r) => s + (dibuatRef.current[r.key] ?? 0), 0);
+      const berisi = baris.filter((r) => (dibuatRef.current[r.key] ?? 0) > 0).length;
+      setSelesai({
+        total: jumlahTotal,
+        sub: lewati
+          ? 'Kamu bisa mengisi saldo kapan saja dari layar Akun.'
+          : berisi > 0
+            ? `${berisi} dompet siap dipakai. Sekarang kamu bisa langsung mencatat transaksi pertama.`
+            : 'Semua dompet mulai dari Rp0. Catat transaksi pertama untuk mengisi saldo.',
+      });
     } catch (e) {
       setError(pesanGalat(e));
     } finally {
@@ -82,55 +226,154 @@ export default function DompetAwal() {
     }
   }
 
+  if (selesai) {
+    // AuthGate mengalihkan ke /(tabs) setelah profil diperbarui.
+    return <LayarSelesai total={selesai.total} sub={selesai.sub} onLanjut={() => refreshProfile()} />;
+  }
+  if (intro) return <OverlayAkunSiap onSelesai={tutupIntro} />;
+
+  const utamaNonaktif = busy || (langkah === 1 ? terpilih.length === 0 : terpilih.length === 0 || namaBermasalah || nominalSalah);
+  const awalPilih = semua.filter((it) => !it.custom);
+
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerClassName="gap-4 px-6 py-12">
-      <Text className="text-2xl font-bold text-fg font-sans">Selamat datang</Text>
-      <Text className="text-mid font-sans">Siapa nama panggilanmu?</Text>
-      <TextInput
-        value={nama}
-        onChangeText={setNama}
-        placeholder="Nama panggilan"
-        placeholderTextColor={t.mid}
-        className="rounded-xl border border-line bg-card px-4 py-3 text-fg font-sans"
-      />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ paddingTop: insets.top }}
+      className="flex-1 bg-bg"
+    >
+      <TopbarOnboarding langkah={langkah} />
+      <ScrollView
+        ref={scrollRef}
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 28, gap: 18 }}
+      >
+        <IntroOnboarding langkah={langkah} nama={sapaan} />
 
-      <Text className="mt-2 text-lg font-semibold text-fg font-sans">Dompetmu</Text>
-      <Text className="text-mid font-sans">Isi saldo awal tiap dompet. Boleh Rp0.</Text>
-
-      {rows.map((r) => (
-        <View key={r.key} className="gap-2 rounded-2xl border border-line bg-card p-3">
-          <View className="flex-row items-center gap-2">
+        {langkah === 1 ? (
+          <View className="gap-1.5">
+            <Text className="text-[11.5px] font-semibold text-mid font-sans">Nama panggilan (opsional)</Text>
             <TextInput
-              value={r.nama}
-              editable={!r.dibuat}
-              onChangeText={(v) => ubah(r.key, { nama: v })}
-              placeholder="Nama dompet"
+              value={nama}
+              onChangeText={setNama}
+              placeholder="Nama panggilan"
               placeholderTextColor={t.mid}
-              className="flex-1 rounded-xl border border-line px-4 py-2 text-fg font-sans"
+              accessibilityLabel="Nama panggilan (opsional)"
+              maxLength={40}
+              style={{ borderColor: t.line }}
+              className="min-h-[44px] rounded-[14px] border bg-card px-[14px] py-2 text-sm text-fg font-sans"
             />
-            {r.dibuat ? (
-              <Text className="px-3 text-xs text-mid font-sans">sudah dibuat</Text>
-            ) : (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hapus dompet"
-                onPress={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
-                className="px-3 py-2"
-              >
-                <Text className="text-mid font-sans">Hapus</Text>
-              </Pressable>
-            )}
           </View>
-          <AmountInput value={r.saldo} allowZero editable={!r.dibuat} onChange={(n) => ubah(r.key, { saldo: n })} />
+        ) : null}
+
+        <HeroSaldoAwal total={total} harian={harian} darurat={darurat} catatan={catatanHero} />
+
+        <View className="gap-2.5">
+          <KepalaSeksi judul="Pilih dompet kamu" catatan={`${terpilih.length} dipilih`} />
+          <View
+            accessibilityRole="radiogroup"
+            accessibilityLabel="Pilih dompet"
+            style={{ borderColor: t.line }}
+            className="overflow-hidden rounded-[20px] border bg-card"
+          >
+            {awalPilih.map((it, i) => (
+              <BarisPilihDompet
+                key={it.key}
+                nama={it.nama}
+                hint={dibuat[it.key] ? 'sudah dibuat' : pilih[it.key] ? `${formatRupiah(nilaiSaldo(it))} · ${it.hint}` : it.hint}
+                ikon={it.ikon}
+                dipilih={!!pilih[it.key]}
+                terkunci={!!dibuat[it.key]}
+                pertama={i === 0}
+                onToggle={() => setPilih((p) => ({ ...p, [it.key]: !p[it.key] }))}
+              />
+            ))}
+          </View>
         </View>
-      ))}
 
-      <Tombol label="Tambah dompet" onPress={() => setRows((rs) => [...rs, { key: nextKey.current++, nama: '', saldo: 0 }])} />
+        {langkah === 2 && terpilih.length > 0 ? (
+          <View className="gap-2.5 pt-1">
+            <KepalaSeksi judul="Saldo tiap dompet" catatan="Rupiah" />
+            {terpilih.map((it) => (
+              <KartuSaldoDompet
+                key={it.key}
+                item={it}
+                saldo={saldo[it.key] ?? 0}
+                target={target[it.key] ?? null}
+                revisi={revisi[it.key] ?? 0}
+                terkunci={!!dibuat[it.key]}
+                onSaldo={(n) => setSaldo((s) => ({ ...s, [it.key]: n }))}
+                onTarget={(n) => ubahTarget(it.key, n)}
+                onPintasan={(v) => pintasan(it.key, v)}
+              />
+            ))}
+          </View>
+        ) : null}
 
-      {kembar ? <Text className="text-fg font-sans">Nama dompet tidak boleh sama.</Text> : null}
-      {error ? <Text className="text-fg font-sans">{error}</Text> : null}
+        {tambahan.length > 0 ? (
+          <View className="gap-2.5 pt-1">
+            <KepalaSeksi judul="Dompet lain" catatan="Opsional" />
+            {tambahan.map((c) => (
+              <BarisDompetLain
+                key={c.key}
+                nama={c.nama}
+                terkunci={!!dibuat[c.key]}
+                fokus={fokusKey === c.key}
+                onNama={(v) => setTambahan((l) => l.map((x) => (x.key === c.key ? { ...x, nama: v } : x)))}
+                onHapus={() => hapusTambahan(c.key)}
+              />
+            ))}
+          </View>
+        ) : null}
 
-      <Tombol primary label="Mulai" onPress={mulai} disabled={nonaktif} busy={busy} />
-    </ScrollView>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Tambah dompet lain"
+          onPress={tambahDompet}
+          style={{ borderColor: t.line, borderStyle: 'dashed', minHeight: 56 }}
+          className="flex-row items-center gap-3 rounded-[20px] border px-4 py-[11px]"
+        >
+          <PetakIkon ikon="ui-wallet-plus" />
+          <View className="min-w-0 flex-1 gap-0.5">
+            <Text className="text-[14.5px] font-semibold leading-[19px] text-fg font-sans">Tambah dompet lain</Text>
+            <Text className="text-[11.5px] leading-[16px] text-mid font-sans">Mis. e-wallet lain, rekening bank, uang tunai</Text>
+          </View>
+          <Ikon nama="ui-arrow-right" ukuran={16} warna={t.mid} />
+        </Pressable>
+
+        <StripTotal total={total} jumlah={terpilih.length} />
+
+        <CatatanInfo>
+          Saldo awal dicatat sebagai titik mulai, bukan pemasukan — jadi laporan bulan ini tetap bersih. Kamu bisa mengubahnya kapan saja di Akun.
+        </CatatanInfo>
+
+        <KolomGalat pesan={tampilGalat} />
+
+        <Text className="px-1 pt-0.5 text-center text-[11px] leading-[16px] text-mid font-sans">arta · Own Your Money</Text>
+      </ScrollView>
+
+      <DockOnboarding
+        langkah={langkah}
+        utamaNonaktif={utamaNonaktif}
+        lewatiNonaktif={busy || namaBermasalah}
+        busy={busy}
+        bawah={insets.bottom}
+        onUtama={() => (langkah === 1 ? lanjut() : simpan(false))}
+        onLewati={() => simpan(true)}
+        onKembali={() => ke(1)}
+      />
+    </KeyboardAvoidingView>
   );
+}
+
+function omit<T>(o: Record<string, T>, key: string): Record<string, T> {
+  const { [key]: _hapus, ...sisa } = o;
+  return sisa;
+}
+
+function sumberGoogle(session: { user?: { user_metadata?: Record<string, unknown> } } | null): string {
+  const m = session?.user?.user_metadata;
+  const v = m?.full_name ?? m?.name;
+  return typeof v === 'string' ? v : '';
 }
