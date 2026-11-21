@@ -7,6 +7,7 @@ import { SheetBawah } from '@/components/SheetBawah';
 import { Tombol } from '@/components/Tombol';
 import { useTransisiOpsional } from '@/animasi/TransisiProvider';
 import { useAuth } from '@/auth/AuthProvider';
+import { setLapisan, useLapisanLainAktif } from '@/lib/lapisan';
 import { useTheme } from '@/theme/ThemeProvider';
 import { aktif, bukaPengaturanIzin, izinAktif, setAktif, tersedia } from '../../modules/notifikasi-dompet';
 import { sinkronAntrean } from './useNotifikasiDompet';
@@ -45,6 +46,8 @@ export function GerbangIzinNotif() {
   const { session, profile } = useAuth();
   const transisi = useTransisiOpsional();
   const sedangPutar = transisi?.sedangPutar ?? false;
+  // Tur fitur sedang tampil: popup menunggu sampai tur selesai.
+  const lainAktif = useLapisanLainAktif('izin');
   const [popup, setPopup] = useState(false);
   // Ditutup ("Nanti") atau layar sudah dibuka: jangan muncul lagi sampai app kembali dari latar belakang.
   const diamSesiIni = useRef(false);
@@ -53,7 +56,7 @@ export function GerbangIzinNotif() {
   const diDalamApp = !!session && profile?.onboarding_selesai === true && segmen[0] === '(tabs)';
 
   const cek = useCallback(async () => {
-    if (!ada || !diDalamApp || sedangPutar) return;
+    if (!ada || !diDalamApp || sedangPutar || lainAktif) return;
     if (aman(izinAktif, false)) {
       setPopup(false);
       return;
@@ -75,7 +78,7 @@ export function GerbangIzinNotif() {
       return;
     }
     if (!diamSesiIni.current) setPopup(true);
-  }, [ada, diDalamApp, sedangPutar, router]);
+  }, [ada, diDalamApp, sedangPutar, lainAktif, router]);
 
   // Dijalankan setelah effect selesai (bukan sinkron di dalamnya) karena cek mengubah state.
   useEffect(() => {
@@ -102,12 +105,18 @@ export function GerbangIzinNotif() {
     return () => sub.remove();
   }, [ada, cek]);
 
+  const tampil = popup && diDalamApp && !lainAktif;
+  useEffect(() => {
+    setLapisan('izin', tampil);
+  }, [tampil]);
+  useEffect(() => () => setLapisan('izin', false), []);
+
   const nanti = () => {
     diamSesiIni.current = true;
     setPopup(false);
   };
 
-  if (!popup || !diDalamApp) return null;
+  if (!tampil) return null;
   return (
     <SheetBawah terbuka onTutup={nanti} testID="popup-izin-notif">
       <View className="items-center gap-2 pt-1">

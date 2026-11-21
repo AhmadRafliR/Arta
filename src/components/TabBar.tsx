@@ -16,6 +16,7 @@ import type { NamaIkon } from '@/components/ikon/data';
 import { TINGGI_NAV } from '@/nav/pulau';
 import { useStatusNav } from '@/nav/NavPulauProvider';
 import { useTheme } from '@/theme/ThemeProvider';
+import { TargetTur } from '@/tur/TargetTur';
 import { MicButton } from './MicButton';
 
 type BottomTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
@@ -44,6 +45,7 @@ const RADIUS_TAMPAK = (TINGGI_PULAU + 2) / 2;
 const RADIUS_PULAU = 999;
 
 function ItemTab({
+  nama,
   label,
   ikon,
   aktif,
@@ -51,6 +53,7 @@ function ItemTab({
   opasitasLabel,
   onPress,
 }: {
+  nama: string;
   label: string;
   ikon: NamaIkon | undefined;
   aktif: boolean;
@@ -68,6 +71,7 @@ function ItemTab({
   }));
   const warna = aktif ? t.fg : t.mid;
   return (
+    <TargetTur id={`tab-${nama}`} style={{ flex: 1, alignSelf: 'stretch' }}>
     <Pressable
       accessibilityRole="tab"
       accessibilityLabel={label}
@@ -90,6 +94,7 @@ function ItemTab({
         style={{ width: 5, height: 5, borderRadius: 3, marginTop: 4, backgroundColor: aktif ? t.accInk : 'transparent' }}
       />
     </Pressable>
+    </TargetTur>
   );
 }
 
@@ -166,6 +171,7 @@ export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarPr
     return (
       <ItemTab
         key={r.key}
+        nama={r.name}
         label={LABEL[r.name] ?? r.name}
         ikon={IKON[r.name]}
         aktif={aktif}
@@ -202,7 +208,9 @@ export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarPr
         <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }, gayaBaris]}>
           {items.slice(0, tengah)}
           <Animated.View style={[{ width: 80, alignItems: 'center', alignSelf: 'stretch' }, gayaSlotMic]}>
-            <MicButton onPress={() => router.push('/rekam')} style={gayaMic} />
+            <TargetTur id="tab-catat">
+              <MicButton onPress={() => router.push('/rekam')} style={gayaMic} />
+            </TargetTur>
           </Animated.View>
           {items.slice(tengah)}
         </Animated.View>

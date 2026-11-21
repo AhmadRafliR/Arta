@@ -4,6 +4,7 @@ import { BadgeTier } from '@/components/BadgeTier';
 import { BarisMenuAkun, JudulSeksiAkun, KartuGrupAkun, type NadaProgres } from '@/components/BarisAkun';
 import type { NamaIkon } from '@/components/ikon/data';
 import { formatRingkas } from '@/domain/money';
+import { TargetTur } from '@/tur/TargetTur';
 
 /** Ringkasan opsional per baris; dihitung layar Akun dari hook data. Tanpa ringkasan, baris tetap tampil. */
 export type RingkasanRencana = {
@@ -13,6 +14,14 @@ export type RingkasanRencana = {
 };
 
 const rp = (n: number) => `Rp${formatRingkas(n)}`;
+
+/** Id titik sorot tur per baris. */
+const ID_TUR: Record<string, string> = {
+  '/budget': 'akun-budget',
+  '/dana-darurat': 'akun-darurat',
+  '/investasi': 'akun-investasi',
+  '/laporan': 'akun-laporan',
+};
 
 type ItemMenu = {
   label: string;
@@ -64,8 +73,11 @@ function susunMenu(r: RingkasanRencana): ItemMenu[] {
 export function MenuRencana({
   ringkasan = {},
   onBukaBudget,
+  gulirTur,
 }: {
   ringkasan?: RingkasanRencana;
+  /** Tur fitur: gulir layar pemilik supaya bagian ini terlihat. */
+  gulirTur?: () => void;
   /** Bila diisi, baris Budget memanggil ini (mis. membuka sheet) alih-alih pindah ke halaman Budget. */
   onBukaBudget?: () => void;
 }) {
@@ -75,8 +87,8 @@ export function MenuRencana({
       <JudulSeksiAkun>Rencana keuangan</JudulSeksiAkun>
       <KartuGrupAkun>
         {susunMenu(ringkasan).map((m, i) => (
+          <TargetTur key={m.rute} id={ID_TUR[m.rute] ?? `akun-${m.rute}`} gulir={gulirTur}>
           <BarisMenuAkun
-            key={m.rute}
             pertama={i === 0}
             ikon={m.ikon}
             judul={m.label}
@@ -88,6 +100,7 @@ export function MenuRencana({
             accessibilityLabel={m.label}
             onPress={() => (m.rute === '/budget' && onBukaBudget ? onBukaBudget() : router.push(m.rute as never))}
           />
+          </TargetTur>
         ))}
       </KartuGrupAkun>
     </View>

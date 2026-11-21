@@ -14,7 +14,7 @@ jest.mock('expo-web-browser', () => ({ openBrowserAsync: jest.fn(async () => ({}
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock('@/data/wallets', () => ({ useWallets: () => ({ data: [] }) }));
+jest.mock('@/data/wallets', () => ({ useWallets: () => ({ data: [] }), useSaldoDompet: () => ({ data: {} }) }));
 jest.mock('@/data/transactions', () => ({
   useAllTransactions: () => ({ data: [] }),
   useTransactions: () => ({ data: [] }),

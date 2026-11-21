@@ -30,13 +30,16 @@ jest.mock('@/notifikasi-dompet/useNotifikasiDompet', () => ({
 jest.mock('@/data/budgets', () => ({ useBudgets: () => mockBudgets }));
 jest.mock('@/data/wallets', () => {
   const { W } = jest.requireActual('@/domain/testFactories');
+  const daftar = () => [
+    { ...W('GoPay', 200000), nama: 'GoPay' },
+    { ...W('Cash', 88000), nama: 'Cash' },
+    ...(mockHanyaHarian ? [] : [{ ...W('Tabungan', 5000000, 'darurat'), nama: 'Tabungan' }]),
+  ];
   return {
-    useWallets: () => ({
-      data: [
-        { ...W('GoPay', 200000), nama: 'GoPay' },
-        { ...W('Cash', 88000), nama: 'Cash' },
-        ...(mockHanyaHarian ? [] : [{ ...W('Tabungan', 5000000, 'darurat'), nama: 'Tabungan' }]),
-      ],
+    useWallets: () => ({ data: daftar() }),
+    // Tanpa transaksi: saldo = saldo awal (sama dengan RPC saldo_dompet).
+    useSaldoDompet: () => ({
+      data: Object.fromEntries(daftar().map((w: { id: string; saldo_awal: number }) => [w.id, w.saldo_awal])),
     }),
   };
 });

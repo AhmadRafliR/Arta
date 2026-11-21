@@ -5,6 +5,7 @@ import { Ikon } from '@/components/ikon/Ikon';
 import type { NamaIkon } from '@/components/ikon/data';
 import { formatRupiah } from '@/domain/money';
 import { useTheme } from '@/theme/ThemeProvider';
+import { TargetTur } from '@/tur/TargetTur';
 
 type Props = { sisa: number; kekayaan: number };
 
@@ -64,6 +65,7 @@ export function HeroCard({ sisa, kekayaan }: Props) {
           </Text>
         </View>
 
+        <TargetTur id="beranda-aksi" style={{ flexShrink: 0 }}>
         <View className="flex-row" style={{ gap: 4, flexShrink: 0 }}>
           {daftarAksi.map((a) => (
             <Pressable
@@ -106,6 +108,7 @@ export function HeroCard({ sisa, kekayaan }: Props) {
             </Pressable>
           ))}
         </View>
+        </TargetTur>
       </View>
     </LinearGradient>
   );

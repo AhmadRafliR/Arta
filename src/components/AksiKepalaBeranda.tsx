@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Ikon } from '@/components/ikon/Ikon';
 import { useNotifikasiDompet } from '@/notifikasi-dompet/useNotifikasiDompet';
 import { useTheme } from '@/theme/ThemeProvider';
+import { TargetTur } from '@/tur/TargetTur';
 import { tersedia } from '../../modules/notifikasi-dompet';
 
 const TOMBOL = { width: 36, height: 36 } as const;
@@ -25,6 +26,7 @@ export function AksiKepalaBeranda() {
 
   return (
     <View className="flex-row items-center gap-2">
+      <TargetTur id="beranda-tema">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={gelap ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}
@@ -34,7 +36,9 @@ export function AksiKepalaBeranda() {
       >
         <Ikon nama={gelap ? 'ui-sun' : 'ui-moon'} ukuran={18} warna={t.fg} />
       </Pressable>
+      </TargetTur>
       {adaNotif ? (
+        <TargetTur id="beranda-notif">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Catat otomatis dari notifikasi"
@@ -51,6 +55,7 @@ export function AksiKepalaBeranda() {
             />
           ) : null}
         </Pressable>
+        </TargetTur>
       ) : null}
     </View>
   );

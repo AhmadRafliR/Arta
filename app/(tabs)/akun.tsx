@@ -10,11 +10,13 @@ import { KartuProfilAkun } from '@/components/KartuProfilAkun';
 import { SheetBudget } from '@/components/SheetBudget';
 import { MenuRencana, type RingkasanRencana } from '@/components/MenuRencana';
 import { PengaturanPengingat } from '@/components/PengaturanPengingat';
+import { TargetTur } from '@/tur/TargetTur';
+import { useTurOpsional } from '@/tur/TurProvider';
 import { Segmented } from '@/components/Segmented';
 import { Ikon } from '@/components/ikon/Ikon';
 import type { NamaIkon } from '@/components/ikon/data';
 import { useAuth } from '@/auth/AuthProvider';
-import { kekayaanBersih, walletBalances } from '@/domain/balances';
+import { kekayaanBersih } from '@/domain/balances';
 import { pemakaianBudget } from '@/domain/budget';
 import { ringkasDarurat } from '@/domain/danaDarurat';
 import { ringkasHutang } from '@/domain/hutang';
@@ -23,8 +25,8 @@ import type { TipeDompet, Wallet } from '@/domain/types';
 import { sisaKuota, useKuotaAi } from '@/data/ai';
 import { useBudgets } from '@/data/budgets';
 import { useDebts } from '@/data/debts';
-import { useAllTransactions, useTransactions } from '@/data/transactions';
-import { useWallets } from '@/data/wallets';
+import { useTransactions } from '@/data/transactions';
+import { useSaldoDompet, useWallets } from '@/data/wallets';
 import { useStatusLangganan } from '@/data/langganan';
 import { teksStatusLangganan } from '@/langganan/teks';
 import { URL_KEBIJAKAN_PRIVASI } from '@/config';
@@ -113,12 +115,18 @@ export default function Akun() {
   const insets = useSafeAreaInsets();
   const gulir = useGulirPulau('akun');
   const gulirRef = useRef<ScrollViewInstance>(null);
+  const tur = useTurOpsional();
+  // Posisi bagian untuk tur fitur (gulir ke bagian yang sedang dibahas).
+  const tambahDompetY = useRef(0);
+  const rencanaY = useRef(0);
+  const gulirKe = (y: number) => gulirRef.current?.scrollTo({ y: Math.max(0, y), animated: true });
   const [temaY, setTemaY] = useState(0);
   const { signOut, profile, session } = useAuth();
   const { pref, setPref, mode, t } = useTheme();
   const walletsQ = useWallets();
   const wallets = walletsQ.data ?? [];
-  const txs = useAllTransactions();
+  // Saldo dari RPC saldo_dompet (bukan seluruh riwayat transaksi).
+  const saldoQ = useSaldoDompet();
   const [arsipBuka, setArsipBuka] = useState(false);
   const [budgetBuka, setBudgetBuka] = useState(false);
   const langganan = useStatusLangganan();
@@ -131,7 +139,7 @@ export default function Akun() {
   const budgets = useBudgets();
   const txBulan = useTransactions(bulan);
   // Dompet arsip tetap dihitung dalam saldo (aturan domain).
-  const saldo = txs.data ? walletBalances(wallets, txs.data) : null;
+  const saldo = saldoQ.data ?? null;
   const buka = (id: string) => router.push(`/dompet/${id}`);
   const aktif = wallets.filter((w) => !w.diarsip);
   const arsip = wallets.filter((w) => w.diarsip);
@@ -164,8 +172,9 @@ export default function Akun() {
       };
     }
   }
-  if (saldo && txs.data) {
-    const d = ringkasDarurat(wallets, saldo, txs.data, bulan);
+  if (saldo) {
+    // Cakupan bulan tidak dipakai di Akun, jadi tanpa daftar transaksi.
+    const d = ringkasDarurat(wallets, saldo, [], bulan);
     if (d.dompet.length > 0) ringkasan.darurat = { total: d.total, target: d.totalTarget, persen: d.persen };
     const inv = aktif.filter((w) => w.tipe === 'investasi');
     if (inv.length > 0) ringkasan.investasi = { jumlah: inv.length, total: jumlah(inv, saldo) };
@@ -244,6 +253,13 @@ export default function Akun() {
         );
       })}
 
+      <TargetTur
+        id="akun-dompet"
+        onLayout={(e) => {
+          tambahDompetY.current = e.nativeEvent.layout.y;
+        }}
+        gulir={() => gulirKe(tambahDompetY.current - 260)}
+      >
       {kosong ? (
         // Keadaan kosong (mockup: .empty) dengan tombol tambah.
         <View className="items-center gap-2.5 rounded-[20px] border border-line bg-card px-[18px] pb-5 pt-6">
@@ -278,6 +294,7 @@ export default function Akun() {
           </Text>
         </Pressable>
       )}
+      </TargetTur>
 
       {arsip.length > 0 ? (
         <KartuGrupAkun>
@@ -302,7 +319,17 @@ export default function Akun() {
         </KartuGrupAkun>
       ) : null}
 
-      <MenuRencana ringkasan={ringkasan} onBukaBudget={() => setBudgetBuka(true)} />
+      <View
+        onLayout={(e) => {
+          rencanaY.current = e.nativeEvent.layout.y;
+        }}
+      >
+        <MenuRencana
+          ringkasan={ringkasan}
+          onBukaBudget={() => setBudgetBuka(true)}
+          gulirTur={() => gulirKe(rencanaY.current - 90)}
+        />
+      </View>
       {budgetBuka ? <SheetBudget terbuka onTutup={() => setBudgetBuka(false)} /> : null}
 
       <View className="gap-3" onLayout={(e) => setTemaY(e.nativeEvent.layout.y)}>
@@ -354,6 +381,21 @@ export default function Akun() {
 
       <JudulSeksiAkun>Pengingat</JudulSeksiAkun>
       <PengaturanPengingat pro={pro} onBukaPremium={() => router.push('/premium?dari=pengingat')} />
+
+      {tur ? (
+        <>
+          <JudulSeksiAkun>Bantuan</JudulSeksiAkun>
+          <KartuGrupAkun>
+            <BarisMenuAkun
+              pertama
+              ikon="ui-info"
+              judul="Tur fitur arta"
+              sub="Kenali lagi semua fitur dalam satu menit"
+              onPress={tur.mulai}
+            />
+          </KartuGrupAkun>
+        </>
+      ) : null}
 
       <JudulSeksiAkun>Data & privasi</JudulSeksiAkun>
       <KartuGrupAkun>

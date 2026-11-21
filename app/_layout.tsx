@@ -1,7 +1,8 @@
 import '../global.css';
 import { useCallback, useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { Stack, useRouter, type Href } from 'expo-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { AuthGate } from '@/auth/AuthGate';
@@ -10,6 +11,7 @@ import { ThemeProfileBridge } from '@/auth/ThemeProfileBridge';
 import { KerangkaLogo } from '@/components/KerangkaLogo';
 import { GerbangIzinNotif } from '@/notifikasi-dompet/GerbangIzin';
 import { TransisiProvider } from '@/animasi/TransisiProvider';
+import { TurProvider } from '@/tur/TurProvider';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import type { Pref } from '@/theme/tokens';
 import { LanggananProvider } from '@/langganan/LanggananProvider';
@@ -50,14 +52,40 @@ function SinkronPush() {
   return null;
 }
 
-// Pendaftaran ulang token push hanya untuk sesi yang sudah masuk (RPC butuh auth).
+// Penjadwalan ulang pengingat hanya untuk sesi yang sudah masuk (RPC butuh auth). Ditunda sebentar
+// supaya tidak berebut jaringan dengan data Beranda saat app baru dibuka.
+const JEDA_SINKRON_MS = 2500;
 function SinkronPushBersesi() {
   const { session } = useAuth();
-  return session ? <SinkronPush /> : null;
+  const [siap, setSiap] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setSiap(true), JEDA_SINKRON_MS);
+    return () => clearTimeout(id);
+  }, []);
+  return session && siap ? <SinkronPush /> : null;
+}
+
+// Data dianggap segar 1 menit: pindah tab atau buka modal tidak memicu unduh ulang. Perubahan dari app
+// sendiri tetap langsung tampil karena setiap mutasi meng-invalidate query terkait.
+function buatQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { staleTime: 60_000, gcTime: 10 * 60_000, retry: 1 },
+    },
+  });
+}
+
+// Kembali ke app dari latar belakang = "fokus": query yang sudah basi disegarkan (mis. transaksi dari notifikasi).
+function useFokusAppState() {
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => focusManager.setFocused(s === 'active'));
+    return () => sub.remove();
+  }, []);
 }
 
 export default function RootLayout() {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(buatQueryClient);
+  useFokusAppState();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -68,6 +96,7 @@ export default function RootLayout() {
             <PenanganNotifikasi />
             <SinkronPushBersesi />
             <TransisiProvider>
+            <TurProvider>
             <AuthGate>
               <KerangkaLogo>
               <Stack screenOptions={{ headerShown: false }}>
@@ -89,6 +118,7 @@ export default function RootLayout() {
               </KerangkaLogo>
               <GerbangIzinNotif />
             </AuthGate>
+            </TurProvider>
             </TransisiProvider>
           </ThemeShell>
         </LanggananProvider>
