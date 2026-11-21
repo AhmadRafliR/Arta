@@ -64,7 +64,7 @@ export function HeroCard({ sisa, kekayaan }: Props) {
           </Text>
         </View>
 
-        <View className="flex-row" style={{ gap: 2 }}>
+        <View className="flex-row" style={{ gap: 4, flexShrink: 0 }}>
           {daftarAksi.map((a) => (
             <Pressable
               key={a.label}
@@ -73,7 +73,7 @@ export function HeroCard({ sisa, kekayaan }: Props) {
               onPress={a.buka}
               hitSlop={4}
               style={({ pressed }) => ({
-                minWidth: 48,
+                width: 50,
                 minHeight: 44,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -93,7 +93,14 @@ export function HeroCard({ sisa, kekayaan }: Props) {
               >
                 <Ikon nama={a.ikon} ukuran={20} warna={t.aksiFg} />
               </View>
-              <Text style={{ color: t.kartuFg }} className="mt-1 text-[12px] font-semibold font-sans" numberOfLines={1}>
+              <Text
+                style={{ color: t.kartuFg, width: 50, textAlign: 'center' }}
+                className="mt-1 text-[11px] font-semibold font-sans"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                maxFontSizeMultiplier={1.2}
+              >
                 {a.label}
               </Text>
             </Pressable>

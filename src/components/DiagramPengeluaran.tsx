@@ -144,7 +144,7 @@ export function DiagramPengeluaran({ data, bulan, galat, onLihatRiwayat }: Props
                   {s.nama}
                 </Text>
                 <Text className="text-[13px] text-fg2 font-sans">{formatRupiah(s.nominal)}</Text>
-                <Text className="w-10 text-right text-[13px] font-bold text-fg font-sans">{`${s.persen}%`}</Text>
+                <Text style={{ minWidth: 44, fontVariant: ['tabular-nums'] }} className="text-right text-[13px] font-bold text-fg font-sans" numberOfLines={1} maxFontSizeMultiplier={1.3}>{`${s.persen}%`}</Text>
               </Pressable>
             );
           })}
