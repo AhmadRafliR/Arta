@@ -123,6 +123,10 @@ function hitungSaldo(wallets: DataLaporan['wallets'], txs: Tx[]): Record<string,
 
 const kunci = (s: string) => s.trim().toLowerCase();
 
+// Sentinel budget "Seluruh kategori" (sama dengan src/domain/budget.ts): batas untuk total semua pengeluaran.
+const KATEGORI_SEMUA = '__semua__';
+const LABEL_KATEGORI_SEMUA = 'Seluruh kategori';
+
 export function buatIsiLaporan(d: DataLaporan, bulan: string, sampai?: string): IsiLaporan {
   const akhir = sampai ?? akhirBulan(bulan);
   const awal = `${bulan}-01`;
@@ -161,14 +165,20 @@ export function buatIsiLaporan(d: DataLaporan, bulan: string, sampai?: string): 
     e.total += t.nominal;
     peta.set(k, e);
   }
+  let batasSemua: number | null = null;
   for (const b of d.budgets) {
     const k = kunci(b.kategori);
+    if (k === KATEGORI_SEMUA) {
+      batasSemua = b.batas_bulanan;
+      continue;
+    }
     const e = peta.get(k) ?? { kategori: b.kategori.trim(), total: 0, batas: null };
     e.batas = b.batas_bulanan;
     peta.set(k, e);
   }
-  const kategori = [...peta.values()]
-    .map((e) => {
+  if (batasSemua !== null) peta.set(KATEGORI_SEMUA, { kategori: LABEL_KATEGORI_SEMUA, total: pengeluaran, batas: batasSemua });
+  const kategori = [...peta.entries()]
+    .map(([k, e]) => {
       const ada = e.batas !== null && e.batas > 0;
       let status: StatusBudget | null = null;
       if (ada) {
@@ -176,6 +186,7 @@ export function buatIsiLaporan(d: DataLaporan, bulan: string, sampai?: string): 
         status = e.total > batas ? 'lewat' : e.total * 100 >= batas * 80 ? 'waspada' : 'aman';
       }
       return {
+        sentinel: k === KATEGORI_SEMUA,
         kategori: e.kategori,
         total: e.total,
         batas: ada ? e.batas : null,
@@ -183,7 +194,8 @@ export function buatIsiLaporan(d: DataLaporan, bulan: string, sampai?: string): 
         status,
       };
     })
-    .sort((a, b) => b.total - a.total || a.kategori.localeCompare(b.kategori));
+    .sort((a, b) => Number(b.sentinel) - Number(a.sentinel) || b.total - a.total || a.kategori.localeCompare(b.kategori))
+    .map(({ sentinel: _s, ...baris }) => baris);
 
   const terbesar = bulanIni
     .filter((t) => t.jenis === 'pengeluaran')

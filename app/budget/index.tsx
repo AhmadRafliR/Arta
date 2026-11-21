@@ -9,7 +9,7 @@ import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
 import { useBudgets } from '@/data/budgets';
 import { useTransactions } from '@/data/transactions';
-import { pemakaianBudget } from '@/domain/budget';
+import { adalahBudgetSemua, pemakaianBudget } from '@/domain/budget';
 import { formatRupiah } from '@/domain/money';
 import { hariIni, labelBulan } from '@/lib/tanggal';
 
@@ -25,8 +25,10 @@ export default function BudgetIndex() {
   const galat = budgets.error ?? txs.error;
   const siap = budgets.data !== undefined && txs.data !== undefined;
   const daftar = siap ? pemakaianBudget(budgets.data ?? [], txs.data ?? [], bulan) : [];
-  const totalTerpakai = daftar.reduce((s, p) => s + p.terpakai, 0);
-  const totalBatas = daftar.reduce((s, p) => s + p.batas, 0);
+  const semua = daftar.find((p) => adalahBudgetSemua(p.kategori));
+  const perKategori = daftar.filter((p) => !adalahBudgetSemua(p.kategori));
+  const totalTerpakai = perKategori.reduce((s, p) => s + p.terpakai, 0);
+  const totalBatas = perKategori.reduce((s, p) => s + p.batas, 0);
 
   return (
     <ScrollView
@@ -46,23 +48,41 @@ export default function BudgetIndex() {
           pesan="Belum ada budget. Pasang batas bulanan per kategori supaya pengeluaran tetap terkendali."
         />
       ) : (
-        // Kartu budget bulan ini (mockup akun: budgetView): kepala + daftar bergaris per kategori.
-        <View className="gap-3 rounded-[20px] border border-line bg-card px-3.5 pb-3.5 pt-3.5">
-          <KepalaSheet
-            ikon="ui-budget"
-            judul={`Budget ${labelBulan(bulan)}`}
-            sub={`Terpakai ${formatRupiah(totalTerpakai)} dari ${formatRupiah(totalBatas)}`}
-            kanan={totalBatas > 0 ? `${Math.round((totalTerpakai * 100) / totalBatas)}%` : undefined}
-          />
-          <View className="overflow-hidden rounded-[14px] border border-line">
-            {daftar.map((p, i) => (
-              <View key={p.id} className={`px-3 py-2.5 ${i > 0 ? 'border-t border-line' : ''}`}>
-                <BarBudget p={p} onPress={() => router.push(`/budget/ubah?id=${p.id}`)} />
+        <>
+          {semua ? (
+            // Budget seluruh kategori: batas total semua pengeluaran sebulan, tampil menonjol di atas.
+            <View testID="kartu-budget-semua" className="gap-2.5 rounded-[20px] border border-line bg-card px-3.5 py-3.5">
+              <Text className="font-sans text-[11.5px] font-semibold text-mid">
+                {`Batas total pengeluaran ${labelBulan(bulan)}`}
+              </Text>
+              <BarBudget p={semua} onPress={() => router.push(`/budget/ubah?id=${semua.id}`)} />
+              {perKategori.length > 0 && totalBatas !== semua.batas ? (
+                <Text className="font-sans text-[11.5px] leading-[17px] text-fg2">
+                  {`Total budget per kategori: ${formatRupiah(totalBatas)}`}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+          {perKategori.length > 0 ? (
+            // Kartu budget bulan ini (mockup akun: budgetView): kepala + daftar bergaris per kategori.
+            <View className="gap-3 rounded-[20px] border border-line bg-card px-3.5 pb-3.5 pt-3.5">
+              <KepalaSheet
+                ikon="ui-budget"
+                judul={`Budget ${labelBulan(bulan)}`}
+                sub={`Terpakai ${formatRupiah(totalTerpakai)} dari ${formatRupiah(totalBatas)}`}
+                kanan={totalBatas > 0 ? `${Math.round((totalTerpakai * 100) / totalBatas)}%` : undefined}
+              />
+              <View className="overflow-hidden rounded-[14px] border border-line">
+                {perKategori.map((p, i) => (
+                  <View key={p.id} className={`px-3 py-2.5 ${i > 0 ? 'border-t border-line' : ''}`}>
+                    <BarBudget p={p} onPress={() => router.push(`/budget/ubah?id=${p.id}`)} />
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-          <Text className="font-sans text-[11.5px] leading-[17px] text-fg2">Ketuk kategori untuk mengubah atau menghapus batasnya.</Text>
-        </View>
+              <Text className="font-sans text-[11.5px] leading-[17px] text-fg2">Ketuk kategori untuk mengubah atau menghapus batasnya.</Text>
+            </View>
+          ) : null}
+        </>
       )}
 
       <Tombol primary label="Tambah budget" onPress={() => router.push('/budget/ubah')} />

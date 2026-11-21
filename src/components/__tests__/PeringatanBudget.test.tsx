@@ -59,4 +59,10 @@ describe('PeringatanBudget', () => {
     await rerender(<PeringatanBudget kategori="transport" nominal={999999} tanggal="2026-11-10" />);
     expect(toJSON()).toBeNull();
   });
+
+  it('seluruh kategori: kategori apa pun menambah pemakaian, label Seluruh kategori', async () => {
+    mockBudgets = { data: [B('__semua__', 100000)] };
+    await render(<PeringatanBudget kategori="hobi" nominal={24000} tanggal="2026-11-10" />);
+    expect(screen.getByText('Lewat budget Seluruh kategori Rp14.000')).toBeTruthy();
+  });
 });

@@ -1,5 +1,7 @@
 import {
+  KATEGORI_SEMUA,
   kategoriKritis,
+  labelKategoriBudget,
   pemakaianBudget,
   peringatanBudget,
   statusBudget,
@@ -117,5 +119,35 @@ describe('peringatanBudget', () => {
   it('item bulan lain tidak dijumlah dengan tx bulan ini', () => {
     const r = peringatanBudget(bt, dasar, [{ kategori: 'transport', nominal: 50000, tanggal: '2026-12-01' }]);
     expect(r).toEqual([]);
+  });
+});
+
+describe('budget Seluruh kategori', () => {
+  const semua: Budget = { id: 's', kategori: KATEGORI_SEMUA, batas_bulanan: 1000000 };
+
+  it('label tidak pernah menampilkan sentinel', () => {
+    expect(labelKategoriBudget(KATEGORI_SEMUA)).toBe('Seluruh kategori');
+    expect(labelKategoriBudget('makan')).toBe('makan');
+  });
+  it('terpakai = total semua pengeluaran bulan itu (bukan pemasukan/transfer/bulan lain)', () => {
+    const p = pemakaianBudget([semua], txs, '2026-11');
+    expect(p[0]).toMatchObject({ terpakai: 710000, persen: 71, status: 'aman', sisa: 290000 });
+  });
+  it('status waspada dan lewat', () => {
+    expect(pemakaianBudget([{ ...semua, batas_bulanan: 800000 }], txs, '2026-11')[0].status).toBe('waspada');
+    expect(pemakaianBudget([{ ...semua, batas_bulanan: 700000 }], txs, '2026-11')[0].status).toBe('lewat');
+  });
+  it('ikut perhitungan kategori kritis dengan label Seluruh kategori', () => {
+    const p = pemakaianBudget([{ ...semua, batas_bulanan: 500000 }, ...budgets], txs, '2026-11');
+    expect(kategoriKritis(p)?.id).toBe('s');
+  });
+  it('peringatan: pengeluaran apa pun menambah pemakaian, nominal lama tidak dihitung dua kali', () => {
+    const dasar = [tx('a', 'pengeluaran', 'makan', 900000, '2026-11-02')];
+    const r = peringatanBudget([semua], dasar, [{ kategori: 'hobi', nominal: 150000, tanggal: '2026-11-19' }]);
+    expect(r).toHaveLength(1);
+    expect(r[0].kategori).toBe('Seluruh kategori');
+    expect(r[0].pesan).toBe('Lewat budget Seluruh kategori Rp50.000');
+    expect(peringatanBudget([semua], dasar, [{ kategori: null, nominal: 150000, tanggal: '2026-11-19' }])).toHaveLength(1);
+    expect(peringatanBudget([semua], dasar, [{ kategori: 'hobi', nominal: 150000, tanggal: '2026-11-19' }], 'a')).toEqual([]);
   });
 });

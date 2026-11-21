@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Ikon } from '@/components/ikon/Ikon';
-import type { PemakaianBudget } from '@/domain/budget';
+import { labelKategoriBudget, type PemakaianBudget } from '@/domain/budget';
 import { formatRupiah } from '@/domain/money';
 import { useTheme } from '@/theme/ThemeProvider';
 
@@ -20,6 +20,7 @@ export function BarBudget({ p, onPress }: Props) {
   const { t } = useTheme();
   const warnaBar = p.status === 'lewat' ? t.danger : p.status === 'waspada' ? t.warn : t.acc;
   const teksStatus = teksStatusBudget(p);
+  const namaTampil = kapital(labelKategoriBudget(p.kategori));
   const nilai = `${formatRupiah(p.terpakai)} / ${formatRupiah(p.batas)}`;
   const kelasStatus =
     p.status === 'lewat' ? 'font-semibold' : p.status === 'waspada' ? 'font-semibold' : 'text-fg2';
@@ -28,7 +29,7 @@ export function BarBudget({ p, onPress }: Props) {
     <View className="gap-1.5">
       <View className="flex-row items-center justify-between gap-3">
         <Text className="flex-shrink font-sans text-[13.5px] font-semibold text-fg" numberOfLines={1}>
-          {kapital(p.kategori)}
+          {namaTampil}
         </Text>
         <Text
           style={{ fontVariant: ['tabular-nums'], ...(warnaTeks ? { color: warnaTeks } : null) }}
@@ -58,7 +59,7 @@ export function BarBudget({ p, onPress }: Props) {
       </View>
     </View>
   );
-  const label = `${kapital(p.kategori)}, ${nilai}, ${teksStatus}`;
+  const label = `${namaTampil}, ${nilai}, ${teksStatus}`;
   if (!onPress) {
     return (
       <View accessible accessibilityLabel={label}>

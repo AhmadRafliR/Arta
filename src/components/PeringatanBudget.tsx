@@ -12,7 +12,7 @@ export function PeringatanBudget({ kategori, nominal, tanggal, abaikanTxId }: Pr
   const { t } = useTheme();
   const budgets = useBudgets();
   const txs = useTransactions(tanggal.slice(0, 7));
-  if (!kategori || !budgets.data || budgets.data.length === 0 || !txs.data) return null;
+  if (!budgets.data || budgets.data.length === 0 || !txs.data) return null;
   const hasil = peringatanBudget(budgets.data, txs.data, [{ kategori, nominal, tanggal }], abaikanTxId);
   if (hasil.length === 0) return null;
   return (

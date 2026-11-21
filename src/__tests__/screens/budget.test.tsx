@@ -72,6 +72,26 @@ describe('Budget: daftar', () => {
     expect(nama).toEqual(['Transport', 'Makan']);
   });
 
+  it('seluruh kategori: kartu menonjol di atas, tanpa sentinel, info total per kategori', async () => {
+    mockBudgets = { data: [B('b1', 'makan', 800000), B('bs', '__semua__', 1000000)] };
+    await render(<BudgetIndex />);
+    expect(screen.queryByText(/__semua__/)).toBeNull();
+    expect(screen.getByTestId('kartu-budget-semua')).toBeTruthy();
+    expect(screen.getByText('Seluruh kategori')).toBeTruthy();
+    expect(screen.getByText('Rp470.000 / Rp1.000.000')).toBeTruthy();
+    expect(screen.getByText('Total budget per kategori: Rp800.000')).toBeTruthy();
+    expect(screen.getByText('Terpakai Rp320.000 dari Rp800.000')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: /^Seluruh kategori,/ }));
+    expect(mockPush).toHaveBeenCalledWith('/budget/ubah?id=bs');
+  });
+
+  it('hanya seluruh kategori: tanpa kartu daftar kategori', async () => {
+    mockBudgets = { data: [B('bs', '__semua__', 1000000)] };
+    await render(<BudgetIndex />);
+    expect(screen.getByTestId('kartu-budget-semua')).toBeTruthy();
+    expect(screen.queryByText(/Ketuk kategori/)).toBeNull();
+  });
+
   it('ketuk baris membuka ubah; tambah membuka form baru', async () => {
     await render(<BudgetIndex />);
     await fireEvent.press(screen.getByRole('button', { name: /^Makan,/ }));
@@ -108,6 +128,29 @@ describe('Budget: tambah dan ubah', () => {
     await fireEvent.press(btn('Simpan'));
     await waitFor(() => expect(mockSimpan).toHaveBeenCalledWith({ id: undefined, kategori: 'Makan', batas_bulanan: 800000 }));
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
+  });
+
+  it('tambah: chip Seluruh kategori menyimpan sentinel; hilang bila sudah ada', async () => {
+    await render(<BudgetUbah />);
+    expect(screen.getByText('Batas total semua pengeluaran dalam sebulan')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('kat-semua'));
+    await fireEvent.changeText(screen.getByTestId('batas'), '2000000');
+    await fireEvent.press(btn('Simpan'));
+    await waitFor(() => expect(mockSimpan).toHaveBeenCalledWith({ id: undefined, kategori: '__semua__', batas_bulanan: 2000000 }));
+  });
+
+  it('tambah: chip Seluruh kategori tidak muncul bila sudah ada', async () => {
+    mockBudgets = { data: [B('bs', '__semua__', 1000000)] };
+    await render(<BudgetUbah />);
+    expect(screen.queryByTestId('kat-semua')).toBeNull();
+  });
+
+  it('ubah sentinel: judul kategori Seluruh kategori', async () => {
+    mockBudgets = { data: [B('bs', '__semua__', 1000000)] };
+    mockId = 'bs';
+    await render(<BudgetUbah />);
+    expect(screen.getByText('Seluruh kategori')).toBeTruthy();
+    expect(screen.queryByText(/__semua__/)).toBeNull();
   });
 
   it('galat kembar: pesan kategori sudah ada, tidak menutup', async () => {

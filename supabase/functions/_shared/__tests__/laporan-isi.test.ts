@@ -89,6 +89,16 @@ describe('buatIsiLaporan', () => {
     expect(isi.kategori[4]).toMatchObject({ total: 0, batas: 500000, persen: 0, status: 'aman' });
   });
 
+  it('budget Seluruh kategori: paling atas, terpakai = total pengeluaran bulan itu', () => {
+    const k = buatIsiLaporan(
+      { ...DATA, budgets: [...DATA.budgets, { kategori: '__semua__', batas_bulanan: 1000000 }] },
+      '2026-11',
+    ).kategori;
+    expect(k[0]).toEqual({ kategori: 'Seluruh kategori', total: 766000, batas: 1000000, persen: 76, status: 'aman' });
+    expect(k.map((x) => x.kategori)).not.toContain('__semua__');
+    expect(k).toHaveLength(6);
+  });
+
   it('ambang waspada tepat 80% dan 100%', () => {
     const d: DataLaporan = {
       ...DATA,
