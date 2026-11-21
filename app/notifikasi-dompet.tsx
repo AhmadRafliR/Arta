@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KartuGrupAkun } from '@/components/BarisAkun';
 import { Tombol } from '@/components/Tombol';
+import { nyalakanBilaIzinBaru } from '@/notifikasi-dompet/GerbangIzin';
 import { sinkronAntrean, useNotifikasiTerakhir } from '@/notifikasi-dompet/useNotifikasiDompet';
 import { useTheme } from '@/theme/ThemeProvider';
 import { aktif, bukaPengaturanIzin, izinAktif, setAktif, tersedia } from '../modules/notifikasi-dompet';
@@ -48,10 +49,15 @@ export default function NotifikasiDompet() {
   const ada = modulAda();
   const [izin, setIzin] = useState(() => (ada ? bacaIzin() : false));
   const [nyala, setNyala] = useState(() => (ada ? bacaAktif() : false));
+  const izinTadi = useRef(izin);
 
   const segarkan = useCallback(() => {
     if (!ada) return;
-    setIzin(bacaIzin());
+    const baru = bacaIzin();
+    // Izin baru saja diberikan dari pengaturan sistem: langsung nyalakan catat otomatis.
+    if (baru && !izinTadi.current) nyalakanBilaIzinBaru();
+    izinTadi.current = baru;
+    setIzin(baru);
     setNyala(bacaAktif());
   }, [ada]);
 

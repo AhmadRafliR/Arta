@@ -8,6 +8,7 @@ import { AuthGate } from '@/auth/AuthGate';
 import { QueryCacheGuard } from '@/auth/QueryCacheGuard';
 import { ThemeProfileBridge } from '@/auth/ThemeProfileBridge';
 import { KerangkaLogo } from '@/components/KerangkaLogo';
+import { GerbangIzinNotif } from '@/notifikasi-dompet/GerbangIzin';
 import { TransisiProvider } from '@/animasi/TransisiProvider';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import type { Pref } from '@/theme/tokens';
@@ -86,6 +87,7 @@ export default function RootLayout() {
                 <Stack.Screen name="notifikasi-dompet" options={{ presentation: "modal" }} />
               </Stack>
               </KerangkaLogo>
+              <GerbangIzinNotif />
             </AuthGate>
             </TransisiProvider>
           </ThemeShell>

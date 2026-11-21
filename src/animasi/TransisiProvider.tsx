@@ -14,7 +14,11 @@ export type OpsiTransisi = {
   tunggu?: Promise<unknown>;
 };
 
-type TransisiValue = { putar: (opsi: OpsiTransisi) => Promise<void> };
+type TransisiValue = {
+  putar: (opsi: OpsiTransisi) => Promise<void>;
+  /** true selama overlay transisi tampil (mis. agar popup lain menunggu). */
+  sedangPutar: boolean;
+};
 
 // Batas pengaman: bila `tunggu` tak pernah selesai, overlay tidak menutup app selamanya.
 export const BATAS_TUNGGU_MS = 20000;
@@ -65,7 +69,8 @@ export function TransisiProvider({ children }: { children: React.ReactNode }) {
     r?.();
   }, []);
 
-  const value = useMemo<TransisiValue>(() => ({ putar }), [putar]);
+  const sedangPutar = aktif !== null;
+  const value = useMemo<TransisiValue>(() => ({ putar, sedangPutar }), [putar, sedangPutar]);
   return (
     <TransisiContext.Provider value={value}>
       {children}

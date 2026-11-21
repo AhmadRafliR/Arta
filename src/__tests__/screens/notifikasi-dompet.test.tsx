@@ -121,4 +121,11 @@ describe('layar Catat otomatis dari notifikasi', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Tutup' }));
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
+
+  it('izin baru saja diberikan dari pengaturan: catat otomatis langsung menyala', async () => {
+    await render(<NotifikasiDompet />);
+    mockIzin = true;
+    await act(async () => mockAppState?.('active'));
+    expect(mockSetAktif).toHaveBeenCalledWith(true);
+  });
 });
