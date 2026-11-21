@@ -26,6 +26,9 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 jest.mock('@/data/wallets', () => ({
   useWallets: () => ({ data: mockWallets }),
+  useSaldoDompet: () => ({
+    data: Object.fromEntries((mockWallets as { id: string; saldo_awal: number }[]).map((w) => [w.id, w.saldo_awal])),
+  }),
 }));
 jest.mock('@/data/transactions', () => ({
   useAllTransactions: () => ({ data: [] }),

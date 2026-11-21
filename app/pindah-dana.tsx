@@ -7,12 +7,11 @@ import { AmountInput } from '@/components/AmountInput';
 import { Chip } from '@/components/Chip';
 import { Tombol } from '@/components/Tombol';
 import { useAuth } from '@/auth/AuthProvider';
-import { walletBalances } from '@/domain/balances';
 import { formatRupiah } from '@/domain/money';
 import { hariIni } from '@/lib/tanggal';
 import { pesanDompet } from '@/data/pesan';
-import { newTxId, useAllTransactions, useSaveTransactions, type NewTx } from '@/data/transactions';
-import { useWallets } from '@/data/wallets';
+import { newTxId, useSaveTransactions, type NewTx } from '@/data/transactions';
+import { useSaldoDompet, useWallets } from '@/data/wallets';
 
 type Mode = 'setor' | 'tarik' | 'beli' | 'jual';
 
@@ -30,7 +29,7 @@ export default function PindahDana() {
   const { ke, dari, mode } = useLocalSearchParams<{ ke?: string; dari?: string; mode?: string }>();
   const { profile } = useAuth();
   const wallets = useWallets();
-  const txs = useAllTransactions();
+  const saldoQ = useSaldoDompet();
   const simpanTx = useSaveTransactions();
   const [txId] = useState(() => newTxId()); // sekali per layar dibuka; dipakai ulang saat coba lagi
   const [nominal, setNominal] = useState<number | null>(null);
@@ -48,7 +47,7 @@ export default function PindahDana() {
   const khususId = (masuk ? ke : dari) ?? ke ?? dari;
   const khusus = wallets.data?.find((w) => w.id === khususId && w.tipe !== 'harian' && !w.diarsip);
   const harian = (wallets.data ?? []).filter((w) => w.tipe === 'harian' && !w.diarsip);
-  const saldo = wallets.data && txs.data ? walletBalances(wallets.data, txs.data) : null;
+  const saldo = wallets.data && saldoQ.data ? saldoQ.data : null;
   const pasangan = harian.find((w) => w.id === pilih) ?? harian[0];
 
   const bungkus = (isi: ReactNode) => (

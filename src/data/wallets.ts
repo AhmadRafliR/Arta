@@ -31,6 +31,28 @@ export function useWallets() {
   });
 }
 
+/** Kunci saldo per dompet; di bawah 'transactions' agar ikut segar setiap transaksi berubah. */
+export const KUNCI_SALDO_DOMPET = ['transactions', 'saldo-dompet'] as const;
+
+/**
+ * Saldo setiap dompet (termasuk arsip) dihitung di database lewat RPC saldo_dompet: satu permintaan kecil,
+ * bukan menarik seluruh riwayat transaksi. Hasil sama dengan walletBalances.
+ */
+export function useSaldoDompet() {
+  return useQuery<Record<string, number>, AppError>({
+    queryKey: KUNCI_SALDO_DOMPET,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('saldo_dompet');
+      if (error) throw toAppError(error, { aksi: 'baca' });
+      const hasil: Record<string, number> = {};
+      for (const r of (data ?? []) as { wallet_id: string; saldo: number | string }[]) {
+        hasil[r.wallet_id] = Number(r.saldo);
+      }
+      return hasil;
+    },
+  });
+}
+
 export type NewWallet = Omit<Wallet, 'id' | 'diarsip' | 'target'> & {
   target?: number | null;
 };
@@ -43,7 +65,12 @@ export function useCreateWallet() {
       if (error) throw toAppError(error);
       return toWallet(data as Row);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['wallets'] }),
+    // Saldo awal ikut menentukan saldo: segarkan juga RPC saldo.
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ['wallets'] }),
+        qc.invalidateQueries({ queryKey: KUNCI_SALDO_DOMPET }),
+      ]),
   });
 }
 
@@ -60,6 +87,11 @@ export function useUpdateWallet() {
       if (error) throw toAppError(error);
       return toWallet(data as Row);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['wallets'] }),
+    // Saldo awal ikut menentukan saldo: segarkan juga RPC saldo.
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ['wallets'] }),
+        qc.invalidateQueries({ queryKey: KUNCI_SALDO_DOMPET }),
+      ]),
   });
 }

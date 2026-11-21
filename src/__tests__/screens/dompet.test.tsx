@@ -44,6 +44,10 @@ jest.mock('@/data/wallets', () => ({
   useWallets: () => ({ data: mockWallets }),
   useUpdateWallet: () => ({ mutateAsync: mockUpdate }),
   useCreateWallet: () => ({ mutateAsync: mockCreate }),
+  // Sama dengan RPC saldo_dompet: saldo awal + efek transaksi.
+  useSaldoDompet: () => ({
+    data: jest.requireActual('@/domain/balances').walletBalances(mockWallets, mockTxs),
+  }),
 }));
 jest.mock('@/data/transactions', () => ({
   useAllTransactions: () => ({ data: mockTxs }),
