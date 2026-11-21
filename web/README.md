@@ -1,11 +1,14 @@
 # Halaman web arta
 
-Dua halaman statis mandiri (CSS inline, tanpa build) yang dibutuhkan Google Play:
+Halaman statis mandiri (CSS inline, tanpa build) yang dibutuhkan Google Play dan AdMob:
 
 | File | Fungsi | Dipakai untuk |
 | --- | --- | --- |
 | `hapus-akun.html` | Hapus akun lewat web (email, kode 6 digit, ketik HAPUS) | Play Console: "Penghapusan akun" (URL) |
-| `kebijakan-privasi.html` | Draf kebijakan privasi | Play Console: "Kebijakan privasi" (URL) |
+| `kebijakan-privasi.html` | Draf kebijakan privasi (termasuk iklan AdMob, AI, catat otomatis) | Play Console: "Kebijakan privasi" (URL) |
+| `app-ads.txt` | Verifikasi penjual iklan AdMob | Harus ada di **akar domain** situs developer di listing Play |
+
+`app-ads.txt` hanya dibaca di akar domain (`https://domainmu/app-ads.txt`). Karena itu pakai Netlify (seluruh situs = folder `web/`) atau GitHub Pages **situs pengguna** (`<user>.github.io`). Situs proyek GitHub Pages (`<user>.github.io/<repo>/`) tidak bisa dipakai untuk `app-ads.txt`. Isi "Situs web" di listing Play dengan domain yang sama, lalu ganti `pub-0000000000000000` dengan Publisher ID AdMob.
 
 ## 1. Isi dulu
 
@@ -18,6 +21,7 @@ Selama masih `GANTI_...`, halaman menampilkan "Halaman belum dikonfigurasi".
 
 Kedua file, cari dan ganti placeholder:
 
+- `pub-0000000000000000` -> Publisher ID AdMob (app-ads.txt)
 - `[EMAIL KONTAK]` -> email kontak (hapus-akun.html dan kebijakan-privasi.html)
 - `[TANGGAL]` -> tanggal pembaruan kebijakan
 - `[URL HAPUS AKUN]` -> URL publik `hapus-akun.html` setelah di-host (di kebijakan-privasi.html)

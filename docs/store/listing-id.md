@@ -35,22 +35,26 @@ Uang bulanan dari orang tua, gaji pertama, beberapa e-wallet, dan paylater yang 
 FITUR UTAMA
 - Catat pakai suara atau teks bahasa sehari-hari. Tidak perlu format khusus.
 - Catat manual lewat formulir, tanpa batas.
+- Catat otomatis dari notifikasi GoPay dan ShopeePay (Android): transaksi disiapkan sebagai draf, kamu tinggal cek lalu simpan.
 - Banyak dompet: tunai, rekening, e-wallet.
-- Hutang dan paylater: bunga flat atau efektif, jadwal tagihan, dan perkiraan kapan hutangmu lunas.
+- Hutang dan paylater: bunga flat atau efektif, jadwal tagihan, dan perkiraan kapan hutangmu lunas. Bisa diisi dari screenshot tagihan.
 - Budget bulanan, dana darurat, dan pencatatan investasi.
 - Tampilan terang dan gelap yang nyaman dipandang.
+- Ekspor data dan kirim laporan email bisa dibuka gratis dengan menonton satu iklan.
 
-ARTA PRO (LANGGANAN, BISA DICOBA GRATIS 14 HARI)
+ARTA PRO (LANGGANAN, UJI COBA GRATIS 14 HARI UNTUK PELANGGAN BARU)
+- Tanpa iklan.
 - Catat pakai AI tanpa batas (paket gratis: 30 kali per bulan).
 - Laporan bulanan otomatis lewat email ke orang pilihanmu, misalnya orang tua atau pasangan, sebagai bentuk akuntabilitas.
 - Pengingat jatuh tempo tagihan lewat notifikasi.
 - Ekspor data ke CSV dan Excel (XLSX) untuk dibuka di Excel atau Google Sheets.
 
-Langganan dibayar lewat Google Play. Harga dan ketentuan ditampilkan sebelum kamu mengonfirmasi, dan kamu bisa membatalkan kapan saja lewat Google Play.
+Langganan dibayar lewat Google Play dan diperpanjang otomatis sampai dibatalkan. Harga dan ketentuan ditampilkan sebelum kamu mengonfirmasi, dan kamu bisa membatalkan kapan saja lewat Google Play. Versi gratis menampilkan iklan.
 
 PRIVASI DAN KENDALI ATAS DATAMU
 - Datamu hanya bisa dibaca oleh akunmu sendiri.
-- Rekaman suara hanya diproses untuk diubah menjadi teks lalu dibuang, tidak disimpan.
+- Rekaman suara dan screenshot tagihan hanya diproses lalu dibuang, tidak disimpan.
+- Notifikasi e-wallet dibaca di HP dan tidak dikirim ke server; hanya transaksi yang kamu simpan yang tercatat.
 - Kamu bisa menghapus akun dan seluruh datamu kapan saja, dari dalam app maupun lewat halaman web.
 
 Catatan: arta hanya mencatat keuanganmu. arta tidak memindahkan uang, tidak memberi pinjaman, dan bukan layanan penasihat keuangan.
@@ -62,14 +66,14 @@ Ngomong aja, beres. Unduh arta dan mulai mencatat hari ini.
 
 ```
 Rilis pertama arta.
-- Catat uang pakai suara atau teks.
-- Dompet, hutang, budget, dan dana darurat.
-- arta Pro: coba gratis 14 hari, laporan email bulanan, pengingat tagihan, dan ekspor CSV/XLSX.
+- Catat uang pakai suara, teks, atau otomatis dari notifikasi GoPay dan ShopeePay.
+- Dompet, hutang (bisa dari screenshot tagihan), budget, dan dana darurat.
+- arta Pro: tanpa iklan, laporan email bulanan, pengingat tagihan, dan ekspor CSV/XLSX.
 - Hapus akun dari dalam app atau lewat web.
 ```
 
-## Aset grafis yang dibutuhkan (dibuat Rafli)
+## Aset grafis
 
-- Ikon app 512 x 512 px (PNG, maks. 1 MB).
-- Feature graphic 1024 x 500 px.
-- Minimal 2 screenshot ponsel (disarankan 4-8): catat suara, Beranda, hutang, Premium.
+- [x] Ikon app 512 x 512 px: `docs/store/ikon-play-512.png` (dari `assets/images/icon.png`; Play menambahkan sudut membulat sendiri).
+- [x] Feature graphic 1024 x 500 px: `docs/store/feature-graphic-1024x500.png` (draf; boleh diganti desain sendiri).
+- Minimal 2 screenshot ponsel (disarankan 4-8): catat suara, Beranda, catat otomatis, hutang, Premium.

@@ -41,21 +41,27 @@
 
   <h2>2. Data yang kami kumpulkan</h2>
   <ul>
-    <li><strong>Email</strong>, untuk membuat akun dan masuk (kode sekali pakai lewat email).</li>
-    <li><strong>Data keuangan yang kamu ketik atau ucapkan:</strong> dompet dan saldo, transaksi, kategori, hutang dan jadwalnya, budget, serta catatan yang kamu tulis.</li>
+    <li><strong>Data akun:</strong> email, untuk membuat akun dan masuk (kode sekali pakai lewat email). Bila kamu memilih <strong>Masuk dengan Google</strong>, kami juga menerima nama dan email akun Google-mu.</li>
+    <li><strong>Data keuangan yang kamu catat:</strong> dompet dan saldo, transaksi, kategori, hutang dan jadwalnya, budget, dana darurat, investasi, serta catatan yang kamu tulis.</li>
     <li><strong>Rekaman suara</strong> bila kamu memakai catat dengan suara. Audio dikirim untuk ditranskripsi menjadi teks lalu <strong>dibuang</strong>; kami tidak menyimpan file audionya. Teks hasil transkripsi dapat disimpan bersama transaksi.</li>
+    <li><strong>Screenshot tagihan</strong> yang kamu pilih sendiri dari galeri saat mengisi hutang. Gambar dikirim untuk dibaca AI menjadi isian formulir lalu <strong>dibuang</strong>; kami tidak menyimpan gambarnya. arta tidak membaca galerimu di luar gambar yang kamu pilih.</li>
+    <li><strong>Notifikasi GoPay dan ShopeePay</strong>, hanya bila kamu menyalakan <em>Catat otomatis dari notifikasi</em> dan memberi akses notifikasi di pengaturan Android. Teks notifikasi diproses <strong>di HP</strong> menjadi draf transaksi dan tidak dikirim ke server kami; notifikasi aplikasi lain diabaikan. Yang tersimpan hanyalah transaksi yang kamu periksa dan simpan sendiri. Akses ini bisa dimatikan kapan saja.</li>
+    <li><strong>Penerima laporan email</strong>: alamat email orang yang kamu tambahkan sebagai penerima laporan bulanan. Penerima harus mengonfirmasi lewat tautan di email sebelum laporan dikirim, dan bisa berhenti kapan saja.</li>
     <li><strong>Pengaturan dan kuota:</strong> preferensi (misalnya tema, zona waktu, jam pengingat) dan pemakaian kuota catat AI.</li>
     <li><strong>Token notifikasi (push)</strong> perangkat, agar pengingat tagihan bisa dikirim.</li>
     <li><strong>Status langganan</strong> (apakah Pro aktif, masa berlaku, dan produk). Pembayaran diproses Google Play; kami tidak menerima nomor kartu atau data pembayaran kamu.</li>
+    <li><strong>Data iklan (pengguna gratis):</strong> arta versi gratis menampilkan iklan Google AdMob. SDK AdMob dapat mengumpulkan ID iklan perangkat, alamat IP (perkiraan lokasi kasar), informasi perangkat, serta interaksi dengan iklan, untuk menampilkan dan mengukur iklan serta mencegah penipuan. Pengguna Pro tidak melihat iklan.</li>
   </ul>
-  <p>Kami tidak menjual data pribadi dan tidak menampilkan iklan.</p>
+  <p>Kami <strong>tidak menjual</strong> data pribadi dan <strong>tidak membagikan data keuanganmu</strong> (transaksi, saldo, hutang, budget) kepada pengiklan.</p>
 
   <h2>3. Tujuan penggunaan</h2>
   <ul>
     <li>Menyediakan fitur inti: mencatat, menampilkan, dan mengelola keuanganmu.</li>
-    <li>Memproses catatan suara/teks menjadi draf transaksi (catat dengan AI).</li>
-    <li>Mengirim pengingat tagihan bila kamu mengaktifkannya.</li>
+    <li>Memproses catatan suara/teks dan screenshot tagihan menjadi draf transaksi atau hutang (catat dengan AI).</li>
+    <li>Menyiapkan draf transaksi dari notifikasi e-wallet di HP bila kamu mengaktifkannya.</li>
+    <li>Mengirim pengingat tagihan dan laporan email bila kamu mengaktifkannya.</li>
     <li>Mengelola langganan Pro dan membatasi kuota sesuai paket.</li>
+    <li>Menampilkan iklan kepada pengguna gratis, termasuk iklan berhadiah untuk membuka ekspor data dan kirim laporan.</li>
     <li>Menjaga keamanan akun dan mencegah penyalahgunaan.</li>
   </ul>
 
@@ -65,24 +71,35 @@
     <thead><tr><th>Pihak</th><th>Peran</th><th>Data</th></tr></thead>
     <tbody>
       <tr><td>Supabase</td><td>Basis data, autentikasi, dan fungsi server</td><td>Email dan seluruh data akun</td></tr>
-      <tr><td>OpenAI</td><td>Transkripsi suara dan penguraian teks menjadi transaksi</td><td>Audio atau teks yang kamu kirim ke fitur catat AI, plus daftar nama dompet dan kategori sebagai konteks</td></tr>
-      <tr><td>RevenueCat</td><td>Pengelolaan langganan</td><td>ID akun (acak) dan status langganan</td></tr>
+      <tr><td>OpenAI dan Google (Gemini API)</td><td>Transkripsi suara, penguraian teks menjadi transaksi, dan pembacaan screenshot tagihan</td><td>Audio, teks, atau gambar yang kamu kirim ke fitur catat AI, plus daftar nama dompet dan kategori sebagai konteks</td></tr>
+      <tr><td>Google (Masuk dengan Google)</td><td>Autentikasi</td><td>Nama dan email akun Google, bila kamu memilih cara masuk ini</td></tr>
+      <tr><td>Google AdMob</td><td>Iklan untuk pengguna gratis</td><td>ID iklan, alamat IP, informasi perangkat, dan interaksi iklan (lihat <a href="https://policies.google.com/technologies/partner-sites?hl=id" rel="noopener">cara Google memakai data dari aplikasi mitra</a>)</td></tr>
+      <tr><td>RevenueCat</td><td>Pengelolaan langganan</td><td>ID akun (acak), riwayat pembelian langganan, dan informasi perangkat dasar</td></tr>
       <tr><td>Google Play</td><td>Pembayaran dan penagihan langganan</td><td>Data pembelian di akun Google kamu</td></tr>
-      <tr><td>Expo (layanan push)</td><td>Pengiriman notifikasi</td><td>Token notifikasi perangkat dan isi pengingat</td></tr>
+      <tr><td>Resend</td><td>Pengiriman email laporan</td><td>Email penerima dan isi laporan bulanan</td></tr>
+      <tr><td>Expo (layanan push) dan Firebase Cloud Messaging</td><td>Pengiriman notifikasi</td><td>Token notifikasi perangkat dan isi pengingat</td></tr>
     </tbody>
   </table>
   </div>
   <p style="margin-top:12px">Sebagian pemroses berada di luar Indonesia, sehingga data dapat diproses di negara lain. Kami memilih penyedia yang menerapkan perlindungan data yang layak.</p>
 
-  <h2>5. Lama penyimpanan</h2>
+  <h2>5. Pilihan iklan</h2>
+  <ul>
+    <li>Kamu dapat mereset atau menghapus ID iklan di <strong>Pengaturan Android &rarr; Privasi &rarr; Iklan</strong>. Tanpa ID iklan, iklan tetap tampil tetapi tidak dipersonalisasi.</li>
+    <li>Di wilayah yang mewajibkan persetujuan (misalnya Uni Eropa dan Inggris), arta meminta persetujuanmu lebih dulu, dan pilihanmu bisa diubah kapan saja di <strong>Akun &rarr; Pilihan privasi iklan</strong>.</li>
+    <li>Berlangganan Pro menghilangkan semua iklan.</li>
+  </ul>
+
+  <h2>6. Lama penyimpanan</h2>
   <ul>
     <li>Data akun disimpan selama akunmu aktif.</li>
-    <li>Audio tidak disimpan setelah ditranskripsi.</li>
+    <li>Audio dan screenshot tagihan tidak disimpan setelah diproses.</li>
+    <li>Teks notifikasi e-wallet hanya ada di HP selama app berjalan dan tidak disimpan di server.</li>
     <li>Saat akun dihapus, seluruh data akun dihapus permanen dari basis data kami. Salinan cadangan dapat bertahan paling lama [JANGKA WAKTU CADANGAN] sebelum terhapus otomatis.</li>
     <li>Catatan pembelian dapat tetap disimpan oleh Google Play sesuai kebijakan Google.</li>
   </ul>
 
-  <h2>6. Hak kamu menurut UU PDP</h2>
+  <h2>7. Hak kamu menurut UU PDP</h2>
   <p>Sesuai Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi, kamu berhak untuk:</p>
   <ul>
     <li>mendapat informasi tentang pemrosesan data pribadimu;</li>
@@ -91,11 +108,11 @@
     <li>menghapus atau mengakhiri pemrosesan datamu;</li>
     <li>menarik persetujuan pemrosesan;</li>
     <li>mengajukan keberatan atas pemrosesan tertentu; dan</li>
-    <li>menggunakan atau mengirimkan datamu ke pihak lain bila memungkinkan (di arta kamu dapat mengekspor data ke XLSX/CSV dengan fitur Pro).</li>
+    <li>menggunakan atau mengirimkan datamu ke pihak lain bila memungkinkan (di arta kamu dapat mengekspor data ke XLSX/CSV: Pro, atau gratis setelah menonton iklan).</li>
   </ul>
   <p>Ajukan permintaan lewat <a href="mailto:[EMAIL KONTAK]">[EMAIL KONTAK]</a>. Kami berusaha menanggapi dalam waktu yang wajar dan paling lambat sesuai batas waktu yang ditentukan peraturan.</p>
 
-  <h2>7. Cara menghapus akun dan data</h2>
+  <h2>8. Cara menghapus akun dan data</h2>
   <ul>
     <li><strong>Di aplikasi:</strong> Akun &rarr; Hapus akun, lalu ketik HAPUS.</li>
     <li><strong>Lewat web:</strong> <a href="[URL HAPUS AKUN]">[URL HAPUS AKUN]</a>.</li>
@@ -103,16 +120,16 @@
   </ul>
   <p><strong>Penting:</strong> menghapus akun tidak membatalkan langganan Google Play. Batalkan langganan di <a href="https://play.google.com/store/account/subscriptions" rel="noopener">Google Play &rarr; Langganan</a> agar tidak ditagih lagi.</p>
 
-  <h2>8. Keamanan</h2>
+  <h2>9. Keamanan</h2>
   <p>Data dikirim melalui koneksi terenkripsi (HTTPS) dan setiap akun hanya dapat mengakses datanya sendiri lewat aturan keamanan tingkat baris di basis data. Tidak ada sistem yang sepenuhnya kebal; bila terjadi kegagalan pelindungan data yang berdampak padamu, kami akan memberi tahu sesuai ketentuan peraturan yang berlaku.</p>
 
-  <h2>9. Anak-anak</h2>
+  <h2>10. Anak-anak</h2>
   <p>arta ditujukan untuk pengguna berusia 18 tahun ke atas. Kami tidak dengan sengaja mengumpulkan data anak.</p>
 
-  <h2>10. Perubahan kebijakan</h2>
+  <h2>11. Perubahan kebijakan</h2>
   <p>Kebijakan ini dapat diperbarui. Perubahan penting akan diumumkan di aplikasi atau lewat email, dan tanggal "Terakhir diperbarui" di atas akan berubah.</p>
 
-  <h2>11. Kontak</h2>
+  <h2>12. Kontak</h2>
   <p>Rafli (pengendali data) &middot; <a href="mailto:[EMAIL KONTAK]">[EMAIL KONTAK]</a></p>
 </main>
 </body>

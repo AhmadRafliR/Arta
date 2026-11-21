@@ -15,13 +15,14 @@ Paket: `react-native-google-mobile-ads` (Expo tidak punya modul AdMob resmi; pak
 ## Langkah yang harus kamu lakukan
 1. Buat akun di https://admob.google.com, daftarkan app **Android** (paket `id.arta.keuangan`). Catat **App ID** (`ca-app-pub-…~…`).
 2. Buat satu **unit iklan Banner**. Catat **ID unit** (`ca-app-pub-…/…`).
-3. Isi variabel lingkungan EAS untuk profil `production` (bukan rahasia, tapi spesifik akun):
+3. Isi variabel lingkungan EAS untuk profil `production` (bukan rahasia, tapi spesifik akun). Build production menolak ID unit tanpa App ID asli dari akun AdMob yang sama (`periksaKonfigRilis` di `app.config.ts`):
    ```powershell
-   npx eas-cli@latest env:create --name ADMOB_ANDROID_APP_ID --value "ca-app-pub-XXXX~YYYY" --environment production --visibility plain
-   npx eas-cli@latest env:create --name EXPO_PUBLIC_ADMOB_BANNER_ANDROID --value "ca-app-pub-XXXX/ZZZZ" --environment production --visibility plain
+   npx eas-cli@latest env:set --name ADMOB_ANDROID_APP_ID --value "ca-app-pub-XXXX~YYYY" --environment production --visibility plaintext --non-interactive
+   npx eas-cli@latest env:set --name EXPO_PUBLIC_ADMOB_BANNER_ANDROID --value "ca-app-pub-XXXX/ZZZZ" --environment production --visibility plaintext --non-interactive
    ```
 4. Bangun ulang APK dev (App ID uji sudah di config): `npx eas-cli@latest build --profile development --platform android`.
 5. Di AdMob, atur **Privacy & messaging → European regulations / US states** dan buat pesan consent (UMP). Tanpa pesan consent, di wilayah yang mensyaratkannya iklan tidak akan diminta.
+5a. Isi Publisher ID di `web/app-ads.txt` dan host di akar domain situs developer (lihat `web/README.md`). AdMob memakai berkas ini untuk memverifikasi app.
 6. Perbarui **kebijakan privasi** (menyebut Google AdMob, ID iklan, dan data perangkat) dan isi **Data safety** di Play Console (Advertising ID: ya, untuk iklan).
 7. Kontrol Play Console: deklarasi "Aplikasi berisi iklan".
 
@@ -35,9 +36,9 @@ Paket: `react-native-google-mobile-ads` (Expo tidak punya modul AdMob resmi; pak
 3. Akun Pro: tidak ada banner sama sekali.
 4. Mode pesawat: tidak ada ruang kosong di tempat banner.
 
-## Belum dikerjakan
-- Tombol "Pengaturan privasi iklan" di Akun (`bukaPengaturanPrivasiIklan()` sudah ada, belum dipasang). Wajib di wilayah yang mensyaratkan consent bila nanti app dirilis ke sana.
-- Iklan interstisial / reward: sengaja tidak dipakai agar tidak mengganggu pencatatan.
+## Pilihan privasi iklan
+- **Akun → Data & privasi → Pilihan privasi iklan** tampil otomatis untuk pengguna non-Pro bila UMP melaporkan `privacyOptionsRequirementStatus = REQUIRED` (mis. EEA/UK), dan membuka formulir UMP (`perluPengaturanPrivasiIklan()` dan `bukaPengaturanPrivasiIklan()` di `src/iklan/mulai.native.ts`). Di Indonesia biasanya tidak tampil.
+- Iklan interstisial: sengaja tidak dipakai agar tidak mengganggu pencatatan.
 
 ## Iklan reward: ekspor data dan laporan email untuk pengguna gratis
 
@@ -51,7 +52,7 @@ Cara kerja:
 
 Yang perlu kamu siapkan di AdMob: satu unit iklan **Rewarded** (selain unit Banner), lalu env EAS:
 ```powershell
-npx eas-cli@latest env:create --name EXPO_PUBLIC_ADMOB_REWARD_ANDROID --value "ca-app-pub-XXXX/WWWW" --environment production --visibility plain
+npx eas-cli@latest env:set --name EXPO_PUBLIC_ADMOB_REWARD_ANDROID --value "ca-app-pub-XXXX/WWWW" --environment production --visibility plaintext --non-interactive
 ```
 Saat pengembangan otomatis memakai iklan reward uji Google.
 
