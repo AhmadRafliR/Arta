@@ -1,34 +1,59 @@
-import { useEffect } from 'react';
-import * as Notifications from 'expo-notifications';
+import { useEffect, useMemo } from 'react';
+import { AppState } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { usePro } from '@/data/langganan';
-import { usePengaturanPengingat } from '@/data/pengingat';
-import { daftarkanPush } from './push';
+import { PENGINGAT_DEFAULT, usePengaturanPengingat } from '@/data/pengingat';
+import { useTagihanMendatang } from '@/data/tagihanMendatang';
+import { susunJadwalPengingat } from './jadwalPengingat';
+import { batalkanPengingat, izinSudahDiberikan, jadwalkanUlangPengingat } from './lokal';
 
 /**
- * Daftarkan ulang token push tanpa memunculkan dialog izin: hanya bila izin sudah diberikan.
- * Token Expo bisa berganti (instal ulang, restore), jadi dipanggil setiap app dibuka.
+ * Pengingat jatuh tempo lokal: jadwalkan ulang notifikasi di perangkat setiap tagihan/pengaturan berubah
+ * dan saat app kembali ke foreground. Tanpa dialog izin; bila izin belum ada, tidak menjadwalkan apa pun.
+ * Logout / non-Pro / dimatikan -> batalkan semua pengingat.
  */
-export async function sinkronkanPushDiam(): Promise<void> {
-  try {
-    const izin = await Notifications.getPermissionsAsync();
-    if (!izin.granted) return;
-    await daftarkanPush();
-  } catch {
-    // abaikan: pengguna bisa menyalakan ulang dari Akun
-  }
-}
-
-/** Pengguna Pro dengan pengingat aktif: pastikan token perangkat ini terdaftar ke akunnya. */
-export function useSinkronPush(): void {
-  const { session } = useAuth();
+export function useSinkronPengingat(): void {
+  const { session, profile } = useAuth();
   const userId = session?.user.id ?? null;
-  const { pro } = usePro();
+  const zona = profile?.zona_waktu ?? null;
+  const { pro, memuat } = usePro();
   const pengaturan = usePengaturanPengingat();
-  const aktif = pengaturan.data?.aktif ?? true;
-  const siap = !!userId && pro && pengaturan.isSuccess && aktif;
+  const p = pengaturan.data ?? PENGINGAT_DEFAULT;
+  const nyala = !!userId && pro && pengaturan.isSuccess && p.aktif;
+  const tagihan = useTagihanMendatang(zona, nyala);
+  const data = nyala && tagihan.isSuccess ? tagihan.data : undefined;
+
+  const jalankan = useMemo(
+    () => async () => {
+      if (!data) return;
+      if (!(await izinSudahDiberikan())) return;
+      await jadwalkanUlangPengingat(
+        susunJadwalPengingat({
+          tagihan: data,
+          hariSebelum: p.hari_sebelum,
+          jam: p.jam,
+          zona,
+          sekarang: new Date(),
+        }),
+      );
+    },
+    [data, p.hari_sebelum, p.jam, zona],
+  );
 
   useEffect(() => {
-    if (siap) void sinkronkanPushDiam();
-  }, [siap, userId]);
+    void jalankan();
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') void jalankan();
+    });
+    return () => sub.remove();
+  }, [jalankan]);
+
+  // Batalkan hanya setelah status pasti (jangan menghapus jadwal selagi Pro/pengaturan masih memuat).
+  const pasti = !userId || (!memuat && (!pro || pengaturan.isSuccess));
+  useEffect(() => {
+    if (pasti && !nyala) void batalkanPengingat();
+  }, [pasti, nyala]);
 }
+
+/** Nama lama, dipertahankan sebagai alias. */
+export const useSinkronPush = useSinkronPengingat;

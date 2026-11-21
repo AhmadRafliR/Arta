@@ -5,7 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AmountInput } from '@/components/AmountInput';
 import { kapital } from '@/components/BarBudget';
 import { Chip } from '@/components/Chip';
+import { KepalaSheet } from '@/components/SheetBawah';
+import { Ikon } from '@/components/ikon/Ikon';
 import { Tombol } from '@/components/Tombol';
+import { useTheme } from '@/theme/ThemeProvider';
 import { pesanBudget, useBudgets, useHapusBudget, useSimpanBudget } from '@/data/budgets';
 import { useCategories } from '@/data/categories';
 
@@ -14,6 +17,7 @@ const kunci = (s: string) => s.trim().toLowerCase();
 export default function BudgetUbah() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTheme();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const budgets = useBudgets();
   const kategoriQ = useCategories('pengeluaran');
@@ -76,10 +80,22 @@ export default function BudgetUbah() {
       contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }}
       keyboardShouldPersistTaps="handled"
     >
-      <View className="flex-row items-center justify-between">
-        <Text className="text-lg font-bold text-fg font-sans">{ubah ? 'Ubah budget' : 'Tambah budget'}</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Batal" onPress={tutup} className="px-2 py-1">
-          <Text className="text-mid font-sans">Batal</Text>
+      <View className="flex-row items-center gap-3">
+        <View className="min-w-0 flex-1">
+          <KepalaSheet
+            ikon="ui-budget"
+            judul={ubah ? 'Ubah budget' : 'Tambah budget'}
+            sub="Batas pengeluaran per kategori tiap bulan"
+          />
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Batal"
+          onPress={tutup}
+          style={{ width: 38, height: 38 }}
+          className="items-center justify-center rounded-full border border-line bg-card"
+        >
+          <Ikon nama="ui-close" ukuran={18} warna={t.fg} />
         </Pressable>
       </View>
 
@@ -89,23 +105,37 @@ export default function BudgetUbah() {
         <Text className="text-mid font-sans">{budgets.error ? budgets.error.pesan : 'Memuat…'}</Text>
       ) : (
         <>
-          <Text className="text-mid font-sans">Kategori</Text>
-          {ubah ? (
-            <Text className="text-base font-bold text-fg font-sans">{kapital(ada?.kategori ?? '')}</Text>
-          ) : opsi.length === 0 ? (
-            <Text className="text-mid font-sans">
-              {kategoriQ.data ? 'Semua kategori pengeluaran sudah punya budget.' : 'Memuat…'}
-            </Text>
-          ) : (
-            <View className="flex-row flex-wrap gap-2">
-              {opsi.map((k) => (
-                <Chip key={k.id} testID={`kat-${k.nama}`} label={k.nama} selected={pilih === k.nama} onPress={() => setPilih(k.nama)} />
-              ))}
-            </View>
-          )}
+          <View className="gap-2">
+            <Text className="font-sans text-[11.5px] font-semibold text-mid">Kategori</Text>
+            {ubah ? (
+              <View className="rounded-[14px] border border-line bg-card px-3.5 py-3">
+                <Text className="font-sans text-[14.5px] font-semibold text-fg">{kapital(ada?.kategori ?? '')}</Text>
+              </View>
+            ) : opsi.length === 0 ? (
+              <Text className="font-sans text-mid">
+                {kategoriQ.data ? 'Semua kategori pengeluaran sudah punya budget.' : 'Memuat…'}
+              </Text>
+            ) : (
+              <View className="gap-2.5 rounded-[14px] border border-line bg-card p-3">
+                <View className="flex-row flex-wrap gap-2">
+                  {opsi.map((k) => (
+                    <Chip key={k.id} testID={`kat-${k.nama}`} label={k.nama} selected={pilih === k.nama} onPress={() => setPilih(k.nama)} />
+                  ))}
+                </View>
+                {pilih ? (
+                  <Text className="font-sans text-xs text-mid">
+                    Dipilih: <Text className="font-sans font-semibold text-fg">{kapital(pilih)}</Text>
+                  </Text>
+                ) : null}
+              </View>
+            )}
+          </View>
 
-          <Text className="text-mid font-sans">Batas per bulan</Text>
-          <AmountInput value={ada?.batas_bulanan ?? null} onChange={setBatas} testID="batas" />
+          <View className="gap-1.5">
+            <Text className="font-sans text-[11.5px] font-semibold text-mid">Batas per bulan (Rp)</Text>
+            <AmountInput value={ada?.batas_bulanan ?? null} onChange={setBatas} testID="batas" />
+            <Text className="font-sans text-xs text-mid">Kamu akan diingatkan saat terpakai 80%.</Text>
+          </View>
 
           <Tombol primary label="Simpan" busy={busy} disabled={!valid || busy} onPress={() => void simpan()} />
           {ubah ? <Tombol label="Hapus budget" disabled={busy} onPress={konfirmasiHapus} /> : null}

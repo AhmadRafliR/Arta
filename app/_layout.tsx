@@ -11,7 +11,7 @@ import { ThemeProvider } from '@/theme/ThemeProvider';
 import type { Pref } from '@/theme/tokens';
 import { LanggananProvider } from '@/langganan/LanggananProvider';
 import { pasangPenangan } from '@/notifikasi/penangan';
-import { useSinkronPush } from '@/notifikasi/sinkron';
+import { useSinkronPengingat } from '@/notifikasi/sinkron';
 
 // Urutan provider: QueryClientProvider > AuthProvider > ThemeShell(ThemeProvider) > ...
 // ThemeProvider berada DI DALAM AuthProvider agar onPrefChange bisa melihat sesi
@@ -43,7 +43,7 @@ function PenanganNotifikasi() {
 }
 
 function SinkronPush() {
-  useSinkronPush();
+  useSinkronPengingat();
   return null;
 }
 

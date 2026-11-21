@@ -49,6 +49,8 @@ export type NamaIkon =
   | 'ui-check'
   | 'ui-percent'
   | 'ui-bell'
+  | 'ui-sun'
+  | 'ui-moon'
   | 'ui-lock'
   | 'ui-plus'
   | 'ui-trend-up'
@@ -262,6 +264,13 @@ export const IKON: Record<NamaIkon, Elemen[]> = {
   'ui-bell': [
     { tag: 'path', kelas: 'ln', attr: { d: 'M6.6 10.4 A5.4 5.4 0 0 1 17.4 10.4 V14.6 L19.2 17.6 H4.8 L6.6 14.6 Z' } },
     { tag: 'path', kelas: 'ln', attr: { d: 'M10 20 C10.6 21 13.4 21 14 20' } },
+  ],
+  'ui-sun': [
+    { tag: 'circle', kelas: 'ln', attr: { cx: '12', cy: '12', r: '4' } },
+    { tag: 'path', kelas: 'ln', attr: { d: 'M12 2.8 V4.8 M12 19.2 V21.2 M2.8 12 H4.8 M19.2 12 H21.2 M5.5 5.5 L6.9 6.9 M17.1 17.1 L18.5 18.5 M5.5 18.5 L6.9 17.1 M17.1 6.9 L18.5 5.5' } },
+  ],
+  'ui-moon': [
+    { tag: 'path', kelas: 'ln', attr: { d: 'M19.8 14.6 A8.2 8.2 0 0 1 9.4 4.2 A8.2 8.2 0 1 0 19.8 14.6 Z' } },
   ],
   'ui-lock': [
     { tag: 'rect', kelas: 'ln', attr: { x: '4.6', y: '10.2', width: '14.8', height: '10.4', rx: '2.8' } },

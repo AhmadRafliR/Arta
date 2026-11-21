@@ -7,6 +7,7 @@ import { TxRow } from '@/components/TxRow';
 import { KartuHutangBeranda } from '@/components/KartuHutangBeranda';
 import { KeadaanKosong } from '@/components/KeadaanKosong';
 import { KartuBudgetKritis } from '@/components/KartuBudgetKritis';
+import { AksiKepalaBeranda } from '@/components/AksiKepalaBeranda';
 import { KartuNotifDompet } from '@/components/KartuNotifDompet';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAllTransactions, useTransactions } from '@/data/transactions';
@@ -61,9 +62,12 @@ export default function Beranda() {
       contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: spacerNav(insets.bottom) }}
       {...gulir}
     >
-      <View>
-        <Text className="text-xs text-mid font-sans">{`${sapaan(jamDi(zona))},`}</Text>
-        <Text className="text-base font-bold text-fg font-sans">{profile?.nama ?? ''}</Text>
+      <View className="flex-row items-center gap-3">
+        <View className="min-w-0 flex-1">
+          <Text className="text-xs text-mid font-sans">{`${sapaan(jamDi(zona))},`}</Text>
+          <Text className="text-base font-bold text-fg font-sans" numberOfLines={1}>{profile?.nama ?? ''}</Text>
+        </View>
+        <AksiKepalaBeranda />
       </View>
 
       {termuat ? (

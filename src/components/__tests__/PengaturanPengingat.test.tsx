@@ -8,8 +8,12 @@ jest.mock('@/theme/ThemeProvider', () => {
   return { useTheme: () => ({ mode: 'terang', t: tokens.terang }) };
 });
 
-const mockDaftar = jest.fn();
-jest.mock('@/notifikasi/push', () => ({ daftarkanPush: () => mockDaftar() }));
+const mockIzin = jest.fn();
+const mockUji = jest.fn();
+jest.mock('@/notifikasi/lokal', () => ({
+  mintaIzinNotifikasi: () => mockIzin(),
+  kirimNotifikasiUji: () => mockUji(),
+}));
 
 const mockMaybeSingle = jest.fn();
 const mockUpsert = jest.fn();
@@ -65,20 +69,20 @@ describe('PengaturanPengingat', () => {
     await waitFor(() => expect(mockUpsert).toHaveBeenCalledWith(expect.objectContaining({ jam: 19 }), expect.anything()));
   });
 
-  it('Pro: menyalakan memanggil daftar push lalu menyimpan aktif', async () => {
+  it('Pro: menyalakan meminta izin notifikasi lalu menyimpan aktif', async () => {
     mockMaybeSingle.mockResolvedValue({ data: { aktif: false, hari_sebelum: 1, jam: 8 }, error: null });
-    mockDaftar.mockResolvedValue({ status: 'aktif', token: 'ExponentPushToken[x]' });
+    mockIzin.mockResolvedValue('diberikan');
     await tampil(true);
     const saklar = await screen.findByLabelText('Pengingat jatuh tempo');
     await waitFor(() => expect(saklar.props.value).toBe(false));
     await fireEvent(saklar, 'valueChange', true);
-    await waitFor(() => expect(mockDaftar).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockIzin).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(mockUpsert).toHaveBeenCalledWith(expect.objectContaining({ aktif: true }), expect.anything()));
   });
 
   it('izin ditolak: pesan dan tombol Buka Pengaturan, tanpa simpan', async () => {
     mockMaybeSingle.mockResolvedValue({ data: { aktif: false, hari_sebelum: 1, jam: 8 }, error: null });
-    mockDaftar.mockResolvedValue({ status: 'ditolak' });
+    mockIzin.mockResolvedValue('ditolak');
     await tampil(true);
     const saklar = await screen.findByLabelText('Pengingat jatuh tempo');
     await waitFor(() => expect(saklar.props.value).toBe(false));
@@ -88,14 +92,11 @@ describe('PengaturanPengingat', () => {
     expect(mockUpsert).not.toHaveBeenCalled();
   });
 
-  it('tidak didukung: menampilkan alasan', async () => {
-    mockMaybeSingle.mockResolvedValue({ data: { aktif: false, hari_sebelum: 1, jam: 8 }, error: null });
-    mockDaftar.mockResolvedValue({ status: 'tidak-didukung', alasan: 'Hanya di perangkat sungguhan.' });
+  it('aktif: tombol uji mengirim notifikasi dan menampilkan umpan balik', async () => {
+    mockUji.mockResolvedValue(true);
     await tampil(true);
-    const saklar = await screen.findByLabelText('Pengingat jatuh tempo');
-    await waitFor(() => expect(saklar.props.value).toBe(false));
-    await fireEvent(saklar, 'valueChange', true);
-    expect(await screen.findByText('Hanya di perangkat sungguhan.')).toBeTruthy();
-    expect(mockUpsert).not.toHaveBeenCalled();
+    await fireEvent.press(await screen.findByRole('button', { name: 'Kirim notifikasi uji' }));
+    expect(await screen.findByText('Notifikasi uji dikirim. Cek bilah notifikasi.')).toBeTruthy();
+    expect(mockUji).toHaveBeenCalledTimes(1);
   });
 });

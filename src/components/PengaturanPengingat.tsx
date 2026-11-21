@@ -6,7 +6,7 @@ import { BarisMenuAkun, KartuGrupAkun } from './BarisAkun';
 import { Ikon } from './ikon/Ikon';
 import { LabelSub } from './KartuSeksi';
 import { Segmented } from './Segmented';
-import { daftarkanPush } from '@/notifikasi/push';
+import { kirimNotifikasiUji, mintaIzinNotifikasi } from '@/notifikasi/lokal';
 import {
   PENGINGAT_DEFAULT,
   usePengaturanPengingat,
@@ -32,8 +32,8 @@ export function PengaturanPengingat({ pro, onBukaPremium }: Props) {
   const { data } = usePengaturanPengingat();
   const simpan = useSimpanPengingat();
   const [ditolak, setDitolak] = useState(false);
-  const [alasan, setAlasan] = useState<string | null>(null);
   const [sibuk, setSibuk] = useState(false);
+  const [infoUji, setInfoUji] = useState<string | null>(null);
   const p: Pengaturan = data ?? PENGINGAT_DEFAULT;
 
   if (!pro) {
@@ -44,7 +44,7 @@ export function PengaturanPengingat({ pro, onBukaPremium }: Props) {
           pertama
           ikon="ui-alert"
           judul="Pengingat jatuh tempo"
-          sub="Push notification untuk tagihan hutang."
+          sub="Notifikasi untuk tagihan hutang."
           accessibilityLabel="Pengingat jatuh tempo, fitur Pro"
           onPress={onBukaPremium}
           chevron={false}
@@ -59,22 +59,25 @@ export function PengaturanPengingat({ pro, onBukaPremium }: Props) {
     );
   }
 
+  const kirimUji = async () => {
+    const ok = await kirimNotifikasiUji();
+    setInfoUji(ok ? 'Notifikasi uji dikirim. Cek bilah notifikasi.' : 'Notifikasi uji gagal dikirim.');
+  };
+
   const ubahAktif = async (nilai: boolean) => {
     setDitolak(false);
-    setAlasan(null);
+    setInfoUji(null);
     if (!nilai) {
       simpan.mutate({ ...p, aktif: false });
       return;
     }
     setSibuk(true);
     try {
-      const h = await daftarkanPush();
-      if (h.status === 'aktif') {
+      const h = await mintaIzinNotifikasi();
+      if (h === 'diberikan') {
         simpan.mutate({ ...p, aktif: true });
-      } else if (h.status === 'ditolak') {
-        setDitolak(true);
       } else {
-        setAlasan(h.alasan);
+        setDitolak(true);
       }
     } finally {
       setSibuk(false);
@@ -87,7 +90,7 @@ export function PengaturanPengingat({ pro, onBukaPremium }: Props) {
         pertama
         ikon="ui-bell"
         judul="Pengingat jatuh tempo"
-        sub="Push notification untuk tagihan hutang."
+        sub="Notifikasi untuk tagihan hutang."
         chevron={false}
         kanan={
           <Switch
@@ -114,11 +117,6 @@ export function PengaturanPengingat({ pro, onBukaPremium }: Props) {
           </Pressable>
         </View>
       ) : null}
-      {alasan ? (
-        <View className="border-t border-line px-3.5 py-3">
-          <Text className="font-sans text-[12.5px] text-fg2">{alasan}</Text>
-        </View>
-      ) : null}
 
       {p.aktif ? (
         <View className="border-t border-line px-3.5 pb-3.5">
@@ -134,6 +132,16 @@ export function PengaturanPengingat({ pro, onBukaPremium }: Props) {
             nilai={String(p.jam)}
             onChange={(v) => simpan.mutate({ ...p, jam: Number(v) })}
           />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Kirim notifikasi uji"
+            onPress={kirimUji}
+            className="mt-3 flex-row items-center gap-1.5 self-start rounded-full border border-line px-4 py-2"
+          >
+            <Ikon nama="ui-bell" ukuran={16} warna={t.fg} />
+            <Text className="font-sans text-sm font-semibold text-fg">Kirim notifikasi uji</Text>
+          </Pressable>
+          {infoUji ? <Text className="mt-2 font-sans text-[12.5px] text-fg2">{infoUji}</Text> : null}
         </View>
       ) : null}
     </KartuGrupAkun>
