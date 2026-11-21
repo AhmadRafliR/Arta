@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMomen } from '@/animasi/useMomen';
 import { BarisDraf } from '@/components/BarisDraf';
 import { EditorDraf, type PatchDraf } from '@/components/EditorDraf';
 import { Ikon } from '@/components/ikon/Ikon';
@@ -53,6 +54,7 @@ export default function Cek() {
   const ditutup = useRef(false); // layar menutup sendiri; jangan replace('/') saat store dikosongkan
 
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const momen = useMomen();
 
   useEffect(() => {
     if (!h && !ditutup.current) router.replace('/');
@@ -146,6 +148,7 @@ export default function Cek() {
       ditutup.current = true;
       beritahuSimpan();
       kosongkan();
+      momen('Transaksi tersimpan');
       tutup();
     } catch (e) {
       setGalat(pesanGalat(e));

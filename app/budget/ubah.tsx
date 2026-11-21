@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMomen } from '@/animasi/useMomen';
 import { AmountInput } from '@/components/AmountInput';
 import { kapital } from '@/components/BarBudget';
 import { Chip } from '@/components/Chip';
@@ -30,6 +31,7 @@ export default function BudgetUbah() {
   const [busy, setBusy] = useState(false);
   const [pesan, setPesan] = useState<string | null>(null);
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/budget'));
+  const momen = useMomen();
 
   const ada = id ? (budgets.data ?? []).find((b) => b.id === id) : undefined;
   const ubah = !!id;
@@ -46,6 +48,7 @@ export default function BudgetUbah() {
     setPesan(null);
     try {
       await simpanM.mutateAsync({ id: ada?.id, kategori, batas_bulanan: batas });
+      momen(ubah ? 'Budget diperbarui' : 'Budget tersimpan');
       tutup();
     } catch (e) {
       setPesan(pesanBudget(e));

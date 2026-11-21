@@ -82,6 +82,11 @@ export function TransisiProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Seperti useTransisi, tetapi null di luar provider (mis. tes layar) — pemanggil boleh mengabaikannya. */
+export function useTransisiOpsional(): TransisiValue | null {
+  return useContext(TransisiContext);
+}
+
 export function useTransisi(): TransisiValue {
   const ctx = useContext(TransisiContext);
   if (!ctx) throw new Error('useTransisi harus dipakai di dalam TransisiProvider');

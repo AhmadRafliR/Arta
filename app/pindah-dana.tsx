@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMomen } from '@/animasi/useMomen';
 import { AmountInput } from '@/components/AmountInput';
 import { Chip } from '@/components/Chip';
 import { Tombol } from '@/components/Tombol';
@@ -38,6 +39,7 @@ export default function PindahDana() {
   const sibuk = useRef(false);
   const [pesan, setPesan] = useState<string | null>(null);
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/akun'));
+  const momen = useMomen();
 
   const m = mode as Mode;
   const modeOk = m in JUDUL;
@@ -94,6 +96,7 @@ export default function PindahDana() {
         sumber: 'manual',
       };
       await simpanTx.mutateAsync([item]);
+      momen('Dana dipindahkan');
       tutup();
     } catch (e) {
       setPesan(pesanDompet(e));

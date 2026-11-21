@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMomen } from '@/animasi/useMomen';
 import { AmountInput } from '@/components/AmountInput';
 import { BarisField } from '@/components/BarisField';
 import { Segmented } from '@/components/Segmented';
@@ -64,6 +65,7 @@ export default function DompetBaru() {
   const [busy, setBusy] = useState(false);
   const [pesan, setPesan] = useState<string | null>(null);
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/akun'));
+  const momen = useMomen();
   const teks = TEKS[tipe];
   const valid = nama.trim() !== '' && saldo !== null && (tipe !== 'darurat' || target !== null);
 
@@ -79,6 +81,7 @@ export default function DompetBaru() {
         tanggal_saldo_awal: hariIni(profile?.zona_waktu),
         target: tipe === 'darurat' && target ? target : null,
       });
+      momen('Dompet dibuat');
       tutup();
     } catch (e) {
       setPesan(pesanDompet(e, { namaUnik: true }));

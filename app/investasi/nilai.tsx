@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMomen } from '@/animasi/useMomen';
 import { AmountInput } from '@/components/AmountInput';
 import { BarJudul } from '@/components/BarJudul';
 import { BarisField } from '@/components/BarisField';
@@ -56,6 +57,7 @@ export default function NilaiInvestasi() {
   const sibuk = useRef(false);
   const [pesan, setPesan] = useState<string | null>(null);
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/akun'));
+  const momen = useMomen();
   const wallet = wallets.data?.find((w) => w.id === id);
   const tanggal = hariIni(profile?.zona_waktu);
 
@@ -108,6 +110,7 @@ export default function NilaiInvestasi() {
         sumber: 'manual',
       };
       await simpanTx.mutateAsync([item]);
+      momen('Nilai investasi tersimpan');
       tutup();
     } catch (e) {
       setPesan(pesanDompet(e));

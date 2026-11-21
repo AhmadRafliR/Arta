@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMomen } from '@/animasi/useMomen';
 import { BarJudul } from '@/components/BarJudul';
 import { Tombol } from '@/components/Tombol';
 import { TxForm } from '@/components/TxForm';
@@ -21,6 +22,11 @@ export default function UbahTransaksi() {
   const [galat, setGalat] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const momen = useMomen();
+  const selesai = () => {
+    momen('Perubahan tersimpan');
+    tutup();
+  };
 
   async function lakukanHapus() {
     setBusy(true);
@@ -52,7 +58,7 @@ export default function UbahTransaksi() {
           key={tx.data.id}
           mode="ubah"
           initial={tx.data}
-          onSaved={tutup}
+          onSaved={selesai}
           bawah={
             <>
               {galat ? <Text className="text-center font-sans text-[12.5px] text-dangerink">{galat}</Text> : null}

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMomen } from '@/animasi/useMomen';
 import { AmountInput } from '@/components/AmountInput';
 import { BarisField } from '@/components/BarisField';
 import {
@@ -117,6 +118,11 @@ export default function SesuaikanHutang() {
   const debt = useDebt(id);
   const [txId] = useState(() => newTxId());
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const momen = useMomen();
+  const selesai = () => {
+    momen('Penyesuaian tersimpan');
+    tutup();
+  };
   const h = debt.data;
   return (
     <View className="flex-1 bg-bg">
@@ -129,7 +135,7 @@ export default function SesuaikanHutang() {
         />
       </View>
       {h ? (
-        <FormSesuaikan hutang={h} txId={txId} onSaved={tutup} onBatal={tutup} />
+        <FormSesuaikan hutang={h} txId={txId} onSaved={selesai} onBatal={tutup} />
       ) : (
         <Text className="px-[18px] py-4 text-mid font-sans">{debt.error ? debt.error.pesan : 'Memuat…'}</Text>
       )}

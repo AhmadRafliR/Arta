@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { launchImageLibraryAsync } from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { useMomen } from '@/animasi/useMomen';
 import { FormHutang } from '@/components/FormHutang';
 import { KepalaHutang, Petunjuk } from '@/components/hutang/BagianHutang';
 import { Ikon } from '@/components/ikon/Ikon';
@@ -30,6 +31,7 @@ export default function HutangBaru() {
   const baca = useBacaScreenshotHutang();
   const sibuk = useRef(false);
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const momen = useMomen();
 
   async function pilihScreenshot() {
     if (sibuk.current) return;
@@ -115,7 +117,10 @@ export default function HutangBaru() {
         awal={draf}
         txId={txId}
         debtId={debtId}
-        onSaved={(id) => router.replace({ pathname: '/hutang/[id]', params: { id } })}
+        onSaved={(id) => {
+          momen('Hutang tersimpan');
+          router.replace({ pathname: '/hutang/[id]', params: { id } });
+        }}
         onBatal={tutup}
       />
     </View>
