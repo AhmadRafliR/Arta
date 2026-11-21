@@ -56,7 +56,7 @@ function susunMenu(r: RingkasanRencana): ItemMenu[] {
       sub: investasi ? `${investasi.jumlah} aset terpantau` : 'Pantau nilai aset',
       nilai: investasi ? rp(investasi.total) : null,
     },
-    { label: 'Laporan email', ikon: 'ui-ekspor', rute: '/laporan', pro: true, sub: 'Bulanan, maks. 3 penerima' },
+    { label: 'Laporan email', ikon: 'ui-ekspor', rute: '/laporan', pro: true, sub: 'Maks. 3 penerima, gratis dengan iklan' },
   ];
 }
 

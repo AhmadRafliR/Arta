@@ -51,3 +51,12 @@ export function unitBanner(): string | null {
       : process.env.EXPO_PUBLIC_ADMOB_BANNER_ANDROID;
   return pilihUnitId({ dev: __DEV__, uji: TestIds.ADAPTIVE_BANNER, produksi });
 }
+
+/** ID unit iklan reward (dev: iklan uji; produksi: env EXPO_PUBLIC_ADMOB_REWARD_*). */
+export function unitReward(): string | null {
+  const produksi =
+    Platform.OS === 'ios'
+      ? process.env.EXPO_PUBLIC_ADMOB_REWARD_IOS
+      : process.env.EXPO_PUBLIC_ADMOB_REWARD_ANDROID;
+  return pilihUnitId({ dev: __DEV__, uji: TestIds.REWARDED, produksi });
+}

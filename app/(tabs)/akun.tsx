@@ -364,6 +364,7 @@ export default function Akun() {
         <BarisMenuAkun
           ikon="ui-ekspor"
           judul="Ekspor data"
+          sub={pro ? undefined : 'Gratis dengan iklan, atau Pro'}
           accessibilityLabel={pro ? 'Ekspor data' : 'Ekspor data · Pro'}
           kanan={pro ? null : <BadgeTier tier="pro" tinggi={20} />}
           onPress={() => router.push('/ekspor')}

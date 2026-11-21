@@ -188,6 +188,25 @@ export async function muatPro(sb: SbLike, userId: string, sekarang: Date): Promi
   return h.data ? proBerlaku(h.data as Baris, sekarang) : false;
 }
 
+/** Akses sementara dari iklan reward untuk satu fitur (tabel akses_iklan, RLS milik sendiri). */
+export async function muatAksesIklan(
+  sb: SbLike,
+  userId: string,
+  fitur: 'ekspor' | 'laporan',
+  sekarang: Date,
+): Promise<boolean> {
+  const h = await sb
+    .from('akses_iklan')
+    .select('berlaku_sampai')
+    .eq('user_id', userId)
+    .eq('fitur', fitur)
+    .maybeSingle();
+  periksa(h, 'akses_iklan');
+  const s = h.data ? teksAtauNull((h.data as Baris).berlaku_sampai) : null;
+  const t = s ? Date.parse(s) : NaN;
+  return Number.isFinite(t) && t > sekarang.getTime();
+}
+
 const POTONGAN_IN = 100;
 
 /** Kandidat laporan bulanan (service role): Pro aktif + ≥1 penerima terverifikasi, dengan zona profil. */

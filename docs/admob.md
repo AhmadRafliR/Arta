@@ -38,3 +38,23 @@ Paket: `react-native-google-mobile-ads` (Expo tidak punya modul AdMob resmi; pak
 ## Belum dikerjakan
 - Tombol "Pengaturan privasi iklan" di Akun (`bukaPengaturanPrivasiIklan()` sudah ada, belum dipasang). Wajib di wilayah yang mensyaratkan consent bila nanti app dirilis ke sana.
 - Iklan interstisial / reward: sengaja tidak dipakai agar tidak mengganggu pencatatan.
+
+## Iklan reward: ekspor data dan laporan email untuk pengguna gratis
+
+Pengguna gratis bisa memakai **Ekspor data** (Excel/CSV) dan **Laporan email** (kirim manual) setelah menonton **satu iklan reward sampai selesai**. Akses terbuka **30 menit** per fitur. Pengguna Pro tidak pernah melihat gerbang ini. Pengiriman laporan **otomatis tiap tanggal 1 tetap khusus Pro**.
+
+Cara kerja:
+- `src/components/GerbangIklan.tsx` membungkus isi layar Ekspor dan Laporan. Hadiah dicatat hanya bila SDK melaporkan `EARNED_REWARD` sebelum iklan ditutup (`src/iklan/reward.native.ts`). Ditutup lebih awal = tidak ada akses.
+- Akses disimpan di tabel `akses_iklan` (migrasi `20261121000050_akses_iklan.sql`) lewat RPC `klaim_akses_iklan` (jeda minimal 20 detik antarklaim).
+- Edge Function `report-send` menerima Pro **atau** akses `laporan` yang masih berlaku. Batas kirim 3 kali per 24 jam dan hanya ke penerima terverifikasi tetap berlaku.
+- Iklan tidak tersedia (tidak ada ID unit produksi, tidak ada consent, tidak ada isi iklan): fitur tetap terkunci dan pengguna diarahkan mencoba lagi atau berlangganan Pro.
+
+Yang perlu kamu siapkan di AdMob: satu unit iklan **Rewarded** (selain unit Banner), lalu env EAS:
+```powershell
+npx eas-cli@latest env:create --name EXPO_PUBLIC_ADMOB_REWARD_ANDROID --value "ca-app-pub-XXXX/WWWW" --environment production --visibility plain
+```
+Saat pengembangan otomatis memakai iklan reward uji Google.
+
+Batasan versi ini: klaim akses datang dari aplikasi (belum diverifikasi server lewat AdMob SSV). Pengguna yang memanggil RPC langsung bisa melewati iklan; dampaknya hanya hilangnya pendapatan iklan, bukan keamanan data. Penguatan berikutnya: Edge Function SSV yang memverifikasi tanda tangan Google sebelum menulis `akses_iklan`.
+
+Uji manual: akun non-Pro → Akun → Ekspor data → "Tonton iklan untuk membuka" → iklan uji tampil → setelah selesai form ekspor terbuka dengan keterangan "Akses terbuka sampai …". Tutup iklan lebih awal → tetap terkunci. Ulangi untuk Rencana keuangan → Laporan email.

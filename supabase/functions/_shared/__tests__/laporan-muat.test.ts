@@ -2,6 +2,7 @@ import { createHmac, webcrypto } from 'crypto';
 import {
   buatTandatanganHmac,
   klaimBulanan,
+  muatAksesIklan,
   muatDataLaporan,
   muatKandidat,
   muatPenerima,
@@ -183,6 +184,24 @@ describe('muatPenerima & muatPro', () => {
     expect(await cek({ pro_aktif: true, berlaku_sampai: '2026-11-01T00:00:00Z' })).toBe(false);
     expect(await cek({ pro_aktif: false, berlaku_sampai: null })).toBe(false);
     expect(await cek(null)).toBe(false);
+  });
+});
+
+describe('muatAksesIklan', () => {
+  it('berlaku hanya bila berlaku_sampai di masa depan, dan menyaring user & fitur', async () => {
+    const sekarang = new Date('2026-11-21T10:00:00Z');
+    const cek = (data: unknown) => {
+      const { sb, log } = buatSb(() => ok(data));
+      return muatAksesIklan(sb, UID, 'laporan', sekarang).then((v) => ({ v, log }));
+    };
+    const a = await cek({ berlaku_sampai: '2026-11-21T10:20:00Z' });
+    expect(a.v).toBe(true);
+    expect(a.log[0].tabel).toBe('akses_iklan');
+    expect(a.log[0].ops).toContainEqual(['eq', 'user_id', UID]);
+    expect(a.log[0].ops).toContainEqual(['eq', 'fitur', 'laporan']);
+    expect((await cek({ berlaku_sampai: '2026-11-21T09:59:00Z' })).v).toBe(false);
+    expect((await cek({ berlaku_sampai: null })).v).toBe(false);
+    expect((await cek(null)).v).toBe(false);
   });
 });
 

@@ -11,6 +11,13 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, push: mockPush, canGoBack: () => true, replace: jest.fn() }),
 }));
 jest.mock('@/data/langganan', () => ({ usePro: () => mockPro }));
+let mockAkses: Date | null = null;
+jest.mock('@/data/aksesIklan', () => ({
+  ...jest.requireActual('@/data/aksesIklan'),
+  useAksesIklan: () => ({ isPending: false, data: mockAkses }),
+  useKlaimAksesIklan: () => ({ mutateAsync: jest.fn() }),
+}));
+jest.mock('@/iklan/reward', () => ({ tontonIklanReward: jest.fn() }));
 jest.mock('@/auth/AuthProvider', () => ({
   useAuth: () => ({ profile: { nama: 'Rafli', zona_waktu: 'Asia/Jakarta' } }),
 }));
@@ -53,16 +60,25 @@ const btn = (name: string) => screen.getByRole('button', { name });
 beforeEach(() => {
   jest.clearAllMocks();
   mockPro = { pro: false, memuat: false };
+  mockAkses = null;
 });
 
 describe('Layar ekspor', () => {
-  it('non-Pro: terkunci, "Lihat Pro" ke /premium?dari=ekspor, tidak membaca data', async () => {
+  it('non-Pro tanpa akses: gerbang iklan, "Lihat Pro" ke /premium?dari=ekspor, tidak membaca data', async () => {
     await render(<Ekspor />);
-    expect(screen.getByText(/tersedia untuk pengguna Pro/)).toBeTruthy();
+    expect(screen.getByText('Buka ekspor data gratis')).toBeTruthy();
+    expect(btn('Tonton iklan untuk membuka')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Ekspor' })).toBeNull();
     await fireEvent.press(btn('Lihat Pro'));
     expect(mockPush).toHaveBeenCalledWith('/premium?dari=ekspor');
     expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it('non-Pro dengan akses iklan aktif: form ekspor terbuka', async () => {
+    mockAkses = new Date(Date.now() + 10 * 60 * 1000);
+    await render(<Ekspor />);
+    expect(screen.getByText(/Akses terbuka sampai/)).toBeTruthy();
+    expect(btn('Ekspor')).toBeTruthy();
   });
 
   it('memuat status: tidak menampilkan form maupun gerbang', async () => {

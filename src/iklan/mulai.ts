@@ -7,3 +7,6 @@ export function unitBanner(): string | null {
   return null;
 }
 export function setelUlangIklan(): void {}
+export function unitReward(): string | null {
+  return null;
+}

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GerbangIklan } from '@/components/GerbangIklan';
 import { useAuth } from '@/auth/AuthProvider';
 import { Chip } from '@/components/Chip';
 import { Ikon } from '@/components/ikon/Ikon';
-import { KeadaanKosong } from '@/components/KeadaanKosong';
 import { Tombol } from '@/components/Tombol';
 import { useKuotaAi } from '@/data/ai';
 import type { AppError } from '@/data/errors';
@@ -149,21 +149,12 @@ export default function Laporan() {
 
   function isi() {
     if (kuota.isPending) return <ActivityIndicator />;
-    if (!pro) {
-      return (
-        <View className="gap-3">
-          <KeadaanKosong
-            ilustrasi="laporan"
-            pesan="Kirim ringkasan keuangan bulanan ke orang tua, pasangan, atau teman sebagai pengingat. Fitur ini khusus Pro."
-          />
-          <Text className="text-center text-mid font-sans">Pro segera hadir.</Text>
-        </View>
-      );
-    }
     return (
-      <>
+      <GerbangIklan fitur="laporan" nama="laporan email" dari="laporan">
         <Text className="text-fg2 font-sans">
-          Ringkasan bulan lalu dikirim otomatis ke penerima yang sudah terverifikasi setiap tanggal 1 pukul 08.00.
+          {pro
+            ? 'Ringkasan bulan lalu dikirim otomatis ke penerima yang sudah terverifikasi setiap tanggal 1 pukul 08.00.'
+            : 'Kamu bisa mengirim ringkasan keuangan ke penerima yang sudah terverifikasi. Pengiriman otomatis tiap tanggal 1 khusus Pro.'}
         </Text>
 
         <View>
@@ -217,7 +208,7 @@ export default function Laporan() {
           {hasilKirim ? <Text className="text-fg2 font-sans">{hasilKirim}</Text> : null}
           {galatKirim ? <Text className="text-fg font-sans">{galatKirim}</Text> : null}
         </View>
-      </>
+      </GerbangIklan>
     );
   }
 

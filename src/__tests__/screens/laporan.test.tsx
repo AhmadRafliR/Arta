@@ -9,6 +9,7 @@ const mockHapus = jest.fn();
 const mockVerifikasi = jest.fn();
 const mockKirim = jest.fn();
 let mockPro: boolean;
+let mockAkses: Date | null = null;
 let mockDaftar: unknown[];
 
 const P = (id: string, email: string, terverifikasi: boolean) => ({
@@ -32,6 +33,13 @@ jest.mock('@/theme/ThemeProvider', () => {
 jest.mock('@/data/ai', () => ({
   useKuotaAi: () => ({ isPending: false, data: { bulan: '2026-11', terpakai: 0, batas: 10, pro: mockPro } }),
 }));
+jest.mock('@/data/langganan', () => ({ usePro: () => ({ pro: mockPro, memuat: false }) }));
+jest.mock('@/data/aksesIklan', () => ({
+  ...jest.requireActual('@/data/aksesIklan'),
+  useAksesIklan: () => ({ isPending: false, data: mockAkses }),
+  useKlaimAksesIklan: () => ({ mutateAsync: jest.fn() }),
+}));
+jest.mock('@/iklan/reward', () => ({ tontonIklanReward: jest.fn() }));
 jest.mock('@/data/laporan', () => ({
   usePenerima: () => ({ isPending: false, isError: false, data: mockDaftar }),
   useTambahPenerima: () => ({ mutateAsync: mockTambah, isPending: false }),
@@ -45,6 +53,7 @@ const btn = (name: string) => screen.getByRole('button', { name });
 beforeEach(() => {
   jest.clearAllMocks();
   mockPro = true;
+  mockAkses = null;
   mockDaftar = [];
   mockTambah.mockResolvedValue({
     penerima: P('n1', 'ortu@example.com', false),
@@ -55,14 +64,24 @@ beforeEach(() => {
 });
 
 describe('Laporan email', () => {
-  it('non-Pro: teks Pro dan tanpa aksi tambah/kirim', async () => {
+  it('non-Pro tanpa akses: gerbang iklan, tanpa aksi tambah/kirim', async () => {
     mockPro = false;
     await render(<Laporan />);
-    expect(screen.getByText(/khusus Pro/)).toBeTruthy();
-    expect(screen.getByText('Pro segera hadir.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Kirim laporan' })).toBeNull();
+    expect(screen.getByText('Buka laporan email gratis')).toBeTruthy();
+    expect(btn('Tonton iklan untuk membuka')).toBeTruthy();
+    expect(btn('Lihat Pro')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Tambah penerima' })).toBeNull();
-    expect(screen.queryByLabelText('Email penerima')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Kirim laporan' })).toBeNull();
+  });
+
+  it('non-Pro dengan akses iklan aktif: form terbuka, pengiriman otomatis dijelaskan khusus Pro', async () => {
+    mockPro = false;
+    mockAkses = new Date(Date.now() + 20 * 60 * 1000);
+    await render(<Laporan />);
+    expect(screen.getByText(/Akses terbuka sampai/)).toBeTruthy();
+    expect(screen.getByText(/Pengiriman otomatis tiap tanggal 1 khusus Pro/)).toBeTruthy();
+    expect(btn('Tambah penerima')).toBeTruthy();
+    expect(btn('Kirim laporan')).toBeTruthy();
   });
 
   it('tombol Kembali memanggil router.back', async () => {

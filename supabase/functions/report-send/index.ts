@@ -8,6 +8,7 @@ import {
   buatTandatanganHmac,
   muatDataLaporan,
   muatPenerima,
+  muatAksesIklan,
   muatPro,
   muatProfil,
   type SbLike,
@@ -51,7 +52,10 @@ function buatDb(token: string): DbKirim {
   return {
     userId,
     async pro() {
-      return muatPro(sb, await userId(), new Date());
+      // Pro, atau akses sementara dari iklan reward (pengguna gratis).
+      const uid = await userId();
+      const sekarang = new Date();
+      return (await muatPro(sb, uid, sekarang)) || (await muatAksesIklan(sb, uid, 'laporan', sekarang));
     },
     async nama() {
       return (await muatProfil(sb, await userId())).nama;
