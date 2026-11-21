@@ -1,5 +1,10 @@
 import { Platform } from 'react-native';
-import mobileAds, { AdsConsent, MaxAdContentRating, TestIds } from 'react-native-google-mobile-ads';
+import mobileAds, {
+  AdsConsent,
+  AdsConsentPrivacyOptionsRequirementStatus,
+  MaxAdContentRating,
+  TestIds,
+} from 'react-native-google-mobile-ads';
 import { pilihUnitId } from './config';
 
 let janji: Promise<boolean> | null = null;
@@ -41,6 +46,21 @@ export async function bukaPengaturanPrivasiIklan(): Promise<void> {
     await AdsConsent.showPrivacyOptionsForm();
   } catch {
     // abaikan
+  }
+}
+
+/**
+ * true bila build ini menampilkan iklan dan wilayah pengguna (mis. EEA/UK) mewajibkan pintu masuk
+ * "pilihan privasi iklan" (UMP). Di Indonesia biasanya false, jadi tombolnya tidak tampil.
+ */
+export async function perluPengaturanPrivasiIklan(): Promise<boolean> {
+  if (unitBanner() === null && unitReward() === null) return false;
+  try {
+    await mulaiIklan(); // memperbarui info persetujuan sekali per proses (boleh false bila ditolak)
+    const info = await AdsConsent.getConsentInfo();
+    return info.privacyOptionsRequirementStatus === AdsConsentPrivacyOptionsRequirementStatus.REQUIRED;
+  } catch {
+    return false;
   }
 }
 

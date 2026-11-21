@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { Chip } from '@/components/Chip';
 import { MarkPremium } from '@/components/MarkPremium';
 import { Tombol } from '@/components/Tombol';
+import { URL_KEBIJAKAN_PRIVASI } from '@/config';
 import { useStatusLangganan } from '@/data/langganan';
 import { useLangganan } from '@/langganan/LanggananProvider';
+import { satuanPeriode, TEKS_CARA_BATAL, teksKetentuan } from '@/langganan/teks';
 import { URL_LANGGANAN_PLAY, type Paket } from '@/langganan/tipe';
 import { useBeli } from '@/langganan/useBeli';
+import { usePaketLangganan } from '@/langganan/usePaket';
 
 const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -18,13 +22,16 @@ function tanggalPendek(iso: string | null): string | null {
   return `${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+// Harus sama dengan gerbang di app: ekspor dan kirim laporan manual terbuka untuk pengguna gratis lewat iklan reward.
 const BARIS: { fitur: string; gratis: string; pro: string }[] = [
   { fitur: 'Catat pakai AI', gratis: '30x / bulan', pro: 'Tanpa batas' },
   { fitur: 'Catat manual', gratis: 'Tanpa batas', pro: 'Tanpa batas' },
   { fitur: 'Dompet, budget, dana darurat', gratis: 'Ya', pro: 'Ya' },
-  { fitur: 'Laporan email bulanan', gratis: '-', pro: '3 penerima' },
+  { fitur: 'Iklan', gratis: 'Ada', pro: 'Tanpa iklan' },
+  { fitur: 'Ekspor CSV / XLSX', gratis: 'Tonton iklan', pro: 'Ya' },
+  { fitur: 'Kirim laporan email', gratis: 'Tonton iklan', pro: 'Ya' },
+  { fitur: 'Laporan email otomatis tiap bulan', gratis: '-', pro: '3 penerima' },
   { fitur: 'Pengingat jatuh tempo', gratis: '-', pro: 'Ya' },
-  { fitur: 'Ekspor CSV / XLSX', gratis: '-', pro: 'Ya' },
 ];
 
 const namaPaket = (p: Paket) => (p.jenis === 'tahunan' ? 'Tahunan' : p.jenis === 'bulanan' ? 'Bulanan' : 'Paket');
@@ -35,34 +42,30 @@ export default function Premium() {
   const penyedia = useLangganan();
   const status = useStatusLangganan();
   const { beli, pulihkan, sibuk, pesan } = useBeli();
-  const [daftar, setDaftar] = useState<Paket[] | null>(null);
+  const paketQ = usePaketLangganan();
   const [pilihId, setPilihId] = useState<string | null>(null);
   const tutup = () => (router.canGoBack() ? router.back() : router.replace('/akun'));
 
-  useEffect(() => {
-    let batal = false;
-    penyedia
-      .paket()
-      .then((p) => {
-        if (batal) return;
-        setDaftar(p);
-        setPilihId((lama) => lama ?? p.find((x) => x.jenis === 'bulanan')?.id ?? p[0]?.id ?? null);
-      })
-      .catch(() => {
-        if (!batal) setDaftar([]);
-      });
-    return () => {
-      batal = true;
-    };
-  }, [penyedia]);
-
   const pro = status.data?.pro === true;
-  const paket = daftar?.find((p) => p.id === pilihId) ?? null;
+  // Gagal memuat dianggap belum tersedia (tanpa tombol beli), dengan tombol coba lagi.
+  const daftar = paketQ.data ?? (paketQ.isError ? [] : null);
+  const bawaanId = daftar?.find((x) => x.jenis === 'bulanan')?.id ?? daftar?.[0]?.id ?? null;
+  const paket = daftar?.find((p) => p.id === (pilihId ?? bawaanId)) ?? null;
+  // Uji coba hanya diiklankan bila toko benar-benar menawarkannya ke akun ini (Google Play menyaring kelayakan).
+  const hariUji = pro ? null : (paket?.ujiCobaHari ?? null);
   const labelUtama = paket
     ? paket.ujiCobaHari
       ? `Mulai uji coba ${paket.ujiCobaHari} hari`
       : `Langganan ${paket.harga}`
     : 'Langganan';
+  const deskripsi =
+    dari === 'kuota' && !pro
+      ? 'Kuota catat AI bulan ini habis. Buka tanpa batas dengan Pro.'
+      : pro
+        ? 'Semua fitur Pro sudah terbuka untukmu.'
+        : hariUji
+          ? `Semua fitur Pro terbuka selama ${hariUji} hari. Bandingkan dulu, baru putuskan.`
+          : 'Catat AI tanpa batas dan tanpa iklan, plus laporan email dan pengingat tagihan.';
 
   async function kelola() {
     const url = (await penyedia.urlKelola().catch(() => null)) ?? URL_LANGGANAN_PLAY;
@@ -80,13 +83,24 @@ export default function Premium() {
 
       <View className="items-center gap-2">
         <MarkPremium ukuran={64} />
-        <Text className="text-lg font-bold text-fg font-sans">Coba Premium</Text>
-        <Text className="text-5xl font-bold text-fg font-sans">14 hari</Text>
-        <Text className="text-center text-mid font-sans">
-          {dari === 'kuota'
-            ? 'Kuota catat AI bulan ini habis. Buka tanpa batas dengan Pro.'
-            : 'Semua fitur Pro terbuka selama 14 hari. Bandingkan dulu, baru putuskan.'}
-        </Text>
+        {hariUji ? (
+          <>
+            <Text className="text-lg font-bold text-fg font-sans">Coba Premium</Text>
+            <Text className="text-5xl font-bold text-fg font-sans">{`${hariUji} hari`}</Text>
+          </>
+        ) : !pro && paket ? (
+          <>
+            <Text className="text-lg font-bold text-fg font-sans">arta Premium</Text>
+            <Text className="text-5xl font-bold text-fg font-sans">{paket.harga}</Text>
+            <Text className="text-mid font-sans">{`per ${satuanPeriode(paket.jenis)}`}</Text>
+          </>
+        ) : (
+          <>
+            <Text className="text-lg font-bold text-fg font-sans">arta Premium</Text>
+            <Text className="text-5xl font-bold text-fg font-sans">Pro</Text>
+          </>
+        )}
+        <Text className="text-center text-mid font-sans">{deskripsi}</Text>
       </View>
 
       {pro ? (
@@ -116,14 +130,16 @@ export default function Premium() {
       </View>
 
       {pro ? (
-        <Tombol label="Kelola langganan" onPress={kelola} />
+        <>
+          <Tombol label="Kelola langganan" onPress={kelola} />
+          <Text className="text-center text-xs text-mid font-sans">{TEKS_CARA_BATAL}</Text>
+        </>
       ) : daftar === null ? (
         <Text className="text-center text-mid font-sans">Memuat paket...</Text>
       ) : daftar.length === 0 ? (
-        <View className="rounded-2xl border border-line bg-card2 px-4 py-5">
-          <Text className="text-center text-fg2 font-sans">
-            Langganan belum tersedia saat ini. Coba lagi nanti.
-          </Text>
+        <View className="gap-3 rounded-2xl border border-line bg-card2 px-4 py-5">
+          <Text className="text-center text-fg2 font-sans">Langganan belum tersedia saat ini. Coba lagi nanti.</Text>
+          {paketQ.isError ? <Tombol label="Coba lagi" onPress={() => void paketQ.refetch()} /> : null}
         </View>
       ) : (
         <>
@@ -131,8 +147,8 @@ export default function Premium() {
             {daftar.map((p) => (
               <Chip
                 key={p.id}
-                label={`${namaPaket(p)} · ${p.harga}`}
-                selected={p.id === pilihId}
+                label={`${namaPaket(p)} · ${p.harga}${p.jenis === 'tahunan' && p.hargaPerBulan ? ` (${p.hargaPerBulan}/bln)` : ''}`}
+                selected={p.id === paket?.id}
                 onPress={() => setPilihId(p.id)}
               />
             ))}
@@ -144,11 +160,12 @@ export default function Premium() {
             disabled={sibuk || !paket}
             onPress={() => paket && beli(paket.id)}
           />
-          <Text className="text-center text-xs text-mid font-sans">
-            Saat uji coba berakhir, langganan Pro berlanjut sebagai langganan berbayar lewat Google Play. Harga dan
-            ketentuan tampil sebelum kamu mengonfirmasi.
-          </Text>
-          <Text className="text-center text-sm text-mid font-sans">Batalkan kapan saja, tanpa biaya.</Text>
+          {paket ? (
+            <Text testID="ketentuan-langganan" className="text-center text-xs leading-[18px] text-fg2 font-sans">
+              {teksKetentuan(paket)}
+            </Text>
+          ) : null}
+          <Text className="text-center text-xs text-mid font-sans">{TEKS_CARA_BATAL}</Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Pulihkan pembelian"
@@ -166,6 +183,14 @@ export default function Premium() {
           {pesan}
         </Text>
       ) : null}
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel="Kebijakan privasi"
+        onPress={() => void WebBrowser.openBrowserAsync(URL_KEBIJAKAN_PRIVASI).catch(() => {})}
+        className="items-center py-1"
+      >
+        <Text className="text-xs text-mid underline font-sans">Kebijakan privasi</Text>
+      </Pressable>
       {penyedia.nama === 'mock' ? (
         <Text className="text-center text-xs text-mid font-sans">Mode uji: pembayaran tidak sungguhan</Text>
       ) : null}

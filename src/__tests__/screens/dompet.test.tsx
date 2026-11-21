@@ -60,6 +60,8 @@ jest.mock('@/data/transactions', () => ({
 jest.mock('@/data/langganan', () => ({
   useStatusLangganan: () => ({ data: { pro: false } }),
 }));
+jest.mock('@/langganan/usePaket', () => ({ usePaketLangganan: () => ({ data: undefined }), hariUjiTerbaik: () => null }));
+jest.mock('@/iklan/usePrivasiIklan', () => ({ usePerluPrivasiIklan: () => false }));
 // Ringkasan kartu profil, rencana, dan kuota di Akun: hook data dimatikan (kosong).
 jest.mock('@/data/ai', () => ({
   useKuotaAi: () => ({ data: { bulan: '2026-11', terpakai: 12, batas: 30, pro: false } }),

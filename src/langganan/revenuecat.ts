@@ -41,15 +41,34 @@ export function petakanPaket(p: PurchasesPackage): Paket {
   };
 }
 
+/** Entitlement RevenueCat yang membuka Pro (sama dengan REVENUECAT_ENTITLEMENT di webhook). */
+export const ENTITLEMENT_PRO = 'pro';
+
+export const PESAN_TIDAK_ADA_PULIHAN = 'Tidak ada langganan arta Pro yang aktif di akun Google Play ini.';
+
 function petakanGalat(e: unknown): HasilBeli {
   const err = (e ?? {}) as { userCancelled?: boolean | null; code?: unknown };
   if (err.userCancelled === true || err.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
     return { status: 'batal' };
   }
-  if (err.code === PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR) {
-    return { status: 'tertunda', pesan: 'Pembayaran masih menunggu persetujuan. Status Pro aktif setelah selesai.' };
+  switch (err.code) {
+    case PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR:
+      return { status: 'tertunda', pesan: 'Pembayaran masih menunggu persetujuan. Status Pro aktif setelah selesai.' };
+    case PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR:
+      return {
+        status: 'galat',
+        pesan: 'Langganan ini sudah ada di akun Google Play-mu. Tekan Pulihkan pembelian untuk memakainya di akun ini.',
+      };
+    case PURCHASES_ERROR_CODE.NETWORK_ERROR:
+    case PURCHASES_ERROR_CODE.OFFLINE_CONNECTION_ERROR:
+      return { status: 'galat', pesan: 'Tidak ada koneksi internet. Periksa koneksi lalu coba lagi.' };
+    case PURCHASES_ERROR_CODE.PURCHASE_NOT_ALLOWED_ERROR:
+      return { status: 'galat', pesan: 'Pembelian tidak diizinkan di perangkat atau akun Google ini.' };
+    case PURCHASES_ERROR_CODE.STORE_PROBLEM_ERROR:
+      return { status: 'galat', pesan: 'Google Play sedang bermasalah. Coba lagi beberapa saat lagi.' };
+    default:
+      return { status: 'galat', pesan: 'Pembayaran belum berhasil. Coba lagi sebentar lagi.' };
   }
-  return { status: 'galat', pesan: 'Pembayaran belum berhasil. Coba lagi sebentar lagi.' };
 }
 
 /** Adapter RevenueCat (Android). Status Pro tetap diputuskan server lewat webhook, bukan hasil di sini. */
@@ -93,7 +112,9 @@ export function buatPenyediaRevenueCat(apiKey: string): PenyediaLangganan {
     },
     async pulihkan() {
       try {
-        await Purchases.restorePurchases();
+        const info = await Purchases.restorePurchases();
+        // Tidak ada yang dipulihkan: jangan menunggu status Pro yang tidak akan datang.
+        if (!info?.entitlements?.active?.[ENTITLEMENT_PRO]) return { status: 'galat', pesan: PESAN_TIDAK_ADA_PULIHAN };
         return { status: 'sukses' };
       } catch (e) {
         return petakanGalat(e);

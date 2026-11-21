@@ -18,6 +18,7 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ canGoBack: () => true, back: jest.fn(), replace: jest.fn() }),
   useLocalSearchParams: () => ({}),
 }));
+jest.mock('expo-web-browser', () => ({ openBrowserAsync: jest.fn(async () => ({})) }));
 
 const PAKET = [
   { id: 'b', jenis: 'bulanan' as const, harga: 'Rp19.000', hargaPerBulan: null, ujiCobaHari: 14 },
@@ -105,6 +106,47 @@ describe('Premium', () => {
     await tampil(penyedia({ nama: 'tidak-tersedia', paket: jest.fn(async () => []) }));
     await waitFor(() => expect(screen.getByText(/belum tersedia/)).toBeTruthy());
     expect(screen.queryByRole('button', { name: /uji coba/ })).toBeNull();
+  });
+
+  it('ketentuan uji coba terlihat sebelum membeli: harga sesudahnya, perpanjangan otomatis, cara batal', async () => {
+    await tampil(penyedia());
+    await waitFor(() => screen.getByTestId('ketentuan-langganan'));
+    expect(screen.getByText('14 hari')).toBeTruthy();
+    const teks = screen.getByTestId('ketentuan-langganan').props.children as string;
+    expect(teks).toContain('Gratis 14 hari, lalu Rp19.000 per bulan');
+    expect(teks).toContain('diperpanjang otomatis');
+    expect(teks).toContain('Batalkan sebelum uji coba berakhir');
+    expect(screen.getByText(/Batalkan kapan saja di Google Play/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Kebijakan privasi' })).toBeTruthy();
+  });
+
+  it('akun yang tidak lagi berhak uji coba: tidak ada klaim "14 hari", harga per periode ditampilkan', async () => {
+    const tanpaUji = PAKET.map((p) => ({ ...p, ujiCobaHari: null }));
+    await tampil(penyedia({ paket: jest.fn(async () => tanpaUji) }));
+    await waitFor(() => screen.getByRole('button', { name: 'Langganan Rp19.000' }));
+    expect(screen.queryByText('Coba Premium')).toBeNull();
+    expect(screen.queryByText(/14 hari/)).toBeNull();
+    expect(screen.getByText('per bulan')).toBeTruthy();
+    const teks = screen.getByTestId('ketentuan-langganan').props.children as string;
+    expect(teks).toBe(
+      'Rp19.000 per bulan, ditagih lewat Google Play saat kamu mengonfirmasi, lalu diperpanjang otomatis tiap bulan sampai kamu membatalkannya.',
+    );
+  });
+
+  it('tabel fitur sesuai gerbang app: Pro tanpa iklan, ekspor gratis lewat iklan', async () => {
+    await tampil(penyedia());
+    expect(screen.getByText('Tanpa iklan')).toBeTruthy();
+    expect(screen.getAllByText('Tonton iklan').length).toBe(2);
+  });
+
+  it('gagal memuat paket: tanpa tombol beli, Coba lagi memuat ulang', async () => {
+    const paket = jest.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(PAKET);
+    await tampil(penyedia({ paket }));
+    await waitFor(() => screen.getByRole('button', { name: 'Coba lagi' }));
+    expect(screen.queryByRole('button', { name: /uji coba/ })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Coba lagi' }));
+    await waitFor(() => screen.getByRole('button', { name: 'Mulai uji coba 14 hari' }));
+    expect(paket).toHaveBeenCalledTimes(2);
   });
 
   it('mode mock: label uji dan status tidak diubah', async () => {

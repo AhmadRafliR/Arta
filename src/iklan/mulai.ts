@@ -3,6 +3,9 @@ export async function mulaiIklan(): Promise<boolean> {
   return false;
 }
 export async function bukaPengaturanPrivasiIklan(): Promise<void> {}
+export async function perluPengaturanPrivasiIklan(): Promise<boolean> {
+  return false;
+}
 export function unitBanner(): string | null {
   return null;
 }

@@ -27,6 +27,20 @@ jest.mock('@/data/ai', () => ({
 jest.mock('@/data/budgets', () => ({ useBudgets: () => ({ data: [] }) }));
 jest.mock('@/data/debts', () => ({ useDebts: () => ({ data: [] }) }));
 jest.mock('@/data/langganan', () => ({ useStatusLangganan: () => ({ data: mockStatus }) }));
+// Paket toko: uji coba hanya bila Google Play menawarkannya ke akun ini.
+let mockPaket: { ujiCobaHari: number | null }[] | undefined;
+const mockPaketAktif = jest.fn();
+jest.mock('@/langganan/usePaket', () => ({
+  ...jest.requireActual('@/langganan/usePaket'),
+  usePaketLangganan: (o: { aktif?: boolean }) => {
+    mockPaketAktif(o.aktif);
+    return { data: mockPaket };
+  },
+}));
+let mockPerluPrivasi = false;
+const mockBukaPrivasi = jest.fn(async () => {});
+jest.mock('@/iklan/usePrivasiIklan', () => ({ usePerluPrivasiIklan: (aktif: boolean) => aktif && mockPerluPrivasi }));
+jest.mock('@/iklan/mulai', () => ({ bukaPengaturanPrivasiIklan: () => mockBukaPrivasi() }));
 jest.mock('@/components/BadgeTier', () => {
   const { Text } = jest.requireActual('react-native');
   return { BadgeTier: ({ tier }: { tier: string }) => <Text className="font-sans">{`badge-${tier}`}</Text> };
@@ -51,6 +65,8 @@ jest.mock('@/theme/ThemeProvider', () => ({
 beforeEach(() => {
   jest.clearAllMocks();
   mockStatus = { pro: false };
+  mockPaket = undefined;
+  mockPerluPrivasi = false;
 });
 
 it('Free: badge free, ekspor bertanda Pro, pengingat terkunci', async () => {
@@ -84,6 +100,46 @@ it('menu data & privasi membuka rute yang benar', async () => {
   expect(mockPush).toHaveBeenCalledWith('/hapus-akun');
   await fireEvent.press(screen.getByRole('button', { name: 'Kebijakan privasi' }));
   expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(expect.stringContaining('kebijakan-privasi'));
+});
+
+it('tombol langganan: "Coba Pro N hari" hanya bila toko menawarkan uji coba ke akun ini', async () => {
+  mockPaket = [{ ujiCobaHari: 14 }, { ujiCobaHari: null }];
+  const { unmount } = await render(<Akun />);
+  expect(screen.getByText('Coba Pro 14 hari')).toBeTruthy();
+  expect(mockPaketAktif).toHaveBeenLastCalledWith(true);
+  await unmount();
+
+  // Uji coba sudah pernah dipakai: Google Play tidak lagi mengembalikan tawaran gratis.
+  mockPaket = [{ ujiCobaHari: null }];
+  await render(<Akun />);
+  expect(screen.queryByText(/Coba Pro/)).toBeNull();
+  expect(screen.getByText('Lihat Pro')).toBeTruthy();
+});
+
+it('Pro: paket toko tidak dimuat dan tombol menjadi Kelola langganan', async () => {
+  mockStatus = { pro: true };
+  mockPaket = [{ ujiCobaHari: 14 }];
+  await render(<Akun />);
+  expect(mockPaketAktif).toHaveBeenLastCalledWith(false);
+  expect(screen.getByText('Kelola langganan')).toBeTruthy();
+});
+
+it('pilihan privasi iklan hanya tampil bila diwajibkan, dan membuka formulir UMP', async () => {
+  const { unmount } = await render(<Akun />);
+  expect(screen.queryByRole('button', { name: 'Pilihan privasi iklan' })).toBeNull();
+  await unmount();
+
+  mockPerluPrivasi = true;
+  await render(<Akun />);
+  await fireEvent.press(screen.getByRole('button', { name: 'Pilihan privasi iklan' }));
+  expect(mockBukaPrivasi).toHaveBeenCalled();
+});
+
+it('Pro tidak melihat pilihan privasi iklan (tanpa iklan)', async () => {
+  mockStatus = { pro: true };
+  mockPerluPrivasi = true;
+  await render(<Akun />);
+  expect(screen.queryByRole('button', { name: 'Pilihan privasi iklan' })).toBeNull();
 });
 
 it('baris Catat otomatis dari notifikasi membuka layar notifikasi dompet', async () => {

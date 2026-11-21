@@ -1,5 +1,5 @@
 import Purchases from 'react-native-purchases';
-import { buatPenyediaRevenueCat } from '../revenuecat';
+import { buatPenyediaRevenueCat, PESAN_TIDAK_ADA_PULIHAN } from '../revenuecat';
 
 const P = Purchases as unknown as Record<string, jest.Mock>;
 
@@ -70,6 +70,32 @@ describe('adapter RevenueCat', () => {
     P.purchasePackage.mockRejectedValueOnce(new Error('x'));
     expect((await r.beli('$rc_monthly')).status).toBe('galat');
     expect((await r.beli('tidak-ada')).status).toBe('galat');
+  });
+
+  it('beli: pesan jelas untuk sudah dibeli, offline, tidak diizinkan, dan masalah toko', async () => {
+    const r = buatPenyediaRevenueCat('k');
+    await r.paket();
+    const pesanUntuk = async (code: string) => {
+      P.purchasePackage.mockRejectedValueOnce({ code });
+      const h = await r.beli('$rc_monthly');
+      expect(h.status).toBe('galat');
+      return h.pesan;
+    };
+    expect(await pesanUntuk('6')).toMatch(/Pulihkan pembelian/);
+    expect(await pesanUntuk('10')).toMatch(/koneksi internet/);
+    expect(await pesanUntuk('35')).toMatch(/koneksi internet/);
+    expect(await pesanUntuk('3')).toMatch(/tidak diizinkan/);
+    expect(await pesanUntuk('2')).toMatch(/Google Play sedang bermasalah/);
+  });
+
+  it('pulihkan: sukses hanya bila entitlement pro aktif, selain itu pesan tidak ada langganan', async () => {
+    const r = buatPenyediaRevenueCat('k');
+    P.restorePurchases.mockResolvedValueOnce({ entitlements: { active: { pro: { isActive: true } } } });
+    expect(await r.pulihkan()).toEqual({ status: 'sukses' });
+    P.restorePurchases.mockResolvedValueOnce({ entitlements: { active: {} } });
+    expect(await r.pulihkan()).toEqual({ status: 'galat', pesan: PESAN_TIDAK_ADA_PULIHAN });
+    P.restorePurchases.mockRejectedValueOnce({ code: '10' });
+    expect((await r.pulihkan()).pesan).toMatch(/koneksi internet/);
   });
 
   it('urlKelola dari customerInfo, null bila galat', async () => {

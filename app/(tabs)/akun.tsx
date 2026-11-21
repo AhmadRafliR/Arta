@@ -29,6 +29,9 @@ import { useTransactions } from '@/data/transactions';
 import { useSaldoDompet, useWallets } from '@/data/wallets';
 import { useStatusLangganan } from '@/data/langganan';
 import { teksStatusLangganan } from '@/langganan/teks';
+import { hariUjiTerbaik, usePaketLangganan } from '@/langganan/usePaket';
+import { bukaPengaturanPrivasiIklan } from '@/iklan/mulai';
+import { usePerluPrivasiIklan } from '@/iklan/usePrivasiIklan';
 import { URL_KEBIJAKAN_PRIVASI } from '@/config';
 import { geserBulan, hariIni, NAMA_BULAN } from '@/lib/tanggal';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -131,6 +134,10 @@ export default function Akun() {
   const [budgetBuka, setBudgetBuka] = useState(false);
   const langganan = useStatusLangganan();
   const pro = langganan.data?.pro === true;
+  const bukanPro = langganan.data !== undefined && !pro;
+  // "Coba Pro N hari" hanya bila Google Play masih menawarkan uji coba ke akun ini.
+  const hariUji = hariUjiTerbaik(usePaketLangganan({ aktif: bukanPro }).data);
+  const perluPrivasiIklan = usePerluPrivasiIklan(bukanPro);
   const kuota = useKuotaAi().data;
   const hariIniStr = hariIni(profile?.zona_waktu || undefined);
   const bulan = hariIniStr.slice(0, 7);
@@ -374,7 +381,7 @@ export default function Akun() {
         >
           <Ikon nama="ui-check" ukuran={17} warna={t.accFg} />
           <Text style={{ color: t.accFg }} className="font-sans text-[14.5px] font-bold">
-            {pro ? 'Kelola langganan' : 'Coba Pro 14 hari'}
+            {pro ? 'Kelola langganan' : hariUji ? `Coba Pro ${hariUji} hari` : 'Lihat Pro'}
           </Text>
         </Pressable>
       </View>
@@ -419,6 +426,14 @@ export default function Akun() {
           judul="Kebijakan privasi"
           onPress={() => void WebBrowser.openBrowserAsync(URL_KEBIJAKAN_PRIVASI)}
         />
+        {perluPrivasiIklan ? (
+          <BarisMenuAkun
+            ikon="ui-shield"
+            judul="Pilihan privasi iklan"
+            sub="Ubah persetujuan iklan yang dipersonalisasi"
+            onPress={() => void bukaPengaturanPrivasiIklan()}
+          />
+        ) : null}
         <BarisMenuAkun ikon="act-hapus" judul="Hapus akun" bahaya onPress={() => router.push('/hapus-akun')} />
         <BarisMenuAkun ikon="ui-logout" judul="Keluar" onPress={() => void signOut()} />
       </KartuGrupAkun>

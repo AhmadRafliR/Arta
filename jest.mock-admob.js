@@ -11,7 +11,9 @@ module.exports = {
   AdsConsent: {
     gatherConsent: jest.fn(async () => ({ canRequestAds: true })),
     showPrivacyOptionsForm: jest.fn(async () => undefined),
+    getConsentInfo: jest.fn(async () => ({ canRequestAds: true, privacyOptionsRequirementStatus: 'NOT_REQUIRED' })),
   },
+  AdsConsentPrivacyOptionsRequirementStatus: { UNKNOWN: 'UNKNOWN', REQUIRED: 'REQUIRED', NOT_REQUIRED: 'NOT_REQUIRED' },
   MaxAdContentRating: { G: 'G', PG: 'PG', T: 'T', MA: 'MA' },
   TestIds: {
     ADAPTIVE_BANNER: 'ca-app-pub-3940256099942544/9214589741',

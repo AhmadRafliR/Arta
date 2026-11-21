@@ -1,4 +1,33 @@
 import type { StatusLangganan } from '@/data/langganan';
+import type { JenisPaket, Paket } from './tipe';
+
+const SATUAN: Record<JenisPaket, string> = { bulanan: 'bulan', tahunan: 'tahun', lain: 'periode' };
+
+/** "bulan" / "tahun" untuk teks harga per periode. */
+export function satuanPeriode(jenis: JenisPaket): string {
+  return SATUAN[jenis];
+}
+
+/**
+ * Ketentuan yang wajib terlihat sebelum membeli (kebijakan langganan Google Play): harga, periode tagihan,
+ * lama uji coba dan kapan tagihan pertama, perpanjangan otomatis, serta cara agar tidak ditagih.
+ */
+export function teksKetentuan(p: Paket): string {
+  const satuan = SATUAN[p.jenis];
+  if (p.ujiCobaHari) {
+    return (
+      `Gratis ${p.ujiCobaHari} hari, lalu ${p.harga} per ${satuan}. Tagihan pertama otomatis saat uji coba ` +
+      `berakhir, lalu diperpanjang otomatis tiap ${satuan} sampai kamu membatalkannya. Batalkan sebelum uji coba ` +
+      'berakhir agar tidak ditagih.'
+    );
+  }
+  return (
+    `${p.harga} per ${satuan}, ditagih lewat Google Play saat kamu mengonfirmasi, lalu diperpanjang otomatis ` +
+    `tiap ${satuan} sampai kamu membatalkannya.`
+  );
+}
+
+export const TEKS_CARA_BATAL = 'Batalkan kapan saja di Google Play: Profil > Pembayaran & langganan > Langganan.';
 
 const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 

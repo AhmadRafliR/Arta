@@ -14,6 +14,8 @@ export type StatusLangganan = {
 };
 
 export const KUNCI_LANGGANAN = ['langganan'] as const;
+/** Paket dari toko (harga dan kelayakan uji coba). Kunci terpisah agar tidak ikut tiap muat ulang status Pro. */
+export const KUNCI_PAKET_LANGGANAN = ['paket-langganan'] as const;
 
 const PERIODE: readonly PeriodeLangganan[] = ['normal', 'trial', 'intro'];
 
@@ -50,10 +52,14 @@ export function usePro(): { pro: boolean; memuat: boolean } {
   return { pro: q.data?.pro === true, memuat: q.isPending };
 }
 
-/** Muat ulang status Pro dan kuota AI (batas kuota bergantung pada Pro). */
+/**
+ * Muat ulang status Pro dan kuota AI (batas kuota bergantung pada Pro), juga paket toko karena kelayakan
+ * uji coba berubah setelah membeli.
+ */
 export function muatUlangLangganan(qc: QueryClient): Promise<void> {
   return Promise.all([
     qc.invalidateQueries({ queryKey: KUNCI_LANGGANAN }),
     qc.invalidateQueries({ queryKey: ['kuota-ai'] }),
+    qc.invalidateQueries({ queryKey: KUNCI_PAKET_LANGGANAN }),
   ]).then(() => undefined);
 }
