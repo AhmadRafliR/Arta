@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Mark celengan koin geometris dengan celah koin mint">
+  <title>Logo mark</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+      --teal:#1F6A76;
+      --mint:#52C3BF;
+    }
+    .mark-body{ fill:url(#markGradient); }
+    .mark-accent{ fill:var(--mint); }
+  </style>
+  <defs>
+    <linearGradient id="markGradient" x1="95" y1="106" x2="417" y2="406" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <g class="mark-body">
+    <circle cx="267" cy="256" r="150"/>
+    <rect x="95" y="226" width="96" height="96" rx="48"/>
+  </g>
+  <g class="mark-accent">
+    <rect x="225" y="148" width="84" height="20" rx="10"/>
+    <circle cx="130" cy="262" r="8"/>
+    <circle cx="130" cy="286" r="8"/>
+  </g>
+</svg>

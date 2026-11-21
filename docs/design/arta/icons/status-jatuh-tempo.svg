@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon status jatuh tempo, kalender dengan penanda">
+  <title>Ikon status jatuh tempo, kalender dengan penanda</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <rect class="ln" x="3.4" y="5.4" width="17.2" height="15.2" rx="2.6"/>
+    <path class="ln" d="M3.4 9.6 H20.6"/>
+    <path class="ln" d="M8 3.4 V6.8 M16 3.4 V6.8"/>
+    <circle class="fill" cx="12" cy="15.1" r="1.5"/>
+  </g>
+</svg>

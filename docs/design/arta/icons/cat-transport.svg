@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon kategori transport, kendaraan roda empat">
+  <title>Ikon kategori transport, kendaraan roda empat</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <path class="ln" d="M3.4 15.6 V12.2 L5.8 7.6 A1.8 1.8 0 0 1 7.4 6.6 H16.6 A1.8 1.8 0 0 1 18.2 7.6 L20.6 12.2 V15.6 A1.2 1.2 0 0 1 19.4 16.8 H4.6 A1.2 1.2 0 0 1 3.4 15.6 Z"/>
+    <path class="ln" d="M3.4 12.2 H20.6"/>
+    <path class="ln" d="M7.2 16.8 V19.4"/>
+    <path class="ln" d="M16.8 16.8 V19.4"/>
+  </g>
+</svg>

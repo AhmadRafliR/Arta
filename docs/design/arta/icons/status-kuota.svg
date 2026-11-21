@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon status sisa kuota AI, baterai dengan level">
+  <title>Ikon status sisa kuota AI, baterai dengan level</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <rect class="ln" x="2.6" y="7.4" width="16.4" height="9.2" rx="2.4"/>
+    <path class="ln" d="M21.4 10.6 V13.4"/>
+    <rect class="fill" x="4.8" y="9.6" width="6.4" height="4.8" rx="1.2"/>
+  </g>
+</svg>

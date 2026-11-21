@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon kategori rokok">
+  <title>Ikon kategori rokok</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <rect class="ln" x="2.8" y="12.6" width="18.4" height="6.6" rx="1.6"/>
+    <path class="ln" d="M10.4 12.6 V19.2"/>
+    <path class="ln" d="M16.8 12.6 V19.2"/>
+    <path class="ln" d="M15.2 9 V7.2 A2.2 2.2 0 0 0 13 5"/>
+    <path class="ln" d="M18.6 9 V7.2 A2.2 2.2 0 0 0 16.4 5"/>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon navigasi Akun">
+  <title>Ikon navigasi Akun</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <circle class="ln" cx="12" cy="8.4" r="3.9"/>
+    <path class="ln" d="M4.6 20.4 C4.6 16.2 7.9 13.9 12 13.9 C16.1 13.9 19.4 16.2 19.4 20.4"/>
+  </g>
+</svg>

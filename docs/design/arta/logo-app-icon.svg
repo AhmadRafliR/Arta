@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Ikon aplikasi: mark celengan koin putih di atas teal">
+  <title>Logo app icon</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+      --teal:#1F6A76;
+      --mint:#52C3BF;
+      --white:#FFFFFF;
+    }
+    .tile{ fill:url(#tileGradient); }
+    .mark-body{ fill:var(--white); }
+    .mark-accent{ fill:var(--mint); }
+  </style>
+  <defs>
+    <linearGradient id="tileGradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <rect class="tile" x="0" y="0" width="512" height="512" rx="112"/>
+  <g transform="translate(256 256) scale(0.72) translate(-256 -256)">
+    <g class="mark-body">
+      <circle cx="267" cy="256" r="150"/>
+      <rect x="95" y="226" width="96" height="96" rx="48"/>
+    </g>
+    <g class="mark-accent">
+      <rect x="225" y="148" width="84" height="20" rx="10"/>
+      <circle cx="130" cy="262" r="8"/>
+      <circle cx="130" cy="286" r="8"/>
+    </g>
+  </g>
+</svg>

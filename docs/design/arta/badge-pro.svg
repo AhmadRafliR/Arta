@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 64" width="200" height="64" role="img" aria-label="Badge tier Pro arta dengan crest premium">
+  <title>Badge tier Pro</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+      --teal:#1F6A76;
+      --mint:#52C3BF;
+      --white:#FFFFFF;
+      --badge-font:'Avenir Next','Century Gothic',Futura,'Trebuchet MS',sans-serif;
+    }
+    .badge-bg{ fill:url(#proBadgeGradient); }
+    .crest-body{ fill:var(--white); }
+    .crest-accent{ fill:var(--mint); }
+    .badge-label{ fill:var(--white); font-family:var(--badge-font); font-size:22px; font-weight:600; letter-spacing:2px; }
+  </style>
+  <defs>
+    <linearGradient id="proBadgeGradient" x1="0" y1="0" x2="200" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <rect class="badge-bg" x="1" y="1" width="198" height="62" rx="31"/>
+  <g transform="translate(34 32) scale(0.128) translate(-256 -254)">
+    <g class="crest-body">
+      <path d="M150 244 L150 186 L196 112 L226 186 L256 86 L286 186 L316 112 L362 186 L362 244 Z"/>
+      <rect x="150" y="204" width="212" height="44" rx="8"/>
+      <circle cx="262.05" cy="340" r="82.5"/>
+      <rect x="167.45" y="323.5" width="52.8" height="52.8" rx="26.4"/>
+    </g>
+    <g class="crest-accent">
+      <path d="M256 122 L282 150 L256 178 L230 150 Z"/>
+      <rect x="238.95" y="280.6" width="46.2" height="11" rx="5.5"/>
+      <circle cx="186.7" cy="343.3" r="4.4"/>
+      <circle cx="186.7" cy="356.5" r="4.4"/>
+      <circle cx="190" cy="226" r="5"/>
+      <circle cx="223" cy="226" r="5"/>
+      <circle cx="256" cy="226" r="5"/>
+      <circle cx="289" cy="226" r="5"/>
+      <circle cx="322" cy="226" r="5"/>
+    </g>
+  </g>
+  <text class="badge-label" x="58" y="40">PRO</text>
+</svg>

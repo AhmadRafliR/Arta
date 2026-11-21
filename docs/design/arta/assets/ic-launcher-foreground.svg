@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108" role="img" aria-label="Lapisan depan adaptive icon arta">
+  <title>Adaptive icon foreground</title>
+  <style>
+    :root{ --mint:#52C3BF; --white:#FFFFFF; }
+    .mark-body{ fill:var(--white); }
+    .mark-accent{ fill:var(--mint); }
+  </style>
+  <g transform="translate(54 54) scale(0.17) translate(-256 -256)">
+    <g class="mark-body">
+      <circle cx="267" cy="256" r="150"/>
+      <rect x="95" y="226" width="96" height="96" rx="48"/>
+    </g>
+    <g class="mark-accent">
+      <rect x="225" y="148" width="84" height="20" rx="10"/>
+      <circle cx="130" cy="262" r="8"/>
+      <circle cx="130" cy="286" r="8"/>
+    </g>
+  </g>
+</svg>

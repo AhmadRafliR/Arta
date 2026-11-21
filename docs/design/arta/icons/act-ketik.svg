@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon aksi mengetik manual, pensil">
+  <title>Ikon aksi mengetik manual, pensil</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <path class="ln" d="M4.4 19.6 L4.9 16.2 L15.6 5.5 A2.2 2.2 0 0 1 18.7 5.5 L18.7 5.5 A2.2 2.2 0 0 1 18.7 8.6 L8 19.3 Z"/>
+    <path class="ln" d="M14.2 6.9 L17.3 10"/>
+  </g>
+</svg>

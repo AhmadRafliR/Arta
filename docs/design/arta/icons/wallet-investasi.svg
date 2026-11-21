@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon dompet investasi, grafik naik dengan panah">
+  <title>Ikon dompet investasi, grafik naik dengan panah</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <path class="ln" d="M3 20.2 H21"/>
+    <path class="ln" d="M4.6 16.4 L9.4 11.4 L13 14.2 L20.2 6.4"/>
+    <path class="ln" d="M15.6 6.2 H20.6 V11.2"/>
+    <path class="ln" d="M4.6 20.2 V18.8"/>
+  </g>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 260" width="320" height="260" role="img" aria-label="Empty state: belum ada hutang">
+  <title>Belum ada hutang</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+      --teal:#1F6A76;
+      --mint:#52C3BF;
+    }
+    .tint{ fill:url(#emptyTint); }
+    .onTint{ fill:none; stroke:#FFFFFF; stroke-width:7; stroke-linecap:round; stroke-linejoin:round; }
+    .accent{ fill:none; stroke:var(--mint); stroke-width:8; stroke-linecap:round; stroke-linejoin:round; }
+  </style>
+  <defs>
+    <linearGradient id="emptyTint" x1="74" y1="44" x2="246" y2="216" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <circle class="tint" cx="160" cy="130" r="88"/>
+  <path class="onTint" d="M112 118 L160 94 L208 118 V180 A10 10 0 0 1 198 190 H122 A10 10 0 0 1 112 180 Z"/>
+  <path class="accent" d="M142 138 L158 154 L182 124"/>
+</svg>

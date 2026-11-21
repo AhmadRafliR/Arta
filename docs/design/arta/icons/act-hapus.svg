@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon aksi hapus, tong sampah">
+  <title>Ikon aksi hapus, tong sampah</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <path class="ln" d="M4.6 6.6 H19.4"/>
+    <path class="ln" d="M9 6.6 V4.8 A1.4 1.4 0 0 1 10.4 3.4 H13.6 A1.4 1.4 0 0 1 15 4.8 V6.6"/>
+    <path class="ln" d="M6.4 6.6 L7.3 19.2 A1.8 1.8 0 0 0 9.1 20.9 H14.9 A1.8 1.8 0 0 0 16.7 19.2 L17.6 6.6"/>
+    <path class="ln" d="M10.4 10.4 V17.2 M13.6 10.4 V17.2"/>
+  </g>
+</svg>

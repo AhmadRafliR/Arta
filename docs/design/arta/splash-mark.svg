@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Splash mark arta dengan koin mint yang bergerak">
+  <title>Splash / loading mark</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+      --teal:#1F6A76;
+      --mint:#52C3BF;
+    }
+    .mark-body{ fill:url(#splashGradient); }
+    .mark-accent{ fill:var(--mint); }
+    .coin{ fill:var(--mint); transform-origin: 267px 132px; animation: coinDrop 1.8s cubic-bezier(.4,0,.2,1) infinite; }
+    .slot-glow{ fill:var(--mint); opacity:.35; animation: slotPulse 1.8s ease-in-out infinite; }
+    @keyframes coinDrop{
+      0%   { transform: translateY(-58px) scale(.7); opacity:0; }
+      22%  { opacity:1; }
+      62%  { transform: translateY(0) scale(1); opacity:1; }
+      80%  { transform: translateY(0) scale(1); opacity:0; }
+      100% { transform: translateY(0) scale(.7); opacity:0; }
+    }
+    @keyframes slotPulse{
+      0%,100% { opacity:.22; }
+      55%     { opacity:.55; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .coin{ animation:none; opacity:1; transform:translateY(0); }
+      .slot-glow{ animation:none; opacity:.35; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="splashGradient" x1="95" y1="106" x2="417" y2="406" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <rect class="slot-glow" x="213" y="136" width="108" height="44" rx="22"/>
+  <g class="mark-body">
+    <circle cx="267" cy="256" r="150"/>
+    <rect x="95" y="226" width="96" height="96" rx="48"/>
+  </g>
+  <g class="mark-accent">
+    <rect x="225" y="148" width="84" height="20" rx="10"/>
+    <circle cx="130" cy="262" r="8"/>
+    <circle cx="130" cy="286" r="8"/>
+  </g>
+  <circle class="coin" cx="267" cy="132" r="17"/>
+</svg>

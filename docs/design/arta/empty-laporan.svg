@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 260" width="320" height="260" role="img" aria-label="Empty state: belum ada laporan">
+  <title>Belum ada laporan</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+      --teal:#1F6A76;
+      --mint:#52C3BF;
+      --muted:#5B7C84;
+    }
+    .frame{ fill:none; stroke:var(--muted); stroke-width:5; stroke-linecap:round; stroke-linejoin:round; stroke-opacity:.4; }
+    .line{ fill:none; stroke:var(--muted); stroke-width:6; stroke-linecap:round; stroke-opacity:.55; }
+    .bar{ fill:var(--muted); fill-opacity:.4; }
+    .tint{ fill:url(#emptyTint); }
+    .accent{ fill:var(--mint); }
+  </style>
+  <defs>
+    <linearGradient id="emptyTint" x1="168" y1="112" x2="204" y2="196" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <rect class="frame" x="84" y="34" width="152" height="192" rx="20"/>
+  <path class="line" d="M110 74 H210"/>
+  <path class="line" d="M110 102 H180"/>
+  <rect class="bar" x="110" y="132" width="18" height="60" rx="8"/>
+  <rect class="bar" x="142" y="152" width="18" height="40" rx="8"/>
+  <rect class="tint" x="174" y="118" width="18" height="74" rx="8"/>
+  <circle class="accent" cx="222" cy="62" r="11"/>
+</svg>

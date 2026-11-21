@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon kategori pemasukan dari orang tua, tangan menerima hati">
+  <title>Ikon kategori pemasukan dari orang tua, tangan menerima hati</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <path class="ln" d="M12 8.1 C10.2 5.9 6.8 8.6 8.2 11.4 C9 13 12 15.1 12 15.1 C12 15.1 15 13 15.8 11.4 C17.2 8.6 13.8 5.9 12 8.1 Z"/>
+    <path class="ln" d="M3.2 14.6 H7.4 L10.4 17.2 H13.2 A1.5 1.5 0 0 1 13.2 20.2 H10.2 L5.4 18.2"/>
+    <path class="ln" d="M20.8 14.6 H17.2"/>
+  </g>
+</svg>

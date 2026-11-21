@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 260" width="320" height="260" role="img" aria-label="Empty state: belum ada transaksi">
+  <title>Belum ada transaksi</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+      --teal:#1F6A76;
+      --mint:#52C3BF;
+      --muted:#5B7C84;
+    }
+    .line{ fill:none; stroke:var(--muted); stroke-width:6; stroke-linecap:round; stroke-opacity:.55; }
+    .frame{ fill:none; stroke:var(--muted); stroke-width:5; stroke-linecap:round; stroke-linejoin:round; stroke-opacity:.4; }
+    .tint{ fill:url(#emptyTint); }
+    .accent{ fill:none; stroke:var(--mint); stroke-width:6; stroke-linecap:round; stroke-linejoin:round; }
+  </style>
+  <defs>
+    <linearGradient id="emptyTint" x1="150" y1="128" x2="256" y2="238" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <rect class="frame" x="66" y="30" width="152" height="200" rx="24"/>
+  <path class="line" d="M96 72 H188"/>
+  <path class="line" d="M96 106 H166"/>
+  <path class="line" d="M96 140 H188"/>
+  <path class="line" d="M96 174 H150"/>
+  <circle class="tint" cx="222" cy="186" r="44"/>
+  <path class="accent" d="M222 168 V204"/>
+  <path class="accent" d="M204 186 H240"/>
+</svg>

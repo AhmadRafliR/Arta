@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 360" width="620" height="360" role="img" aria-label="Lockup premium arta: crest mahkota dan wordmark PREMIUM">
+  <title>Premium lockup arta</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+      --teal:#1F6A76;
+      --mint:#52C3BF;
+      --text-secondary:#5B7C84;
+      --divider:#DDE7EA;
+      --wordmark-font:'Avenir Next','Century Gothic',Futura,'Trebuchet MS',sans-serif;
+    }
+    .crest-body{ fill:url(#lockupPremiumGradient); }
+    .crest-accent{ fill:var(--mint); }
+    .wordmark{
+      fill:var(--teal-deep);
+      font-family:var(--wordmark-font);
+      font-size:64px;
+      font-weight:600;
+      letter-spacing:2px;
+    }
+    .subline{
+      fill:var(--text-secondary);
+      font-family:var(--wordmark-font);
+      font-size:22px;
+      font-weight:400;
+      letter-spacing:4px;
+    }
+    .rule{ stroke:var(--divider); stroke-width:2; }
+  </style>
+  <defs>
+    <linearGradient id="lockupPremiumGradient" x1="150" y1="86" x2="362" y2="422" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(150 180) scale(0.5) translate(-256 -254)">
+    <g class="crest-body">
+      <path d="M150 244 L150 186 L196 112 L226 186 L256 86 L286 186 L316 112 L362 186 L362 244 Z"/>
+      <rect x="150" y="204" width="212" height="44" rx="8"/>
+      <circle cx="262.05" cy="340" r="82.5"/>
+      <rect x="167.45" y="323.5" width="52.8" height="52.8" rx="26.4"/>
+    </g>
+    <g class="crest-accent">
+      <path d="M256 122 L282 150 L256 178 L230 150 Z"/>
+      <rect x="238.95" y="280.6" width="46.2" height="11" rx="5.5"/>
+      <circle cx="186.7" cy="343.3" r="4.4"/>
+      <circle cx="186.7" cy="356.5" r="4.4"/>
+      <circle cx="190" cy="226" r="5"/>
+      <circle cx="223" cy="226" r="5"/>
+      <circle cx="256" cy="226" r="5"/>
+      <circle cx="289" cy="226" r="5"/>
+      <circle cx="322" cy="226" r="5"/>
+    </g>
+  </g>
+  <line class="rule" x1="250" y1="110" x2="250" y2="250"/>
+  <text class="wordmark" x="290" y="178">PREMIUM</text>
+  <text class="subline" x="292" y="218">arta premium</text>
+</svg>

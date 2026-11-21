@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Mark celengan koin satu warna untuk latar terang">
+  <title>Logo mono</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+    }
+    .mark-body{ fill:var(--teal-deep); }
+  </style>
+  <defs>
+    <mask id="monoCut" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>
+      <rect x="225" y="148" width="84" height="20" rx="10" fill="#000000"/>
+      <circle cx="130" cy="262" r="8" fill="#000000"/>
+      <circle cx="130" cy="286" r="8" fill="#000000"/>
+    </mask>
+  </defs>
+  <g class="mark-body" mask="url(#monoCut)">
+    <circle cx="267" cy="256" r="150"/>
+    <rect x="95" y="226" width="96" height="96" rx="48"/>
+  </g>
+</svg>

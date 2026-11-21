@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon aksi ekspor, panah keluar dari kotak">
+  <title>Ikon aksi ekspor, panah keluar dari kotak</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <path class="ln" d="M4.6 13.8 V18.6 A2 2 0 0 0 6.6 20.6 H17.4 A2 2 0 0 0 19.4 18.6 V13.8"/>
+    <path class="ln" d="M12 3.2 V14.4"/>
+    <path class="ln" d="M7.8 7.4 L12 3.2 L16.2 7.4"/>
+  </g>
+</svg>

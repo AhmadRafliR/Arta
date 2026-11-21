@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Crest premium arta satu warna untuk chip dan navigasi kecil">
+  <title>Premium crest mono</title>
+  <style>
+    :root{
+      --teal-deep:#0B424F;
+    }
+    .crest-body{ fill:var(--teal-deep); }
+  </style>
+  <defs>
+    <mask id="premiumCut" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>
+      <path d="M256 122 L282 150 L256 178 L230 150 Z" fill="#000000"/>
+      <rect x="238.95" y="280.6" width="46.2" height="11" rx="5.5" fill="#000000"/>
+      <circle cx="186.7" cy="343.3" r="4.4" fill="#000000"/>
+      <circle cx="186.7" cy="356.5" r="4.4" fill="#000000"/>
+      <circle cx="190" cy="226" r="5" fill="#000000"/>
+      <circle cx="223" cy="226" r="5" fill="#000000"/>
+      <circle cx="256" cy="226" r="5" fill="#000000"/>
+      <circle cx="289" cy="226" r="5" fill="#000000"/>
+      <circle cx="322" cy="226" r="5" fill="#000000"/>
+    </mask>
+  </defs>
+  <g class="crest-body" mask="url(#premiumCut)">
+    <path d="M150 244 L150 186 L196 112 L226 186 L256 86 L286 186 L316 112 L362 186 L362 244 Z"/>
+    <rect x="150" y="204" width="212" height="44" rx="8"/>
+    <circle cx="262.05" cy="340" r="82.5"/>
+    <rect x="167.45" y="323.5" width="52.8" height="52.8" rx="26.4"/>
+  </g>
+</svg>

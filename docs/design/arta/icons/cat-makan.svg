@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon kategori makan, garpu dan sendok">
+  <title>Ikon kategori makan, garpu dan sendok</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <path class="ln" d="M8.2 2.8 V10.4 M5.2 2.8 V7.2 A3 3 0 0 0 8.2 10.2 A3 3 0 0 0 11.2 7.2 V2.8"/>
+    <path class="ln" d="M8.2 10.4 V21.2"/>
+    <path class="ln" d="M16.4 2.8 C14.4 2.8 13.4 5.4 13.4 8.6 C13.4 10.8 14.2 12 15.6 12.2 V21.2"/>
+  </g>
+</svg>

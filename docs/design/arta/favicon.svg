@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Favicon arta">
+  <title>Favicon arta</title>
+  <style>
+    :root{ --mint:#52C3BF; --white:#FFFFFF; }
+    .mark-body{ fill:var(--white); }
+    .mark-accent{ fill:var(--mint); }
+  </style>
+  <defs>
+    <linearGradient id="faviconTile" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B424F"/>
+      <stop offset="1" stop-color="#1F6A76"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#faviconTile)"/>
+  <g transform="translate(32 32) scale(0.14) translate(-256 -256)">
+    <g class="mark-body">
+      <circle cx="267" cy="256" r="150"/>
+      <rect x="95" y="226" width="96" height="96" rx="48"/>
+    </g>
+    <g class="mark-accent">
+      <rect x="225" y="148" width="84" height="20" rx="10"/>
+      <circle cx="130" cy="262" r="8"/>
+      <circle cx="130" cy="286" r="8"/>
+    </g>
+  </g>
+</svg>

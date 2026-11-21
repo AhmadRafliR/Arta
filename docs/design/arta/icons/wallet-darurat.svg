@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon dompet dana darurat, perisai dengan palang">
+  <title>Ikon dompet dana darurat, perisai dengan palang</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <path class="ln" d="M12 2.9 L19.4 6.3 V11.8 C19.4 16.6 16.2 19.9 12 21.3 C7.8 19.9 4.6 16.6 4.6 11.8 V6.3 Z"/>
+    <path class="ln" d="M12 8.2 V15.6"/>
+    <path class="ln" d="M8.3 11.9 H15.7"/>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Ikon navigasi Merekam">
+  <title>Ikon navigasi Merekam</title>
+  <style>
+    :root{ --icon-stroke:1.75; }
+    .ln{ fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+    .fill{ fill:currentColor; stroke:none; }
+  </style>
+  <g>
+    <rect class="ln" x="9.1" y="3.4" width="5.8" height="10" rx="2.9"/>
+    <path class="ln" d="M5.8 11.4 A6.2 6.2 0 0 0 18.2 11.4"/>
+    <path class="ln" d="M12 17.6 V20.4"/>
+    <path class="ln" d="M9 20.6 H15"/>
+  </g>
+</svg>
