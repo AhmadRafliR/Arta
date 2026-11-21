@@ -47,7 +47,7 @@ Tanpa duplikat: ID draf diturunkan secara deterministik dari kunci notifikasi (`
 
 1. Pasang build pengembangan atau rilis yang memuat modul native (lihat Batasan).
 2. Buka **Akun → Catat otomatis dari notifikasi**.
-3. Tekan **Buka pengaturan akses notifikasi**, lalu izinkan arta ("Arta - notifikasi dompet") di layar sistem. Kembali ke app: status berubah menjadi "Aktif".
+3. Tekan **Buka pengaturan akses notifikasi**, lalu izinkan arta ("arta: catat otomatis") di layar sistem. Kembali ke app: status berubah menjadi "Aktif".
 4. Nyalakan sakelar **Catat otomatis**.
 5. HP Xiaomi/HyperOS: agar notifikasi tetap terbaca saat app ditutup:
    - Matikan penghemat baterai untuk arta (pilih "Tanpa pembatasan").

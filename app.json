@@ -15,7 +15,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.keuanganapp.dev"
+      "package": "com.keuanganapp.dev",
+      "allowBackup": false
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -107,7 +108,7 @@
         {
           "photosPermission": "arta memakai galeri hanya saat kamu memilih screenshot tagihan untuk mengisi hutang.",
           "cameraPermission": false,
-          "microphonePermission": false
+          "microphonePermission": "arta butuh mikrofon untuk mencatat transaksi lewat suara."
         }
       ]
     ],

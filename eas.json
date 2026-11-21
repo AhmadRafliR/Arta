@@ -7,6 +7,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "environment": "development",
       "env": {
         "APP_VARIANT": "development"
       },
@@ -16,6 +17,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "environment": "preview",
       "env": {
         "APP_VARIANT": "preview"
       },
@@ -25,6 +27,7 @@
     },
     "production": {
       "autoIncrement": true,
+      "environment": "production",
       "env": {
         "APP_VARIANT": "production"
       },
@@ -36,6 +39,7 @@
   "submit": {
     "production": {
       "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
         "track": "internal",
         "releaseStatus": "draft"
       }
