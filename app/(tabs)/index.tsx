@@ -6,6 +6,7 @@ import { WalletChips } from '@/components/WalletChips';
 import { TxRow } from '@/components/TxRow';
 import { KartuHutangBeranda } from '@/components/KartuHutangBeranda';
 import { KeadaanKosong } from '@/components/KeadaanKosong';
+import { DiagramPengeluaran } from '@/components/DiagramPengeluaran';
 import { KartuBudgetKritis } from '@/components/KartuBudgetKritis';
 import { AksiKepalaBeranda } from '@/components/AksiKepalaBeranda';
 import { BannerIklan } from '@/components/BannerIklan';
@@ -99,6 +100,12 @@ export default function Beranda() {
           </View>
         </View>
       )}
+      <DiagramPengeluaran
+        data={bulanIni.data}
+        bulan={bulan}
+        galat={bulanGalat?.pesan ?? null}
+        onLihatRiwayat={() => router.navigate('/riwayat')}
+      />
       <KartuBudgetKritis />
 
       {adaHutang ? (

@@ -85,7 +85,8 @@ describe('Beranda', () => {
     expect(screen.getByText('Kekayaan bersih Rp5.288.000')).toBeTruthy();
     expect(screen.getByText('Bulan ini')).toBeTruthy();
     expect(screen.getByText('Rp1.500.000')).toBeTruthy(); // masuk
-    expect(screen.getByText('Rp25.000')).toBeTruthy(); // keluar
+    expect(screen.getAllByText('Rp25.000').length).toBeGreaterThan(0); // keluar (juga di diagram)
+    expect(screen.getByText('Ke mana uangmu')).toBeTruthy();
     expect(screen.getByText(/^Gaji · GoPay/)).toBeTruthy();
     expect(screen.getByText('+Rp1.500.000')).toBeTruthy();
     expect(screen.getByText('-Rp25.000')).toBeTruthy();
