@@ -63,6 +63,18 @@ describe('parseNotifikasi: pengeluaran', () => {
     expect(r?.nominal).toBe(150000);
     expect(r?.keterangan).toBe('Budi Santoso');
   });
+  // Contoh ASLI dari HP (GoPay, 21/11): nominal berada di antara "transfer" dan "ke".
+  it('ASLI: "Yes, sukses transfer" / "Kamu berhasil transfer Rp1 ke Zhahira."', () => {
+    const r = parseNotifikasi(notif('com.gojek.gopay', 'Yes, sukses transfer', 'Kamu berhasil transfer Rp1 ke Zhahira.'));
+    expect(r).toMatchObject({ sumber: 'gopay', jenis: 'pengeluaran', nominal: 1, keterangan: 'Zhahira' });
+  });
+  it('ASLI: kartu gosok bukan transaksi', () => {
+    expect(
+      parseNotifikasi(
+        notif('com.gojek.gopay', 'Hai, kamu dapet kartu gosok!', 'Buka sekarang sebelum hangus dan nikmatin bermacam-macam hadiah.'),
+      ),
+    ).toBeNull();
+  });
   it('kirim uang', () => {
     const r = parseNotifikasi(notif(GP, 'GoPay', 'Kamu berhasil kirim ke Siti IDR 75.000'));
     expect(r?.jenis).toBe('pengeluaran');

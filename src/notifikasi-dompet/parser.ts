@@ -65,7 +65,7 @@ export function parseNominal(teks: string): number | null {
 
 function tentukanJenis(t: string): 'pemasukan' | 'pengeluaran' | null {
   const keluarTegas =
-    /\b(?:transfer|kirim|dikirim|mengirim|pengiriman\s+uang)\s+(?:uang\s+)?ke\b/i.test(t);
+    /\b(?:transfer|kirim|dikirim|mengirim|pengiriman\s+uang)\s+(?:uang\s+)?(?:(?:rp|idr)\.?\s*[\d.,]+\s+)?ke\b/i.test(t);
   const topUpLain = /top\s?up\s+(?:\w+\s+){0,2}?ke\s+(?!saldo\b|gopay\b|shopeepay\b|akun\b)\S/i.test(t);
   const topUp = /top\s?up/i.test(t);
 
