@@ -21,6 +21,9 @@ function periksa(error: { code?: string } | null, tahap: string): void {
 
 Deno.serve(
   buatHandlerVerifikasi({
+    // Halaman statis tempat konfirmasi tampil (domain supabase.co tidak merender HTML). Kosong = halaman bawaan.
+    halamanUrl: Deno.env.get('LAPORAN_HALAMAN_URL') || undefined,
+    fungsiUrl: `${SUPABASE_URL}/functions/v1/report-verify`,
     async ambilEmail(id) {
       if (!POLA_UUID.test(id)) return null;
       const { data, error } = await sb.from('report_recipients').select('email').eq('id', id).maybeSingle();

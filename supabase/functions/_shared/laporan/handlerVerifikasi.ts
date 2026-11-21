@@ -12,6 +12,14 @@ export type DepsVerifikasi = {
   sekarang(): Date;
   /** Hanya menerima kode status; bawaan console.log. */
   log?: (baris: string) => void;
+  /**
+   * Alamat halaman statis (mis. GitHub Pages) tempat konfirmasi ditampilkan. Edge Function di domain
+   * bawaan supabase.co dipaksa `text/plain` + sandbox, jadi HTML dari sini tidak tampil di browser.
+   * Bila diisi, GET/POST mengalihkan (303) ke halaman itu; bila kosong, memakai halaman HTML bawaan.
+   */
+  halamanUrl?: string;
+  /** Alamat publik function ini; diteruskan ke halaman statis sebagai target form konfirmasi. */
+  fungsiUrl?: string;
 };
 
 export const PESAN_VERIFIKASI = {
@@ -57,12 +65,27 @@ function halaman(status: number, judul: string, isi: string): Response {
   });
 }
 
+const teks = (status: number, isi: string) =>
+  new Response(isi, { status, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+
+function alihkan(basis: string, berkas: string, param: Record<string, string>): Response {
+  const u = new URL(`${basis.replace(/\/+$/, '')}/${berkas}`);
+  for (const [k, v] of Object.entries(param)) u.searchParams.set(k, v);
+  return new Response(null, {
+    status: 303,
+    headers: { Location: u.toString(), 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' },
+  });
+}
+
 const paragraf = (s: string) => `<p style="font-size:15px;line-height:22px;margin:0;">${esc(s)}</p>`;
 
 const halamanTidakValid = () => halaman(400, 'Tautan tidak berlaku', paragraf(PESAN_VERIFIKASI.tidakValid));
 
 export function buatHandlerVerifikasi(deps: DepsVerifikasi): (req: Request) => Promise<Response> {
   const log = deps.log ?? ((b: string) => console.log(b));
+
+  const hasilHalaman = (status: 'invalid' | 'verif' | 'henti' | 'galat', cadangan: () => Response) =>
+    deps.halamanUrl ? alihkan(deps.halamanUrl, 'hasil.html', { s: status }) : cadangan();
 
   const baca = (t: string) =>
     bacaToken(t, deps.ambilEmail, deps.tandatangan, Math.floor(deps.sekarang().getTime() / 1000));
@@ -76,10 +99,17 @@ export function buatHandlerVerifikasi(deps: DepsVerifikasi): (req: Request) => P
         const hasil = t ? await baca(t) : null;
         if (!hasil || !hasil.ok) {
           log('report-verify: GET 400');
-          return halamanTidakValid();
+          return hasilHalaman('invalid', halamanTidakValid);
         }
         const j = JUDUL[hasil.tujuan];
         log(`report-verify: GET 200 ${hasil.tujuan}`);
+        if (deps.halamanUrl) {
+          return alihkan(deps.halamanUrl, 'konfirmasi.html', {
+            t,
+            a: hasil.tujuan,
+            ...(deps.fungsiUrl ? { f: deps.fungsiUrl } : {}),
+          });
+        }
         return halaman(
           200,
           j.judul,
@@ -99,26 +129,32 @@ export function buatHandlerVerifikasi(deps: DepsVerifikasi): (req: Request) => P
         } catch {
           t = '';
         }
+        // Token dari query = one-click unsubscribe (RFC 8058): balas teks biasa, jangan dialihkan.
+        const satuKlik = !t;
         if (!t) t = url.searchParams.get('t') ?? '';
         const hasil = t ? await baca(t) : null;
         if (!hasil || !hasil.ok) {
           log('report-verify: POST 400');
-          return halamanTidakValid();
+          if (deps.halamanUrl && satuKlik) return teks(400, PESAN_VERIFIKASI.tidakValid);
+          return hasilHalaman('invalid', halamanTidakValid);
         }
         if (hasil.tujuan === 'verif') {
           await deps.tandaiTerverifikasi(hasil.recipientId);
           log('report-verify: POST 200 verif');
-          return halaman(200, 'Email terkonfirmasi', paragraf(PESAN_VERIFIKASI.terverifikasi));
+          return hasilHalaman('verif', () =>
+            halaman(200, 'Email terkonfirmasi', paragraf(PESAN_VERIFIKASI.terverifikasi)),
+          );
         }
         await deps.hapus(hasil.recipientId);
         log('report-verify: POST 200 henti');
-        return halaman(200, 'Berhenti berlangganan', paragraf(PESAN_VERIFIKASI.berhenti));
+        if (deps.halamanUrl && satuKlik) return teks(200, PESAN_VERIFIKASI.berhenti);
+        return hasilHalaman('henti', () => halaman(200, 'Berhenti berlangganan', paragraf(PESAN_VERIFIKASI.berhenti)));
       }
 
       return halaman(405, 'Tidak didukung', paragraf(PESAN_VERIFIKASI.tidakValid));
     } catch {
       log(`report-verify: ${req.method} 500`);
-      return halaman(500, 'Terjadi kesalahan', paragraf(PESAN_VERIFIKASI.server));
+      return hasilHalaman('galat', () => halaman(500, 'Terjadi kesalahan', paragraf(PESAN_VERIFIKASI.server)));
     }
   };
 }
